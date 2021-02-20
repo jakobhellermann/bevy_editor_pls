@@ -1,13 +1,31 @@
-use bevy::prelude::*;
-use bevy_editor_pls::EditorPlugin;
+use bevy::{app::AppExit, prelude::*};
+use bevy_editor_pls::{EditorPlugin, EditorSettings};
+
+struct SaveEvent;
+
+fn editor_settings() -> EditorSettings {
+    let mut settings = EditorSettings::default();
+    settings.add_event("Save", || SaveEvent);
+    settings.add_event("Quit", || AppExit);
+    settings
+}
 
 fn main() {
     App::build()
         .insert_resource(Msaa { samples: 4 })
+        .insert_resource(editor_settings())
+        .add_event::<SaveEvent>()
         .add_plugins(DefaultPlugins)
         .add_plugin(EditorPlugin)
         .add_startup_system(setup.system())
+        .add_system(save.system())
         .run();
+}
+
+fn save(mut events: EventReader<SaveEvent>) {
+    for _ in events.iter() {
+        println!("Saving...");
+    }
 }
 
 fn setup(
