@@ -1,0 +1,15 @@
+[package]
+name = "bevy-editor-pls"
+version = "0.1.0"
+authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
+edition = "2018"
+
+[features]
+default = ["bevy/dynamic"]
+
+[dependencies]
+bevy = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = ["render"] }
+bevy-inspector-egui = { path = "../bevy-inspector-egui" }
+
+[dev-dependencies]
+bevy = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = ["bevy_wgpu", "x11"] }
