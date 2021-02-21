@@ -1,6 +1,6 @@
 use std::any::TypeId;
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{prelude::*, utils::StableHashMap};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 
 use crate::{systems::send_editor_events, systems::EditorEvent, ui::menu_system};
@@ -26,33 +26,31 @@ impl Plugin for EditorPlugin {
     }
 }
 
+type StableTypeMap<V> = StableHashMap<TypeId, V>;
+pub type ExclusiveAccessFn = Box<dyn Fn(&mut World, &mut Resources) + Send + Sync + 'static>;
+
 pub struct EditorSettings {
-    pub(crate) events_to_send: HashMap<TypeId, Box<dyn Fn(&mut Resources) + Send + Sync>>,
-    pub(crate) events_to_send_order: Vec<(String, TypeId)>,
+    pub(crate) events_to_send: StableTypeMap<(String, ExclusiveAccessFn)>,
 }
 impl Default for EditorSettings {
     fn default() -> Self {
         EditorSettings {
             events_to_send: Default::default(),
-            events_to_send_order: Default::default(),
         }
     }
 }
 impl EditorSettings {
-    pub fn add_event<T, F>(&mut self, name: &str, get_event: F)
+    pub fn add_event<T, F>(&mut self, name: &'static str, get_event: F)
     where
         T: Resource,
         F: Fn() -> T + Send + Sync + 'static,
     {
-        let send_event_function = move |resources: &mut Resources| {
+        let f = Box::new(move |_: &mut World, resources: &mut Resources| {
             let mut events = resources.get_mut::<Events<T>>().unwrap();
             events.send(get_event());
-        };
+        });
 
         self.events_to_send
-            .insert(TypeId::of::<T>(), Box::new(send_event_function));
-        assert!(!self.events_to_send_order.iter().any(|(n, _)| n == name));
-        self.events_to_send_order
-            .push((name.to_string(), TypeId::of::<T>()));
+            .insert(TypeId::of::<T>(), (name.to_string(), f));
     }
 }
