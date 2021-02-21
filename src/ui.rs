@@ -19,13 +19,15 @@ pub(crate) fn menu_system(
                 ui.horizontal(|ui| checkbox(ui, &mut inspector_params.enabled, "World Inspector"));
             });
 
-            menu::menu(ui, "Events", |ui| {
-                for (name, type_id) in &editor_settings.events_to_send_order {
-                    if ui.button(name).clicked() {
-                        editor_events.send(EditorEvent(*type_id));
+            if !editor_settings.events_to_send_order.is_empty() {
+                menu::menu(ui, "Events", |ui| {
+                    for (name, type_id) in &editor_settings.events_to_send_order {
+                        if ui.button(name).clicked() {
+                            editor_events.send(EditorEvent(*type_id));
+                        }
                     }
-                }
-            });
+                });
+            }
         });
     });
 }
