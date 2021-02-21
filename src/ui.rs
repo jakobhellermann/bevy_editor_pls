@@ -2,21 +2,27 @@ use bevy::prelude::*;
 use bevy_inspector_egui::{
     bevy_egui::EguiContext,
     egui::{self, menu},
-    WorldInspectorParams,
+    Context, Inspectable, WorldInspectorParams,
 };
 
-use crate::{systems::EditorEvent, EditorSettings};
+use crate::{plugin::EditorState, systems::EditorEvent, EditorSettings};
 
 pub(crate) fn menu_system(
     egui_context: Res<EguiContext>,
-    editor_settings: Res<EditorSettings>,
+    mut editor_settings: ResMut<EditorSettings>,
     mut editor_events: ResMut<Events<EditorEvent>>,
     mut inspector_params: ResMut<WorldInspectorParams>,
 ) {
     egui::TopPanel::top("editor-pls top panel").show(&egui_context.ctx, |ui| {
         menu::bar(ui, |ui| {
+            #[rustfmt::skip]
             menu::menu(ui, "Inspector", |ui| {
-                ui.horizontal(|ui| checkbox(ui, &mut inspector_params.enabled, "World Inspector"));
+                egui::Grid::new("inspector settings").show(ui, |ui| {
+                    checkbox(ui, &mut inspector_params.enabled, "World Inspector");
+                    ui.end_row();
+                    checkbox(ui, &mut editor_settings.click_to_inspect, "Click to inspect");
+                    ui.end_row();
+                });
             });
 
             if !editor_settings.events_to_send.is_empty() {
@@ -30,6 +36,39 @@ pub(crate) fn menu_system(
             }
         });
     });
+}
+
+pub(crate) fn currently_inspected_system(world: &mut World, resources: &mut Resources) {
+    let egui_context = resources.get::<EguiContext>().unwrap();
+    let editor_settings = resources.get_mut::<EditorSettings>().unwrap();
+    let mut editor_state = resources.get_mut::<EditorState>().unwrap();
+
+    if !editor_settings.click_to_inspect {
+        return;
+    }
+
+    let mut currently_inspected = match editor_state.currently_inspected {
+        Some(entity) => entity,
+        None => return,
+    };
+
+    let context = Context::new(&egui_context.ctx, world, resources);
+    let mut is_open = true;
+    egui::Window::new("Inspector")
+        .open(&mut is_open)
+        .id(egui::Id::new("editor inspector"))
+        .show(&egui_context.ctx, |ui| {
+            ui.style_mut().wrap = Some(false);
+            inspector_ui(&mut currently_inspected, ui, &context);
+        });
+
+    if !is_open {
+        editor_state.currently_inspected = None;
+    }
+}
+
+fn inspector_ui<T: Inspectable>(val: &mut T, ui: &mut egui::Ui, context: &Context) {
+    val.ui(ui, Default::default(), context);
 }
 
 fn checkbox(ui: &mut egui::Ui, selected: &mut bool, text: &str) {

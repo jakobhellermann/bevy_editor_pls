@@ -1,7 +1,7 @@
 use bevy::{app::ManualEventReader, prelude::*};
 use std::any::TypeId;
 
-use crate::EditorSettings;
+use crate::{plugin::EditorState, EditorSettings};
 
 /// This event is sent when clicking on the `Events` menu bar
 pub(crate) struct EditorEvent(pub TypeId);
@@ -28,4 +28,23 @@ pub(crate) fn send_editor_events(world: &mut World, resources: &mut Resources) {
 
     let mut editor_settings = resources.get_mut::<EditorSettings>().unwrap();
     editor_settings.events_to_send = events_to_send;
+}
+
+pub fn maintain_inspected_entities(
+    mut editor_state: ResMut<EditorState>,
+    query: Query<(Entity, &Interaction), Changed<Interaction>>,
+) {
+    let entity = query
+        .iter()
+        .filter(|(_, interaction)| matches!(interaction, Interaction::Clicked))
+        .map(|(entity, _)| entity)
+        .next();
+
+    if let Some(entity) = entity {
+        if editor_state.currently_inspected == Some(entity) {
+            editor_state.currently_inspected = None;
+        } else {
+            editor_state.currently_inspected = Some(entity);
+        }
+    }
 }
