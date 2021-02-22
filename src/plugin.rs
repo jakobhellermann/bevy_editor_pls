@@ -68,7 +68,7 @@ impl Default for EditorSettings {
         EditorSettings {
             events_to_send: Default::default(),
             state_transition_handlers: Default::default(),
-            click_to_inspect: true,
+            click_to_inspect: false,
         }
     }
 }
