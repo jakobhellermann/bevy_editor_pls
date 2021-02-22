@@ -2,12 +2,22 @@ use bevy::{app::AppExit, prelude::*};
 use bevy_editor_pls::{EditorPlugin, EditorSettings};
 use bevy_mod_picking::{PickableBundle, PickingCameraBundle};
 
+#[derive(Clone, Hash)]
+pub enum AppState {
+    MainMenu,
+    Overworld,
+}
+
 struct SaveEvent;
 
 fn editor_settings() -> EditorSettings {
     let mut settings = EditorSettings::default();
     settings.add_event("Save", || SaveEvent);
     settings.add_event("Quit", || AppExit);
+
+    settings.add_state("Main menu", AppState::MainMenu);
+    settings.add_state("Overworld", AppState::Overworld);
+
     settings
 }
 
@@ -18,6 +28,15 @@ fn main() {
         .add_event::<SaveEvent>()
         .add_plugins(DefaultPlugins)
         .add_plugin(EditorPlugin)
+        // states
+        .insert_resource(State::new(AppState::MainMenu))
+        .add_stage_before(CoreStage::Update, "app update", {
+            let mut state = StateStage::<AppState>::default();
+            state.on_state_enter(AppState::MainMenu, (|| println!("Main menu")).system());
+            state.on_state_enter(AppState::Overworld, (|| println!("Overworld")).system());
+            state
+        })
+        // systems
         .add_startup_system(setup.system())
         .add_system(save.system())
         .run();

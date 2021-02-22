@@ -29,7 +29,20 @@ pub(crate) fn menu_system(
                 menu::menu(ui, "Events", |ui| {
                     for (type_id, (name, _)) in &editor_settings.events_to_send {
                         if ui.button(name).clicked() {
-                            editor_events.send(EditorEvent(*type_id));
+                            editor_events.send(EditorEvent::SendEvent(*type_id));
+                        }
+                    }
+                });
+            }
+
+            if !editor_settings.state_transition_handlers.is_empty() {
+                menu::menu(ui, "States", |ui| {
+                    for ((type_id, discriminant), (name, _)) in
+                        &editor_settings.state_transition_handlers
+                    {
+                        if ui.button(name).clicked() {
+                            editor_events
+                                .send(EditorEvent::StateTransition(*type_id, *discriminant));
                         }
                     }
                 });

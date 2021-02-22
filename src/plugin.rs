@@ -1,4 +1,4 @@
-use std::any::TypeId;
+use std::{any::TypeId, hash::Hash};
 
 use bevy::{prelude::*, utils::StableHashMap};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
@@ -55,14 +55,19 @@ pub struct EditorState {
 type StableTypeMap<V> = StableHashMap<TypeId, V>;
 pub type ExclusiveAccessFn = Box<dyn Fn(&mut World, &mut Resources) + Send + Sync + 'static>;
 
+#[derive(Clone)]
+enum Never {}
+
 pub struct EditorSettings {
     pub(crate) events_to_send: StableTypeMap<(String, ExclusiveAccessFn)>,
+    pub(crate) state_transition_handlers: StableHashMap<(TypeId, u64), (String, ExclusiveAccessFn)>,
     pub click_to_inspect: bool,
 }
 impl Default for EditorSettings {
     fn default() -> Self {
         EditorSettings {
             events_to_send: Default::default(),
+            state_transition_handlers: Default::default(),
             click_to_inspect: true,
         }
     }
@@ -81,4 +86,25 @@ impl EditorSettings {
         self.events_to_send
             .insert(TypeId::of::<T>(), (name.to_string(), f));
     }
+
+    pub fn add_state<S: Hash + Resource + Clone>(&mut self, name: &'static str, state: S) {
+        let variant = hash_value(&state);
+
+        let f = Box::new(move |_: &mut World, resources: &mut Resources| {
+            let mut events = resources.get_mut::<State<S>>().unwrap();
+            if let Err(e) = events.set_next(state.clone()) {
+                warn!("{}", e);
+            }
+        });
+
+        self.state_transition_handlers
+            .insert((TypeId::of::<S>(), variant), (name.to_string(), f));
+    }
+}
+
+fn hash_value(val: impl Hash) -> u64 {
+    use std::hash::Hasher;
+    let mut hasher = std::collections::hash_map::DefaultHasher::default();
+    val.hash(&mut hasher);
+    hasher.finish()
 }
