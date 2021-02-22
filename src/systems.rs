@@ -48,9 +48,14 @@ pub(crate) fn send_editor_events(world: &mut World, resources: &mut Resources) {
 }
 
 pub fn maintain_inspected_entities(
+    editor_settings: ResMut<EditorSettings>,
     mut editor_state: ResMut<EditorState>,
     query: Query<(Entity, &Interaction), Changed<Interaction>>,
 ) {
+    if !editor_settings.click_to_inspect {
+        return;
+    }
+
     let entity = query
         .iter()
         .filter(|(_, interaction)| matches!(interaction, Interaction::Clicked))
