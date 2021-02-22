@@ -1,5 +1,4 @@
 use bevy::{app::ManualEventReader, prelude::*};
-use std::any::TypeId;
 
 use crate::{
     plugin::{EditorState, ExclusiveAccessFn},
@@ -7,17 +6,15 @@ use crate::{
 };
 
 pub enum EditorEvent {
-    SendEvent(TypeId),
-    StateTransition(TypeId, u64),
+    SendEvent(usize),
+    StateTransition(usize),
 }
 
-impl EditorEvent {
-    fn handler_fn<'e>(&self, editor: &'e EditorSettings) -> &'e ExclusiveAccessFn {
-        match self {
-            EditorEvent::SendEvent(type_id) => &editor.events_to_send[type_id].1,
-            EditorEvent::StateTransition(type_id, variant) => {
-                &editor.state_transition_handlers[&(*type_id, *variant)].1
-            }
+impl EditorSettings {
+    fn handler_fn<'e>(&'e self, event: &EditorEvent) -> &'e ExclusiveAccessFn {
+        match *event {
+            EditorEvent::SendEvent(index) => &self.events_to_send[index].1,
+            EditorEvent::StateTransition(index) => &self.state_transition_handlers[index].1,
         }
     }
 }
@@ -33,7 +30,7 @@ pub(crate) fn send_editor_events(world: &mut World, resources: &mut Resources) {
 
     let mut fns: Vec<_> = editor_event_reader
         .iter(&editor_events)
-        .map(|event| event.handler_fn(&editor_settings))
+        .map(|event| editor_settings.handler_fn(event))
         .collect();
 
     drop(editor_events);

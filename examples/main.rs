@@ -2,7 +2,7 @@ use bevy::{app::AppExit, prelude::*};
 use bevy_editor_pls::{EditorPlugin, EditorSettings};
 use bevy_mod_picking::PickingCameraBundle;
 
-#[derive(Clone, Hash)]
+#[derive(Clone)]
 pub enum AppState {
     Overworld,
     Hell,

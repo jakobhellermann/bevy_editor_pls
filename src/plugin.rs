@@ -1,6 +1,4 @@
-use std::{any::TypeId, hash::Hash};
-
-use bevy::{prelude::*, utils::StableHashMap};
+use bevy::prelude::*;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState};
 
@@ -49,12 +47,11 @@ pub struct EditorState {
     pub currently_inspected: Option<Entity>,
 }
 
-type StableTypeMap<V> = StableHashMap<TypeId, V>;
 pub type ExclusiveAccessFn = Box<dyn Fn(&mut World, &mut Resources) + Send + Sync + 'static>;
 
 pub struct EditorSettings {
-    pub(crate) events_to_send: StableTypeMap<(String, ExclusiveAccessFn)>,
-    pub(crate) state_transition_handlers: StableHashMap<(TypeId, u64), (String, ExclusiveAccessFn)>,
+    pub(crate) events_to_send: Vec<(String, ExclusiveAccessFn)>,
+    pub(crate) state_transition_handlers: Vec<(String, ExclusiveAccessFn)>,
     pub click_to_inspect: bool,
 }
 impl Default for EditorSettings {
@@ -73,16 +70,16 @@ impl EditorSettings {
         F: Fn() -> T + Send + Sync + 'static,
     {
         let f = Box::new(move |_: &mut World, resources: &mut Resources| {
-            let mut events = resources.get_mut::<Events<T>>().unwrap();
+            let mut events = resources
+                .get_mut::<Events<T>>()
+                .unwrap_or_else(|| panic!("no resource for Events<{}>", std::any::type_name::<T>()));
             events.send(get_event());
         });
 
-        self.events_to_send.insert(TypeId::of::<T>(), (name.to_string(), f));
+        self.events_to_send.push((name.to_string(), f));
     }
 
-    pub fn add_state<S: Hash + Resource + Clone>(&mut self, name: &'static str, state: S) {
-        let variant = hash_value(&state);
-
+    pub fn add_state<S: Resource + Clone>(&mut self, name: &'static str, state: S) {
         let f = Box::new(move |_: &mut World, resources: &mut Resources| {
             let mut events = resources.get_mut::<State<S>>().unwrap();
             if let Err(e) = events.set_next(state.clone()) {
@@ -90,14 +87,6 @@ impl EditorSettings {
             }
         });
 
-        self.state_transition_handlers
-            .insert((TypeId::of::<S>(), variant), (name.to_string(), f));
+        self.state_transition_handlers.push((name.to_string(), f));
     }
-}
-
-fn hash_value(val: impl Hash) -> u64 {
-    use std::hash::Hasher;
-    let mut hasher = std::collections::hash_map::DefaultHasher::default();
-    val.hash(&mut hasher);
-    hasher.finish()
 }
