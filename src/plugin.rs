@@ -52,9 +52,6 @@ pub struct EditorState {
 type StableTypeMap<V> = StableHashMap<TypeId, V>;
 pub type ExclusiveAccessFn = Box<dyn Fn(&mut World, &mut Resources) + Send + Sync + 'static>;
 
-#[derive(Clone)]
-enum Never {}
-
 pub struct EditorSettings {
     pub(crate) events_to_send: StableTypeMap<(String, ExclusiveAccessFn)>,
     pub(crate) state_transition_handlers: StableHashMap<(TypeId, u64), (String, ExclusiveAccessFn)>,
