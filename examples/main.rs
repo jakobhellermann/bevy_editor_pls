@@ -35,10 +35,7 @@ fn main() {
             state.on_state_enter(AppState::Overworld, overworld::setup.system());
             state.on_state_enter(AppState::Hell, hell::setup.system());
 
-            state.on_state_exit(
-                AppState::Overworld,
-                despawn_all::<overworld::StateCleanup>.system(),
-            );
+            state.on_state_exit(AppState::Overworld, despawn_all::<overworld::StateCleanup>.system());
             state.on_state_exit(AppState::Hell, despawn_all::<hell::StateCleanup>.system());
             state
         })
@@ -63,8 +60,7 @@ fn save(mut events: EventReader<SaveEvent>) {
 pub fn setup(commands: &mut Commands) {
     commands
         .spawn(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0)
-                .looking_at(Vec3::default(), Vec3::unit_y()),
+            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::default(), Vec3::unit_y()),
             ..Default::default()
         })
         .with_bundle(PickingCameraBundle::default());

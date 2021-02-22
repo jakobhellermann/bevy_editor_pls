@@ -2,9 +2,7 @@ use std::{any::TypeId, hash::Hash};
 
 use bevy::{prelude::*, utils::StableHashMap};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
-use bevy_mod_picking::{
-    pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState,
-};
+use bevy_mod_picking::{pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState};
 
 use crate::{
     systems::EditorEvent,
@@ -25,8 +23,7 @@ impl Plugin for EditorPlugin {
 
         // bevy-mod-picking
         if !app.resources().contains::<PickingPluginState>() {
-            app.add_plugin(PickingPlugin)
-                .add_plugin(InteractablePickingPlugin);
+            app.add_plugin(PickingPlugin).add_plugin(InteractablePickingPlugin);
         };
 
         // resources
@@ -83,8 +80,7 @@ impl EditorSettings {
             events.send(get_event());
         });
 
-        self.events_to_send
-            .insert(TypeId::of::<T>(), (name.to_string(), f));
+        self.events_to_send.insert(TypeId::of::<T>(), (name.to_string(), f));
     }
 
     pub fn add_state<S: Hash + Resource + Clone>(&mut self, name: &'static str, state: S) {

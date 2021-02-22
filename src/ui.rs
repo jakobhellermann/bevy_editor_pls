@@ -15,7 +15,6 @@ pub(crate) fn menu_system(
 ) {
     egui::TopPanel::top("editor-pls top panel").show(&egui_context.ctx, |ui| {
         menu::bar(ui, |ui| {
-            #[rustfmt::skip]
             menu::menu(ui, "Inspector", |ui| {
                 egui::Grid::new("inspector settings").show(ui, |ui| {
                     checkbox(ui, &mut inspector_params.enabled, "World Inspector");
@@ -37,12 +36,9 @@ pub(crate) fn menu_system(
 
             if !editor_settings.state_transition_handlers.is_empty() {
                 menu::menu(ui, "States", |ui| {
-                    for ((type_id, discriminant), (name, _)) in
-                        &editor_settings.state_transition_handlers
-                    {
+                    for ((type_id, discriminant), (name, _)) in &editor_settings.state_transition_handlers {
                         if ui.button(name).clicked() {
-                            editor_events
-                                .send(EditorEvent::StateTransition(*type_id, *discriminant));
+                            editor_events.send(EditorEvent::StateTransition(*type_id, *discriminant));
                         }
                     }
                 });
