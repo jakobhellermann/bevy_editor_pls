@@ -8,6 +8,7 @@ use crate::{
     ui::{currently_inspected_system, menu_system},
 };
 
+/// See the [crate-level docs](index.html) for usage
 pub struct EditorPlugin;
 
 impl Plugin for EditorPlugin {
@@ -49,9 +50,11 @@ pub struct EditorState {
 
 pub type ExclusiveAccessFn = Box<dyn Fn(&mut World, &mut Resources) + Send + Sync + 'static>;
 
+/// Configuration for for editor
 pub struct EditorSettings {
     pub(crate) events_to_send: Vec<(String, ExclusiveAccessFn)>,
     pub(crate) state_transition_handlers: Vec<(String, ExclusiveAccessFn)>,
+    /// controls whether clicking meshes with a [PickableBundle](bevy_mod_picking::PickableBundle) opens the inspector
     pub click_to_inspect: bool,
 }
 impl Default for EditorSettings {
@@ -64,6 +67,8 @@ impl Default for EditorSettings {
     }
 }
 impl EditorSettings {
+    /// Adds a event to the **Events** menu.
+    /// When the menu item is clicked, the event provided by `get_event` will be sent.
     pub fn add_event<T, F>(&mut self, name: &'static str, get_event: F)
     where
         T: Resource,
@@ -79,6 +84,8 @@ impl EditorSettings {
         self.events_to_send.push((name.to_string(), f));
     }
 
+    /// Adds an app to the **States** menu.
+    /// When the menu item is clicked, the game will transition to that state.
     pub fn add_state<S: Resource + Clone>(&mut self, name: &'static str, state: S) {
         let f = Box::new(move |_: &mut World, resources: &mut Resources| {
             let mut events = resources.get_mut::<State<S>>().unwrap();
