@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use bevy::prelude::*;
 use bevy_inspector_egui::{
     bevy_egui::EguiContext,
@@ -67,6 +69,11 @@ pub(crate) fn currently_inspected_system(world: &mut World, resources: &mut Reso
         .open(&mut is_open)
         .id(egui::Id::new("editor inspector"))
         .show(&egui_context.ctx, |ui| {
+            ui.wrap(|ui| {
+                ui.style_mut().visuals.override_text_color = Some(ui.style().visuals.widgets.hovered.text_color());
+                ui.heading(entity_name(world, currently_inspected).as_ref());
+            });
+
             ui.style_mut().wrap = Some(false);
             inspector_ui(&mut currently_inspected, ui, &context);
         });
@@ -90,4 +97,11 @@ fn checkbox(ui: &mut egui::Ui, selected: &mut bool, text: &str) {
         ui.spacing_mut().icon_spacing = 0.0;
         ui.checkbox(selected, "");
     });
+}
+
+fn entity_name(world: &World, entity: Entity) -> Cow<'_, str> {
+    match world.get::<Name>(entity) {
+        Ok(name) => name.as_str().into(),
+        Err(_) => format!("Entity {}", entity.id()).into(),
+    }
 }
