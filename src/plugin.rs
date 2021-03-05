@@ -1,4 +1,6 @@
-use bevy::{app::Events, ecs::component::Component, prelude::*};
+use bevy::{app::Events, render::wireframe::WireframeConfig};
+use bevy::{ecs::component::Component, prelude::*};
+
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState};
 
@@ -26,9 +28,13 @@ impl Plugin for EditorPlugin {
         };
 
         // resources
-        app.init_resource::<EditorSettings>()
-            .init_resource::<EditorState>()
+        app.init_resource::<EditorState>()
+            .init_resource::<EditorSettings>()
             .add_event::<EditorEvent>();
+
+        if app.world().contains_resource::<WireframeConfig>() {
+            app.world_mut().get_resource_mut::<WireframeConfig>().unwrap().global = true;
+        }
 
         // systems
         app.add_system(menu_system.system());
@@ -56,6 +62,7 @@ pub struct EditorSettings {
     pub(crate) state_transition_handlers: Vec<(String, ExclusiveAccessFn)>,
     /// controls whether clicking meshes with a [PickableBundle](bevy_mod_picking::PickableBundle) opens the inspector
     pub click_to_inspect: bool,
+    pub show_wireframes: bool,
 }
 impl Default for EditorSettings {
     fn default() -> Self {
@@ -63,6 +70,7 @@ impl Default for EditorSettings {
             events_to_send: Default::default(),
             state_transition_handlers: Default::default(),
             click_to_inspect: false,
+            show_wireframes: false,
         }
     }
 }

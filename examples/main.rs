@@ -1,4 +1,10 @@
-use bevy::{app::AppExit, ecs::component::Component, prelude::*};
+use bevy::{
+    app::AppExit,
+    ecs::component::Component,
+    prelude::*,
+    render::wireframe::WireframePlugin,
+    wgpu::{WgpuFeature, WgpuFeatures, WgpuOptions},
+};
 use bevy_editor_pls::{EditorPlugin, EditorSettings};
 use bevy_mod_picking::PickingCameraBundle;
 
@@ -23,10 +29,17 @@ fn editor_settings() -> EditorSettings {
 
 fn main() {
     App::build()
+        .insert_resource(WgpuOptions {
+            features: WgpuFeatures {
+                features: vec![WgpuFeature::NonFillPolygonMode],
+            },
+            ..Default::default()
+        })
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(editor_settings())
         .add_event::<SaveEvent>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(WireframePlugin)
         .add_plugin(EditorPlugin)
         // states
         .insert_resource(State::new(AppState::Overworld))

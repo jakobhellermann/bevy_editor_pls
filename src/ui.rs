@@ -1,17 +1,19 @@
 use bevy::prelude::*;
+use bevy::render::wireframe::WireframeConfig;
+
+use crate::{plugin::EditorState, systems::EditorEvent, EditorSettings};
 use bevy_inspector_egui::{
     bevy_egui::EguiContext,
     egui::{self, menu},
     Context, Inspectable, WorldInspectorParams,
 };
 
-use crate::{plugin::EditorState, systems::EditorEvent, EditorSettings};
-
 pub(crate) fn menu_system(
     egui_context: Res<EguiContext>,
     mut editor_settings: ResMut<EditorSettings>,
     mut editor_events: EventWriter<EditorEvent>,
     mut inspector_params: ResMut<WorldInspectorParams>,
+    mut wireframe_config: Option<ResMut<WireframeConfig>>,
 ) {
     egui::TopPanel::top("editor-pls top panel").show(&egui_context.ctx, |ui| {
         menu::bar(ui, |ui| {
@@ -21,6 +23,10 @@ pub(crate) fn menu_system(
                     ui.end_row();
                     checkbox(ui, &mut editor_settings.click_to_inspect, "Click to inspect");
                     ui.end_row();
+
+                    if let Some(wireframe_config) = &mut wireframe_config {
+                        checkbox(ui, &mut wireframe_config.global, "Wireframes");
+                    }
                 });
             });
 
