@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{app::Events, ecs::component::Component, prelude::*};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState};
 
@@ -14,14 +14,14 @@ pub struct EditorPlugin;
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut AppBuilder) {
         // bevy-inspector-egui
-        app.insert_resource(WorldInspectorParams {
+        app.world_mut().get_resource_or_insert_with(|| WorldInspectorParams {
             enabled: false,
             ..Default::default()
-        })
-        .add_plugin(WorldInspectorPlugin);
+        });
+        app.add_plugin(WorldInspectorPlugin::new());
 
         // bevy-mod-picking
-        if !app.resources().contains::<PickingPluginState>() {
+        if !app.world().contains_resource::<PickingPluginState>() {
             app.add_plugin(PickingPlugin).add_plugin(InteractablePickingPlugin);
         };
 
@@ -48,7 +48,7 @@ pub struct EditorState {
     pub currently_inspected: Option<Entity>,
 }
 
-pub type ExclusiveAccessFn = Box<dyn Fn(&mut World, &mut Resources) + Send + Sync + 'static>;
+pub type ExclusiveAccessFn = Box<dyn Fn(&mut World) + Send + Sync + 'static>;
 
 /// Configuration for for editor
 pub struct EditorSettings {
@@ -71,12 +71,12 @@ impl EditorSettings {
     /// When the menu item is clicked, the event provided by `get_event` will be sent.
     pub fn add_event<T, F>(&mut self, name: &'static str, get_event: F)
     where
-        T: Resource,
+        T: Component,
         F: Fn() -> T + Send + Sync + 'static,
     {
-        let f = Box::new(move |_: &mut World, resources: &mut Resources| {
-            let mut events = resources
-                .get_mut::<Events<T>>()
+        let f = Box::new(move |world: &mut World| {
+            let mut events = world
+                .get_resource_mut::<Events<T>>()
                 .unwrap_or_else(|| panic!("no resource for Events<{}>", std::any::type_name::<T>()));
             events.send(get_event());
         });
@@ -86,9 +86,9 @@ impl EditorSettings {
 
     /// Adds an app to the **States** menu.
     /// When the menu item is clicked, the game will transition to that state.
-    pub fn add_state<S: Resource + Clone>(&mut self, name: &'static str, state: S) {
-        let f = Box::new(move |_: &mut World, resources: &mut Resources| {
-            let mut events = resources.get_mut::<State<S>>().unwrap();
+    pub fn add_state<S: Component + Clone>(&mut self, name: &'static str, state: S) {
+        let f = Box::new(move |world: &mut World| {
+            let mut events = world.get_resource_mut::<State<S>>().unwrap();
             if let Err(e) = events.set_next(state.clone()) {
                 warn!("{}", e);
             }

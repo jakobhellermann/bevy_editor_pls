@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use bevy::prelude::*;
 use bevy_inspector_egui::{
     bevy_egui::EguiContext,
@@ -12,7 +10,7 @@ use crate::{plugin::EditorState, systems::EditorEvent, EditorSettings};
 pub(crate) fn menu_system(
     egui_context: Res<EguiContext>,
     mut editor_settings: ResMut<EditorSettings>,
-    mut editor_events: ResMut<Events<EditorEvent>>,
+    mut editor_events: EventWriter<EditorEvent>,
     mut inspector_params: ResMut<WorldInspectorParams>,
 ) {
     egui::TopPanel::top("editor-pls top panel").show(&egui_context.ctx, |ui| {
@@ -49,21 +47,26 @@ pub(crate) fn menu_system(
     });
 }
 
-pub(crate) fn currently_inspected_system(world: &mut World, resources: &mut Resources) {
-    let egui_context = resources.get::<EguiContext>().unwrap();
-    let editor_settings = resources.get_mut::<EditorSettings>().unwrap();
-    let mut editor_state = resources.get_mut::<EditorState>().unwrap();
+pub(crate) fn currently_inspected_system(world: &mut World) {
+    let world_ptr = world as *mut _;
+
+    let mut currently_inspected = match world.get_resource_mut::<EditorState>().unwrap().currently_inspected {
+        Some(entity) => entity,
+        None => return,
+    };
+    let name = entity_name(world, currently_inspected);
+
+    let world_cell = world.cell();
+    let egui_context = world_cell.get_resource::<EguiContext>().unwrap();
+    let editor_settings = world_cell.get_resource_mut::<EditorSettings>().unwrap();
+    let mut editor_state = world_cell.get_resource_mut::<EditorState>().unwrap();
 
     if !editor_settings.click_to_inspect {
         return;
     }
 
-    let mut currently_inspected = match editor_state.currently_inspected {
-        Some(entity) => entity,
-        None => return,
-    };
+    let context = unsafe { Context::new_ptr(&egui_context.ctx, world_ptr) };
 
-    let context = Context::new(&egui_context.ctx, world, resources);
     let mut is_open = true;
     egui::Window::new("Inspector")
         .open(&mut is_open)
@@ -71,7 +74,7 @@ pub(crate) fn currently_inspected_system(world: &mut World, resources: &mut Reso
         .show(&egui_context.ctx, |ui| {
             ui.wrap(|ui| {
                 ui.style_mut().visuals.override_text_color = Some(ui.style().visuals.widgets.hovered.text_color());
-                ui.heading(entity_name(world, currently_inspected).as_ref());
+                ui.heading(name);
             });
 
             ui.style_mut().wrap = Some(false);
@@ -99,9 +102,9 @@ fn checkbox(ui: &mut egui::Ui, selected: &mut bool, text: &str) {
     });
 }
 
-fn entity_name(world: &World, entity: Entity) -> Cow<'_, str> {
+fn entity_name(world: &World, entity: Entity) -> String {
     match world.get::<Name>(entity) {
-        Ok(name) => name.as_str().into(),
-        Err(_) => format!("Entity {}", entity.id()).into(),
+        Some(name) => name.as_str().to_string(),
+        None => format!("Entity {}", entity.id()),
     }
 }

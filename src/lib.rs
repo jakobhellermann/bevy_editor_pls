@@ -6,6 +6,7 @@
 //!
 //! ```rust,no_run
 //! use bevy::prelude::*;
+//! use bevy::app::AppExit;
 //! use bevy_editor_pls::{EditorPlugin, EditorSettings};
 //!
 //! #[derive(Clone)]

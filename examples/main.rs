@@ -1,4 +1,4 @@
-use bevy::{app::AppExit, prelude::*};
+use bevy::{app::AppExit, ecs::component::Component, prelude::*};
 use bevy_editor_pls::{EditorPlugin, EditorSettings};
 use bevy_mod_picking::PickingCameraBundle;
 
@@ -45,9 +45,9 @@ fn main() {
         .run();
 }
 
-fn despawn_all<T: Component>(cmd: &mut Commands, query: Query<Entity, With<T>>) {
+fn despawn_all<T: Component>(mut commands: Commands, query: Query<Entity, With<T>>) {
     for e in query.iter() {
-        cmd.despawn_recursive(e);
+        commands.despawn_recursive(e);
     }
 }
 
@@ -57,10 +57,10 @@ fn save(mut events: EventReader<SaveEvent>) {
     }
 }
 
-pub fn setup(commands: &mut Commands) {
+pub fn setup(mut commands: Commands) {
     commands
         .spawn(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::default(), Vec3::unit_y()),
+            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
         .with_bundle(PickingCameraBundle::default());
@@ -73,7 +73,7 @@ mod overworld {
     pub struct StateCleanup;
 
     pub fn setup(
-        commands: &mut Commands,
+        mut commands: Commands,
         mut meshes: ResMut<Assets<Mesh>>,
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
@@ -109,7 +109,7 @@ mod hell {
     pub struct StateCleanup;
 
     pub fn setup(
-        commands: &mut Commands,
+        mut commands: Commands,
         mut meshes: ResMut<Assets<Mesh>>,
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {

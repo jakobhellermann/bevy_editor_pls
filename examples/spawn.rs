@@ -27,7 +27,7 @@ fn main() {
 }
 
 fn spawn_events(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut events: EventReader<Event>,
@@ -52,7 +52,7 @@ fn spawn_events(
 }
 
 pub fn setup(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut _meshes: ResMut<Assets<Mesh>>,
     mut _materials: ResMut<Assets<StandardMaterial>>,
 ) {

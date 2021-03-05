@@ -1,4 +1,7 @@
-use bevy::{app::ManualEventReader, prelude::*};
+use bevy::{
+    app::{Events, ManualEventReader},
+    prelude::*,
+};
 
 use crate::{
     plugin::{EditorState, ExclusiveAccessFn},
@@ -19,12 +22,13 @@ impl EditorSettings {
     }
 }
 
-pub(crate) fn send_editor_events(world: &mut World, resources: &mut Resources) {
-    let editor_events = resources.get::<Events<EditorEvent>>().unwrap();
+pub(crate) fn send_editor_events(world: &mut World) {
+    let world_cell = world.cell();
+    let editor_events = world_cell.get_resource::<Events<EditorEvent>>().unwrap();
     let mut editor_event_reader = ManualEventReader::<EditorEvent>::default();
     // we need to take ownership of `EditorSettings` so that we can run the handler functions with access to the `Resources`
     let editor_settings = {
-        let mut res = resources.get_mut::<EditorSettings>().unwrap();
+        let mut res = world_cell.get_resource_mut::<EditorSettings>().unwrap();
         std::mem::take(&mut *res)
     };
 
@@ -35,12 +39,13 @@ pub(crate) fn send_editor_events(world: &mut World, resources: &mut Resources) {
 
     drop(editor_events);
     drop(editor_event_reader);
+    drop(world_cell);
 
     for f in &mut fns {
-        f(world, resources);
+        f(world);
     }
 
-    let mut editor_settings_res = resources.get_mut::<EditorSettings>().unwrap();
+    let mut editor_settings_res = world.get_resource_mut::<EditorSettings>().unwrap();
     *editor_settings_res = editor_settings;
 }
 
