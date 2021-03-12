@@ -17,6 +17,8 @@
 //!
 //! fn editor_settings() -> EditorSettings {
 //!     let mut settings = EditorSettings::default();
+//!     settings.auto_pickable = true;
+//!
 //!     settings.add_event("Quit", || AppExit);
 //!
 //!     settings.add_state("Main menu", AppState::MainMenu);

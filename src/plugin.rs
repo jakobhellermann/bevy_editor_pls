@@ -61,10 +61,12 @@ pub type ExclusiveAccessFn = Box<dyn Fn(&mut World) + Send + Sync + 'static>;
 pub struct EditorSettings {
     pub(crate) events_to_send: Vec<(String, ExclusiveAccessFn)>,
     pub(crate) state_transition_handlers: Vec<(String, ExclusiveAccessFn)>,
-    /// controls whether clicking meshes with a [PickableBundle](bevy_mod_picking::PickableBundle) opens the inspector
+    /// Whether clicking meshes with a [PickableBundle](bevy_mod_picking::PickableBundle) opens the inspector.
+    /// Can be toggled in the editor UI.
     pub click_to_inspect: bool,
+    /// Whether wireframe should be shown.
+    /// Can be toggled in the editor UI.
     pub show_wireframes: bool,
-
     /// If enabled, [`PickableBundle`](bevy_mod_picking::PickableBundle) and [`PickingCameraBundle`](bevy_mod_picking::PickingCameraBundle) will automatically be added to your camera and objects
     pub auto_pickable: bool,
 }
