@@ -6,7 +6,6 @@ use bevy::{
     wgpu::{WgpuFeature, WgpuFeatures, WgpuOptions},
 };
 use bevy_editor_pls::{EditorPlugin, EditorSettings};
-use bevy_mod_picking::PickingCameraBundle;
 
 #[derive(Clone)]
 pub enum AppState {
@@ -18,6 +17,8 @@ struct SaveEvent;
 
 fn editor_settings() -> EditorSettings {
     let mut settings = EditorSettings::default();
+    settings.auto_pickable = true;
+
     settings.add_event("Save", || SaveEvent);
     settings.add_event("Quit", || AppExit);
 
@@ -71,17 +72,14 @@ fn save(mut events: EventReader<SaveEvent>) {
 }
 
 pub fn setup(mut commands: Commands) {
-    commands
-        .spawn(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..Default::default()
-        })
-        .with_bundle(PickingCameraBundle::default());
+    commands.spawn(PerspectiveCameraBundle {
+        transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    });
 }
 
 mod overworld {
     use bevy::prelude::*;
-    use bevy_mod_picking::PickableBundle;
 
     pub struct StateCleanup;
 
@@ -98,7 +96,6 @@ mod overworld {
                 ..Default::default()
             })
             .with(StateCleanup)
-            .with_bundle(PickableBundle::default())
             .spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                 material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
@@ -106,7 +103,6 @@ mod overworld {
                 ..Default::default()
             })
             .with(StateCleanup)
-            .with_bundle(PickableBundle::default())
             .spawn(LightBundle {
                 transform: Transform::from_xyz(4.0, 8.0, 4.0),
                 ..Default::default()
@@ -117,7 +113,6 @@ mod overworld {
 
 mod hell {
     use bevy::prelude::*;
-    use bevy_mod_picking::PickableBundle;
 
     pub struct StateCleanup;
 
@@ -134,7 +129,6 @@ mod hell {
                 ..Default::default()
             })
             .with(StateCleanup)
-            .with_bundle(PickableBundle::default())
             .spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                 material: materials.add(Color::rgb(0.4, 0.2, 0.1).into()),
@@ -142,7 +136,6 @@ mod hell {
                 ..Default::default()
             })
             .with(StateCleanup)
-            .with_bundle(PickableBundle::default())
             .spawn(LightBundle {
                 transform: Transform::from_xyz(4.0, 8.0, 4.0),
                 ..Default::default()

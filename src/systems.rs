@@ -1,7 +1,9 @@
 use bevy::{
     app::{Events, ManualEventReader},
     prelude::*,
+    render::{camera::Camera, render_graph::base::camera},
 };
+use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCameraBundle};
 
 use crate::{
     plugin::{EditorState, ExclusiveAccessFn},
@@ -69,6 +71,38 @@ pub fn maintain_inspected_entities(
             editor_state.currently_inspected = None;
         } else {
             editor_state.currently_inspected = Some(entity);
+        }
+    }
+}
+
+// systems for making everything pickable
+
+pub fn make_everything_pickable(
+    editor_settings: Res<EditorSettings>,
+    mut commands: Commands,
+    mut query: Query<Entity, (With<Draw>, Without<PickableMesh>, Without<Node>)>,
+) {
+    if !editor_settings.auto_pickable || !editor_settings.click_to_inspect {
+        return;
+    }
+
+    for entity in query.iter_mut() {
+        // dbg!(entity);
+        commands.insert_bundle(entity, PickableBundle::default());
+    }
+}
+pub fn make_camera_picksource(
+    editor_settings: Res<EditorSettings>,
+    mut commands: Commands,
+    mut query: Query<(Entity, &Camera), Without<PickingCamera>>,
+) {
+    if !editor_settings.auto_pickable || !editor_settings.click_to_inspect {
+        return;
+    }
+
+    for (entity, cam) in query.iter_mut() {
+        if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
+            commands.insert_bundle(entity, PickingCameraBundle::default());
         }
     }
 }
