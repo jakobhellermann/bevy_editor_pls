@@ -24,12 +24,14 @@ impl Plugin for EditorPlugin {
         };
 
         // resources
-        app.init_resource::<EditorState>()
-            .init_resource::<EditorSettings>()
-            .add_event::<EditorEvent>();
+        app.init_resource::<EditorState>().add_event::<EditorEvent>();
 
+        let show_wireframes = app
+            .world_mut()
+            .get_resource_or_insert_with(EditorSettings::default)
+            .show_wireframes;
         if app.world().contains_resource::<WireframeConfig>() {
-            app.world_mut().get_resource_mut::<WireframeConfig>().unwrap().global = true;
+            app.world_mut().get_resource_mut::<WireframeConfig>().unwrap().global = show_wireframes;
         }
 
         // systems
