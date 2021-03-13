@@ -9,6 +9,8 @@ pub enum Event {
 
 fn editor_settings() -> EditorSettings {
     let mut settings = EditorSettings::default();
+    settings.auto_flycam = true;
+
     settings.add_event("Spawn Cube", || Event::Cube);
     settings.add_event("Spawn Sphere", || Event::Sphere);
     settings

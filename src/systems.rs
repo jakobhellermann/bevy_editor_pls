@@ -113,7 +113,7 @@ pub fn make_cam_flycam(
     mut commands: Commands,
     mut query: Query<(Entity, &Camera), Without<FlyCamera>>,
 ) {
-    if !editor_settings.auto_pickable {
+    if !editor_settings.auto_flycam {
         return;
     }
 
