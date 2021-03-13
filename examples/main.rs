@@ -18,6 +18,7 @@ struct SaveEvent;
 fn editor_settings() -> EditorSettings {
     let mut settings = EditorSettings::default();
     settings.auto_pickable = true;
+    settings.auto_flycam = true;
 
     settings.add_event("Save", || SaveEvent);
     settings.add_event("Quit", || AppExit);

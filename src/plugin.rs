@@ -1,6 +1,7 @@
 use bevy::{app::Events, render::wireframe::WireframeConfig};
 use bevy::{ecs::component::Component, prelude::*};
 
+use bevy_fly_camera::FlyCameraPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState};
 
@@ -18,10 +19,13 @@ impl Plugin for EditorPlugin {
         });
         app.add_plugin(WorldInspectorPlugin::new());
 
-        // bevy-mod-picking
+        // bevy_mod_picking
         if !app.world().contains_resource::<PickingPluginState>() {
             app.add_plugin(PickingPlugin).add_plugin(InteractablePickingPlugin);
         };
+
+        // bevy_mod_flycamera
+        app.add_plugin(FlyCameraPlugin);
 
         // resources
         app.init_resource::<EditorState>().add_event::<EditorEvent>();
@@ -40,8 +44,10 @@ impl Plugin for EditorPlugin {
 
         app.add_system(systems::send_editor_events.exclusive_system());
 
+        // auto add systems
         app.add_system(systems::make_everything_pickable.system());
         app.add_system(systems::make_camera_picksource.system());
+        app.add_system(systems::make_cam_flycam.system());
 
         app.add_system_to_stage(
             CoreStage::PostUpdate,
@@ -67,8 +73,14 @@ pub struct EditorSettings {
     /// Whether wireframe should be shown.
     /// Can be toggled in the editor UI.
     pub show_wireframes: bool,
+    /// Whether the camera can be controlled with WASD.
+    /// Can be toggled in the editor UI.
+    pub fly_camera: bool,
+
     /// If enabled, [`PickableBundle`](bevy_mod_picking::PickableBundle) and [`PickingCameraBundle`](bevy_mod_picking::PickingCameraBundle) will automatically be added to your camera and objects
     pub auto_pickable: bool,
+    /// If enabled, [`FlyCamera`](bevy_fly_camera::FlyCamera) will automatically be added to your camera
+    pub auto_flycam: bool,
 }
 impl Default for EditorSettings {
     fn default() -> Self {
@@ -77,7 +89,9 @@ impl Default for EditorSettings {
             state_transition_handlers: Default::default(),
             click_to_inspect: false,
             show_wireframes: false,
+            fly_camera: false,
             auto_pickable: false,
+            auto_flycam: false,
         }
     }
 }

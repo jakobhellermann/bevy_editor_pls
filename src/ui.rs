@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::render::wireframe::WireframeConfig;
+use bevy_fly_camera::FlyCamera;
 
 use crate::{plugin::EditorState, systems::EditorEvent, EditorSettings};
 use bevy_inspector_egui::{
@@ -14,6 +15,7 @@ pub(crate) fn menu_system(
     mut editor_events: EventWriter<EditorEvent>,
     mut inspector_params: ResMut<WorldInspectorParams>,
     mut wireframe_config: Option<ResMut<WireframeConfig>>,
+    mut flycam_query: Query<&mut FlyCamera>,
 ) {
     egui::TopPanel::top("editor-pls top panel").show(&egui_context.ctx, |ui| {
         menu::bar(ui, |ui| {
@@ -26,6 +28,16 @@ pub(crate) fn menu_system(
 
                     if let Some(wireframe_config) = &mut wireframe_config {
                         checkbox(ui, &mut wireframe_config.global, "Wireframes");
+                        ui.end_row();
+                    }
+
+                    let flycam_enabled_before = editor_settings.fly_camera;
+                    checkbox(ui, &mut editor_settings.fly_camera, "Fly camera");
+                    ui.end_row();
+                    if flycam_enabled_before != editor_settings.fly_camera {
+                        for mut cam in flycam_query.iter_mut() {
+                            cam.enabled = editor_settings.fly_camera;
+                        }
                     }
                 });
             });

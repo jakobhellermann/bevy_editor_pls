@@ -3,6 +3,7 @@ use bevy::{
     prelude::*,
     render::{camera::Camera, render_graph::base::camera},
 };
+use bevy_fly_camera::FlyCamera;
 use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCameraBundle};
 
 use crate::{
@@ -75,7 +76,7 @@ pub fn maintain_inspected_entities(
     }
 }
 
-// systems for making everything pickable
+// auto systems
 
 pub fn make_everything_pickable(
     editor_settings: Res<EditorSettings>,
@@ -103,6 +104,28 @@ pub fn make_camera_picksource(
     for (entity, cam) in query.iter_mut() {
         if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
             commands.insert_bundle(entity, PickingCameraBundle::default());
+        }
+    }
+}
+
+pub fn make_cam_flycam(
+    editor_settings: Res<EditorSettings>,
+    mut commands: Commands,
+    mut query: Query<(Entity, &Camera), Without<FlyCamera>>,
+) {
+    if !editor_settings.auto_pickable {
+        return;
+    }
+
+    for (entity, cam) in query.iter_mut() {
+        if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
+            commands.insert(
+                entity,
+                FlyCamera {
+                    enabled: editor_settings.fly_camera,
+                    ..Default::default()
+                },
+            );
         }
     }
 }
