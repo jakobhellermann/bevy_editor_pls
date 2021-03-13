@@ -26,6 +26,7 @@ impl Plugin for EditorPlugin {
 
         // bevy_mod_flycamera
         app.add_plugin(FlyCameraPlugin);
+        app.add_system(systems::esc_cursor_grab.system());
 
         // resources
         app.init_resource::<EditorState>().add_event::<EditorEvent>();

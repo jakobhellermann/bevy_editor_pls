@@ -8,7 +8,7 @@ use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCamer
 
 use crate::{
     plugin::{EditorState, ExclusiveAccessFn},
-    EditorSettings,
+    utils, EditorSettings,
 };
 
 pub enum EditorEvent {
@@ -127,5 +127,12 @@ pub fn make_cam_flycam(
                 },
             );
         }
+    }
+}
+
+pub fn esc_cursor_grab(keys: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
+    let window = windows.get_primary_mut().unwrap();
+    if keys.just_pressed(KeyCode::Escape) {
+        utils::toggle_grab_cursor(window);
     }
 }

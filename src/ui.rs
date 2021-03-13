@@ -34,9 +34,10 @@ pub(crate) fn menu_system(
                     let flycam_enabled_before = editor_settings.fly_camera;
                     checkbox(ui, &mut editor_settings.fly_camera, "Fly camera");
                     ui.end_row();
-                    if flycam_enabled_before != editor_settings.fly_camera {
+                    let flycam_enabled_after = editor_settings.fly_camera;
+                    if flycam_enabled_before != flycam_enabled_after {
                         for mut cam in flycam_query.iter_mut() {
-                            cam.enabled = editor_settings.fly_camera;
+                            cam.enabled = flycam_enabled_after;
                         }
                     }
                 });

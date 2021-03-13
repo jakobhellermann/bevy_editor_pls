@@ -41,6 +41,7 @@
 mod plugin;
 mod systems;
 mod ui;
+mod utils;
 
 pub use bevy_fly_camera;
 pub use bevy_mod_picking;
