@@ -39,6 +39,7 @@
 //!
 //! [example]: https://github.com/jakobhellermann/bevy-editor-pls/blob/main/examples/main.rs
 
+pub mod extensions;
 mod plugin;
 mod systems;
 mod ui;

@@ -131,7 +131,7 @@ impl EditorSettings {
 
 impl EditorSettings {
     /// Displays `ui` in menu bar `menu`.
-    fn add_menu_item<U>(&mut self, menu: &'static str, ui: U)
+    pub(crate) fn add_menu_item<U>(&mut self, menu: &'static str, ui: U)
     where
         U: Fn(&mut egui::Ui, &WorldCell) + Send + Sync + 'static,
     {
@@ -141,8 +141,13 @@ impl EditorSettings {
     /// Displays `ui` in menu bar `menu` with access to some state.
     ///
     /// The state can later be retrieved using [EditorSettings::menu_state] and [EditorSettings::menu_state_mut].
-    fn add_menu_item_stateful<S, U>(&mut self, menu: &'static str, state_label: Option<&'static str>, state: S, ui: U)
-    where
+    pub(crate) fn add_menu_item_stateful<S, U>(
+        &mut self,
+        menu: &'static str,
+        state_label: Option<&'static str>,
+        state: S,
+        ui: U,
+    ) where
         S: Send + Sync + 'static,
         U: Fn(&mut egui::Ui, &mut S, &WorldCell) + Send + Sync + 'static,
     {
@@ -160,7 +165,7 @@ impl EditorSettings {
 
     #[rustfmt::skip]
     #[allow(unused)]
-    fn menu_state<S: Send + Sync + 'static>(&self, name: &'static str, label: &'static str) -> &S {
+    pub(crate) fn menu_state<S: Send + Sync + 'static>(&self, name: &'static str, label: &'static str) -> &S {
         let items = self.menu_items.get(name).unwrap_or_else(|| panic!("no menu `{}` exists", name));
         let state = items
             .iter()
@@ -170,7 +175,7 @@ impl EditorSettings {
     }
     #[rustfmt::skip]
     #[allow(unused)]
-    fn menu_state_mut<S: Send + Sync + 'static>(&mut self, name: &'static str, label: &'static str) -> &mut S {
+    pub(crate) fn menu_state_mut<S: Send + Sync + 'static>(&mut self, name: &'static str, label: &'static str) -> &mut S {
         let items = self.menu_items.get_mut(name).unwrap_or_else(|| panic!("no menu {} exists", name));
         let state = items
             .iter_mut()
