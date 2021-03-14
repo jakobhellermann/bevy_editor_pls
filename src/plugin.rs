@@ -1,11 +1,13 @@
-use bevy::{app::Events, render::wireframe::WireframeConfig};
+use std::any::Any;
+
+use bevy::{app::Events, ecs::world::WorldCell, render::wireframe::WireframeConfig, utils::StableHashMap};
 use bevy::{ecs::component::Component, prelude::*};
 
 use bevy_fly_camera::FlyCameraPlugin;
-use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
+use bevy_inspector_egui::{egui, WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState};
 
-use crate::{systems, systems::EditorEvent, ui};
+use crate::{systems, ui};
 
 /// See the [crate-level docs](index.html) for usage
 pub struct EditorPlugin;
@@ -29,7 +31,7 @@ impl Plugin for EditorPlugin {
         app.add_system(systems::esc_cursor_grab.system());
 
         // resources
-        app.init_resource::<EditorState>().add_event::<EditorEvent>();
+        app.init_resource::<EditorState>().add_event::<ui::EditorMenuEvent>();
 
         let show_wireframes = app
             .world_mut()
@@ -40,10 +42,9 @@ impl Plugin for EditorPlugin {
         }
 
         // systems
-        app.add_system(ui::menu_system.system());
+        app.add_system(ui::menu_system.exclusive_system());
         app.add_system(ui::currently_inspected_system.exclusive_system());
-
-        app.add_system(systems::send_editor_events.exclusive_system());
+        app.add_system(ui::handle_menu_event.system());
 
         // auto add systems
         app.add_system(systems::make_everything_pickable.system());
@@ -62,12 +63,12 @@ pub struct EditorState {
     pub currently_inspected: Option<Entity>,
 }
 
-pub type ExclusiveAccessFn = Box<dyn Fn(&mut World) + Send + Sync + 'static>;
+type UiFn = Box<dyn Fn(&mut egui::Ui, &mut dyn Any, &WorldCell) + Send + Sync>;
 
 /// Configuration for for editor
 pub struct EditorSettings {
-    pub(crate) events_to_send: Vec<(String, ExclusiveAccessFn)>,
-    pub(crate) state_transition_handlers: Vec<(String, ExclusiveAccessFn)>,
+    pub(crate) menu_items:
+        StableHashMap<&'static str, Vec<(Option<&'static str>, Box<dyn Any + Send + Sync + 'static>, UiFn)>>,
     /// Whether clicking meshes with a [PickableBundle](bevy_mod_picking::PickableBundle) opens the inspector.
     /// Can be toggled in the editor UI.
     pub click_to_inspect: bool,
@@ -86,8 +87,7 @@ pub struct EditorSettings {
 impl Default for EditorSettings {
     fn default() -> Self {
         EditorSettings {
-            events_to_send: Default::default(),
-            state_transition_handlers: Default::default(),
+            menu_items: Default::default(),
             click_to_inspect: false,
             show_wireframes: false,
             fly_camera: false,
@@ -98,36 +98,84 @@ impl Default for EditorSettings {
 }
 impl EditorSettings {
     pub fn new() -> Self {
-        Self::default()
+        EditorSettings::default()
     }
 
     /// Adds a event to the **Events** menu.
     /// When the menu item is clicked, the event provided by `get_event` will be sent.
-    pub fn add_event<T, F>(&mut self, name: &'static str, get_event: F)
+    pub fn add_event<T: Component, F>(&mut self, name: &'static str, get_event: F)
     where
-        T: Component,
         F: Fn() -> T + Send + Sync + 'static,
     {
-        let f = Box::new(move |world: &mut World| {
-            let mut events = world
-                .get_resource_mut::<Events<T>>()
-                .unwrap_or_else(|| panic!("no resource for Events<{}>", std::any::type_name::<T>()));
-            events.send(get_event());
+        self.add_menu_item("Events", move |ui, world| {
+            let mut events = world.get_resource_mut::<Events<T>>().unwrap();
+            if ui.button(name).clicked() {
+                events.send(get_event());
+            }
         });
-
-        self.events_to_send.push((name.to_string(), f));
     }
 
     /// Adds an app to the **States** menu.
     /// When the menu item is clicked, the game will transition to that state.
     pub fn add_state<S: Component + Clone>(&mut self, name: &'static str, state: S) {
-        let f = Box::new(move |world: &mut World| {
-            let mut events = world.get_resource_mut::<State<S>>().unwrap();
-            if let Err(e) = events.set_next(state.clone()) {
-                warn!("{}", e);
+        self.add_menu_item("States", move |ui, world| {
+            let mut state_resource = world.get_resource_mut::<State<S>>().unwrap();
+            if ui.button(name).clicked() {
+                if let Err(e) = state_resource.set_next(state.clone()) {
+                    warn!("{}", e);
+                }
             }
         });
+    }
+}
 
-        self.state_transition_handlers.push((name.to_string(), f));
+impl EditorSettings {
+    /// Displays `ui` in menu bar `menu`.
+    fn add_menu_item<U>(&mut self, menu: &'static str, ui: U)
+    where
+        U: Fn(&mut egui::Ui, &WorldCell) + Send + Sync + 'static,
+    {
+        self.add_menu_item_stateful(menu, None, (), move |_ui, _, world| ui(_ui, world))
+    }
+
+    /// Displays `ui` in menu bar `menu` with access to some state.
+    ///
+    /// The state can later be retrieved using [EditorSettings::menu_state] and [EditorSettings::menu_state_mut].
+    fn add_menu_item_stateful<S, U>(&mut self, menu: &'static str, state_label: Option<&'static str>, state: S, ui: U)
+    where
+        S: Send + Sync + 'static,
+        U: Fn(&mut egui::Ui, &mut S, &WorldCell) + Send + Sync + 'static,
+    {
+        const INVALID_NAMES: &[&str] = &["Inspector"];
+        assert!(!INVALID_NAMES.contains(&menu), "can't use menu name `{}`", menu);
+
+        let ui_fn: UiFn = Box::new(move |_ui, state, world| {
+            let state = state.downcast_mut::<S>().unwrap();
+            ui(_ui, state, world);
+        });
+        let items = self.menu_items.entry(menu).or_default();
+        items.push((state_label, Box::new(state), ui_fn));
+    }
+
+
+    #[rustfmt::skip]
+    #[allow(unused)]
+    fn menu_state<S: Send + Sync + 'static>(&self, name: &'static str, label: &'static str) -> &S {
+        let items = self.menu_items.get(name).unwrap_or_else(|| panic!("no menu `{}` exists", name));
+        let state = items
+            .iter()
+            .find_map(|(lbl, state, _)| (*lbl == Some(label)).then(|| state))
+            .unwrap_or_else(|| panic!("no menu item `{}/{}`", name, label));
+        state.downcast_ref().unwrap_or_else(|| panic!("menu state of `{}/{}` is not a {}", name, label, std::any::type_name::<S>()))
+    }
+    #[rustfmt::skip]
+    #[allow(unused)]
+    fn menu_state_mut<S: Send + Sync + 'static>(&mut self, name: &'static str, label: &'static str) -> &mut S {
+        let items = self.menu_items.get_mut(name).unwrap_or_else(|| panic!("no menu {} exists", name));
+        let state = items
+            .iter_mut()
+            .find_map(|(lbl, state, _)| (*lbl == Some(label)).then(|| state))
+            .unwrap_or_else(|| panic!("no menu item `{}/{}`", name, label));
+        state.downcast_mut().unwrap_or_else(|| panic!("menu state of `{}/{}` is not a {}", name, label, std::any::type_name::<S>()))
     }
 }

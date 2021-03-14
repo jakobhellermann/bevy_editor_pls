@@ -1,23 +1,39 @@
-use bevy::prelude::*;
 use bevy::render::wireframe::WireframeConfig;
+use bevy::{app::Events, prelude::*};
 use bevy_fly_camera::FlyCamera;
 
-use crate::{plugin::EditorState, systems::EditorEvent, EditorSettings};
+use crate::{plugin::EditorState, EditorSettings};
 use bevy_inspector_egui::{
     bevy_egui::EguiContext,
     egui::{self, menu},
     Context, Inspectable, WorldInspectorParams,
 };
 
-pub(crate) fn menu_system(
-    egui_context: Res<EguiContext>,
-    mut editor_settings: ResMut<EditorSettings>,
-    mut editor_events: EventWriter<EditorEvent>,
-    mut inspector_params: ResMut<WorldInspectorParams>,
-    mut wireframe_config: Option<ResMut<WireframeConfig>>,
-    mut flycam_query: Query<&mut FlyCamera>,
-) {
-    egui::TopPanel::top("editor-pls top panel").show(&egui_context.ctx, |ui| {
+pub(crate) enum EditorMenuEvent {
+    EnableFlyCams(bool),
+}
+
+pub(crate) fn handle_menu_event(mut events: EventReader<EditorMenuEvent>, mut flycam_query: Query<&mut FlyCamera>) {
+    for event in events.iter() {
+        match *event {
+            EditorMenuEvent::EnableFlyCams(enabled) => {
+                for mut cam in flycam_query.iter_mut() {
+                    cam.enabled = enabled;
+                }
+            }
+        }
+    }
+}
+
+pub(crate) fn menu_system(world: &mut World) {
+    let world = world.cell();
+    let mut menu_events = world.get_resource_mut::<Events<EditorMenuEvent>>().unwrap();
+    let egui_context = world.get_resource::<EguiContext>().unwrap();
+    let mut editor_settings = world.get_resource_mut::<EditorSettings>().unwrap();
+    let mut inspector_params = world.get_resource_mut::<WorldInspectorParams>().unwrap();
+    let mut wireframe_config = world.get_resource_mut::<WireframeConfig>();
+
+    egui::TopPanel::top("editor_pls top panel").show(&egui_context.ctx, |ui| {
         menu::bar(ui, |ui| {
             menu::menu(ui, "Inspector", |ui| {
                 egui::Grid::new("inspector settings").show(ui, |ui| {
@@ -31,34 +47,20 @@ pub(crate) fn menu_system(
                         ui.end_row();
                     }
 
-                    let flycam_enabled_before = editor_settings.fly_camera;
+                    let flycam_before = editor_settings.fly_camera;
                     checkbox(ui, &mut editor_settings.fly_camera, "Fly camera");
                     ui.end_row();
-                    let flycam_enabled_after = editor_settings.fly_camera;
-                    if flycam_enabled_before != flycam_enabled_after {
-                        for mut cam in flycam_query.iter_mut() {
-                            cam.enabled = flycam_enabled_after;
-                        }
+                    let flycam_after = editor_settings.fly_camera;
+                    if flycam_before != flycam_after {
+                        menu_events.send(EditorMenuEvent::EnableFlyCams(flycam_after));
                     }
                 });
             });
 
-            if !editor_settings.events_to_send.is_empty() {
-                menu::menu(ui, "Events", |ui| {
-                    for (index, (name, _)) in editor_settings.events_to_send.iter().enumerate() {
-                        if ui.button(name).clicked() {
-                            editor_events.send(EditorEvent::SendEvent(index));
-                        }
-                    }
-                });
-            }
-
-            if !editor_settings.state_transition_handlers.is_empty() {
-                menu::menu(ui, "States", |ui| {
-                    for (index, (name, _)) in editor_settings.state_transition_handlers.iter().enumerate() {
-                        if ui.button(name).clicked() {
-                            editor_events.send(EditorEvent::StateTransition(index));
-                        }
+            for (menu_title, items) in &mut editor_settings.menu_items {
+                menu::menu(ui, *menu_title, |ui| {
+                    for (_, state, ui_fn) in items.iter_mut() {
+                        ui_fn(ui, &mut **state, &world);
                     }
                 });
             }
@@ -97,16 +99,12 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
             });
 
             ui.style_mut().wrap = Some(false);
-            inspector_ui(&mut currently_inspected, ui, &context);
+            currently_inspected.ui(ui, Default::default(), &context);
         });
 
     if !is_open {
         editor_state.currently_inspected = None;
     }
-}
-
-fn inspector_ui<T: Inspectable>(val: &mut T, ui: &mut egui::Ui, context: &Context) {
-    val.ui(ui, Default::default(), context);
 }
 
 fn checkbox(ui: &mut egui::Ui, selected: &mut bool, text: &str) {

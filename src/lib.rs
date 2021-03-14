@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 //! Adds a menu bar to the app which has the following features:
 //! - you can enable the **World Inspector**
 //! - you can also enable **click to select**.
