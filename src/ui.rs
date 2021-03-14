@@ -6,6 +6,7 @@ use crate::{plugin::EditorState, EditorSettings};
 use bevy_inspector_egui::{
     bevy_egui::EguiContext,
     egui::{self, menu},
+    options::EntityAttributes,
     Context, Inspectable, WorldInspectorParams,
 };
 
@@ -99,7 +100,8 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
             });
 
             ui.style_mut().wrap = Some(false);
-            currently_inspected.ui(ui, Default::default(), &context);
+            let options = EntityAttributes { despawnable: true };
+            currently_inspected.ui(ui, options, &context);
         });
 
     if !is_open {

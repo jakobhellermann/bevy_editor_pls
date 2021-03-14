@@ -17,6 +17,7 @@ impl Plugin for EditorPlugin {
         // bevy-inspector-egui
         app.world_mut().get_resource_or_insert_with(|| WorldInspectorParams {
             enabled: false,
+            despawnable_entities: true,
             ..Default::default()
         });
         app.add_plugin(WorldInspectorPlugin::new());
