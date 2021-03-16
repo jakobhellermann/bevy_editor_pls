@@ -7,7 +7,7 @@ use bevy::{
 };
 use bevy_editor_pls::{EditorPlugin, EditorSettings};
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum AppState {
     Overworld,
     Hell,
@@ -44,16 +44,11 @@ fn main() {
         .add_plugin(WireframePlugin)
         .add_plugin(EditorPlugin)
         // states
-        .insert_resource(State::new(AppState::Overworld))
-        .add_stage_before(CoreStage::Update, "app update", {
-            let mut state = StateStage::<AppState>::default();
-            state.on_state_enter(AppState::Overworld, overworld::setup.system());
-            state.on_state_enter(AppState::Hell, hell::setup.system());
-
-            state.on_state_exit(AppState::Overworld, despawn_all::<overworld::StateCleanup>.system());
-            state.on_state_exit(AppState::Hell, despawn_all::<hell::StateCleanup>.system());
-            state
-        })
+        .add_state(AppState::Overworld)
+        .add_system_set(SystemSet::on_enter(AppState::Overworld).with_system(overworld::setup.system()))
+        .add_system_set(SystemSet::on_exit(AppState::Overworld).with_system(despawn_all::<overworld::StateCleanup>.system()))
+        .add_system_set(SystemSet::on_enter(AppState::Hell).with_system(hell::setup.system()))
+        .add_system_set(SystemSet::on_exit(AppState::Hell).with_system(despawn_all::<hell::StateCleanup>.system()))
         // systems
         .add_startup_system(setup.system())
         .add_system(save.system())
@@ -84,11 +79,7 @@ mod overworld {
 
     pub struct StateCleanup;
 
-    pub fn setup(
-        mut commands: Commands,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut materials: ResMut<Assets<StandardMaterial>>,
-    ) {
+    pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
         commands
             .insert_resource(ClearColor::default())
             .spawn(PbrBundle {
@@ -117,11 +108,7 @@ mod hell {
 
     pub struct StateCleanup;
 
-    pub fn setup(
-        mut commands: Commands,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut materials: ResMut<Assets<StandardMaterial>>,
-    ) {
+    pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
         commands
             .insert_resource(ClearColor(Color::rgb(0.01, 0.0, 0.008)))
             .spawn(PbrBundle {

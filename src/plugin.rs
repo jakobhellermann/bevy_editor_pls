@@ -118,7 +118,7 @@ impl EditorSettings {
 
     /// Adds an app to the **States** menu.
     /// When the menu item is clicked, the game will transition to that state.
-    pub fn add_state<S: Component + Clone>(&mut self, name: &'static str, state: S) {
+    pub fn add_state<S: Component + Clone + Eq>(&mut self, name: &'static str, state: S) {
         self.add_menu_item("States", move |ui, world| {
             let mut state_resource = world.get_resource_mut::<State<S>>().unwrap();
             if ui.button(name).clicked() {

@@ -43,7 +43,6 @@ pub fn make_everything_pickable(
     }
 
     for entity in query.iter_mut() {
-        // dbg!(entity);
         commands.insert_bundle(entity, PickableBundle::default());
     }
 }
