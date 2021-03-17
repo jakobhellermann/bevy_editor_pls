@@ -39,6 +39,7 @@
 //!
 //! [example]: https://github.com/jakobhellermann/bevy-editor-pls/blob/main/examples/main.rs
 
+mod editor_settings;
 pub mod extensions;
 mod plugin;
 mod systems;
@@ -48,4 +49,5 @@ mod utils;
 pub use bevy_fly_camera;
 pub use bevy_mod_picking;
 
-pub use plugin::{EditorPlugin, EditorSettings};
+pub use editor_settings::EditorSettings;
+pub use plugin::EditorPlugin;
