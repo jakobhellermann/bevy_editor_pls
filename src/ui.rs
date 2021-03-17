@@ -76,6 +76,9 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
         Some(entity) => entity,
         None => return,
     };
+    let parent = world.get::<Parent>(currently_inspected).map(|parent| parent.0);
+    let mut go_to_parent = None;
+
     let name = entity_name(world, currently_inspected);
 
     let world_cell = world.cell();
@@ -96,7 +99,15 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
         .show(&egui_context.ctx, |ui| {
             ui.wrap(|ui| {
                 ui.style_mut().visuals.override_text_color = Some(ui.style().visuals.widgets.hovered.text_color());
-                ui.heading(name);
+                ui.horizontal(|ui| {
+                    ui.heading(name);
+
+                    if let Some(parent) = parent {
+                        if ui.heading("⬆").clicked() {
+                            go_to_parent = Some(parent);
+                        }
+                    }
+                });
             });
 
             ui.style_mut().wrap = Some(false);
@@ -106,6 +117,10 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
 
     if !is_open {
         editor_state.currently_inspected = None;
+    }
+
+    if let Some(entity) = go_to_parent {
+        editor_state.currently_inspected = Some(entity);
     }
 }
 
