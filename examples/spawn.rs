@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{asset::AssetPath, prelude::*};
 use bevy_editor_pls::{extensions::EditorExtensionSpawn, EditorPlugin, EditorSettings};
 
 fn main() {
@@ -9,6 +9,16 @@ fn main() {
             settings.auto_flycam = true;
             settings.auto_pickable = true;
             settings.click_to_inspect = true;
+
+            settings.on_file_drop(&["gltf", "glb"], |path, world| {
+                let asset_path = AssetPath::new_ref(path, Some("Scene0".into()));
+                let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
+                let scene_handle = asset_server.load(asset_path);
+
+                let mut spawner = world.get_resource_mut::<SceneSpawner>().unwrap();
+                spawner.spawn(scene_handle);
+            });
+
             settings
         })
         .add_plugins(DefaultPlugins)
@@ -18,11 +28,7 @@ fn main() {
         .run();
 }
 
-pub fn setup(
-    mut commands: Commands,
-    mut _meshes: ResMut<Assets<Mesh>>,
-    mut _materials: ResMut<Assets<StandardMaterial>>,
-) {
+pub fn setup(mut commands: Commands, mut _meshes: ResMut<Assets<Mesh>>, mut _materials: ResMut<Assets<StandardMaterial>>) {
     commands
         .spawn(LightBundle {
             transform: Transform::from_xyz(4.0, 8.0, 4.0),

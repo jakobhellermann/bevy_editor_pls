@@ -5,7 +5,7 @@ use bevy_fly_camera::FlyCameraPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState};
 
-use crate::{systems, ui, EditorSettings};
+use crate::{drag_and_drop, systems, ui, EditorSettings};
 
 /// See the [crate-level docs](index.html) for usage
 pub struct EditorPlugin;
@@ -44,6 +44,8 @@ impl Plugin for EditorPlugin {
         app.add_system(ui::menu_system.exclusive_system());
         app.add_system(ui::currently_inspected_system.exclusive_system());
         app.add_system(ui::handle_menu_event.system());
+
+        app.add_system(drag_and_drop::drag_and_drop_system.exclusive_system());
 
         // auto add systems
         app.add_system(systems::make_everything_pickable.system());

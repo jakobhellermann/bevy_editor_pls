@@ -1,15 +1,18 @@
-use std::any::Any;
+use std::{any::Any, path::Path};
 
 use bevy::{app::Events, ecs::world::WorldCell, utils::StableHashMap};
 use bevy::{ecs::component::Component, prelude::*};
 use bevy_inspector_egui::egui;
 
 type UiFn = Box<dyn Fn(&mut egui::Ui, &mut dyn Any, &WorldCell) + Send + Sync>;
+type DragAndDropHandler = Box<dyn Fn(&Path, &mut World) + Send + Sync>;
 
 /// Configuration for for editor
 pub struct EditorSettings {
     pub(crate) menu_items:
         StableHashMap<&'static str, Vec<(Option<&'static str>, Box<dyn Any + Send + Sync + 'static>, UiFn)>>,
+    pub(crate) drag_and_drop_handlers: Vec<(&'static [&'static str], DragAndDropHandler)>,
+
     /// Whether clicking meshes with a [PickableBundle](bevy_mod_picking::PickableBundle) opens the inspector.
     /// Can be toggled in the editor UI.
     pub click_to_inspect: bool,
@@ -28,7 +31,8 @@ pub struct EditorSettings {
 impl Default for EditorSettings {
     fn default() -> Self {
         EditorSettings {
-            menu_items: Default::default(),
+            menu_items: StableHashMap::default(),
+            drag_and_drop_handlers: Vec::new(),
             click_to_inspect: false,
             show_wireframes: false,
             fly_camera: false,
@@ -101,6 +105,27 @@ impl EditorSettings {
         });
         let items = self.menu_items.entry(menu).or_default();
         items.push((state_label, Box::new(state), ui_fn));
+    }
+
+    /// Registeres a handler for drag and drop events.
+    /// # Example
+    /// ```rust,no_run
+    /// # use bevy::{prelude::*, asset::AssetPath};
+    /// # let mut settings = bevy_editor_pls::EditorSettings::new();
+    /// settings.on_file_drop(&["gltf", "glb"], |path, world| {
+    ///     let asset_path = AssetPath::new_ref(path, Some("Scene0".into()));
+    ///     let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
+    ///     let scene_handle = asset_server.load(asset_path);
+    ///
+    ///     let mut spawner = world.get_resource_mut::<SceneSpawner>().unwrap();
+    ///     spawner.spawn(scene_handle);
+    /// });
+    /// ```
+    pub fn on_file_drop<S>(&mut self, extensions: &'static [&'static str], handler: S)
+    where
+        S: Fn(&Path, &mut World) + Send + Sync + 'static,
+    {
+        self.drag_and_drop_handlers.push((extensions, Box::new(handler)))
     }
 
 

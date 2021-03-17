@@ -10,7 +10,7 @@
 //! use bevy::app::AppExit;
 //! use bevy_editor_pls::{EditorPlugin, EditorSettings};
 //!
-//! #[derive(Clone)]
+//! #[derive(Clone, Eq, PartialEq)]
 //! pub enum AppState {
 //!     MainMenu,
 //!     Game,
@@ -24,6 +24,16 @@
 //!
 //!     settings.add_state("Main menu", AppState::MainMenu);
 //!     settings.add_state("Game", AppState::Game);
+//!
+//!     settings.on_file_drop(&["gltf", "glb"], |path, world| {
+//!         let asset_path = AssetPath::new_ref(path, Some("Scene0".into()));
+//!         let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
+//!         let scene_handle = asset_server.load(asset_path);
+//!
+//!         let mut spawner = world.get_resource_mut::<SceneSpawner>().unwrap();
+//!         spawner.spawn(scene_handle);
+//!     });
+//!
 //!     settings
 //! }
 //!
@@ -39,6 +49,7 @@
 //!
 //! [example]: https://github.com/jakobhellermann/bevy-editor-pls/blob/main/examples/main.rs
 
+mod drag_and_drop;
 mod editor_settings;
 pub mod extensions;
 mod plugin;
