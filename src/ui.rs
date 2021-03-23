@@ -129,6 +129,7 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
         Some(entity) => entity,
         None => return,
     };
+    let entity_exists = world.get_entity(currently_inspected).is_some();
     let parent = world.get::<Parent>(currently_inspected).map(|parent| parent.0);
     let mut go_to_parent = None;
 
@@ -140,6 +141,11 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
     let mut editor_state = world_cell.get_resource_mut::<EditorState>().unwrap();
 
     if !editor_settings.click_to_inspect {
+        return;
+    }
+
+    if !entity_exists {
+        editor_state.currently_inspected = None;
         return;
     }
 
