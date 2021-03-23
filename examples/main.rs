@@ -1,5 +1,6 @@
 use bevy::{
     app::AppExit,
+    diagnostic::FrameTimeDiagnosticsPlugin,
     ecs::component::Component,
     prelude::*,
     render::wireframe::WireframePlugin,
@@ -41,6 +42,7 @@ fn main() {
         .insert_resource(editor_settings())
         .add_event::<SaveEvent>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(WireframePlugin)
         .add_plugin(EditorPlugin)
         // states

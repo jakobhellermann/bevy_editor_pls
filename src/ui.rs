@@ -1,5 +1,9 @@
-use bevy::render::wireframe::WireframeConfig;
-use bevy::{app::Events, prelude::*};
+use bevy::{
+    app::Events,
+    diagnostic::{Diagnostic, FrameTimeDiagnosticsPlugin},
+    prelude::*,
+};
+use bevy::{diagnostic::Diagnostics, render::wireframe::WireframeConfig};
 use bevy_fly_camera::FlyCamera;
 
 use crate::{plugin::EditorState, EditorSettings};
@@ -33,10 +37,13 @@ pub(crate) fn menu_system(world: &mut World) {
     let mut editor_settings = world.get_resource_mut::<EditorSettings>().unwrap();
     let mut inspector_params = world.get_resource_mut::<WorldInspectorParams>().unwrap();
     let mut wireframe_config = world.get_resource_mut::<WireframeConfig>();
+    let diagnostics = world.get_resource::<Diagnostics>().unwrap();
+
+    let frame_time_diagnostics = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS).is_some();
 
     egui::TopPanel::top("editor_pls top panel").show(&egui_context.ctx, |ui| {
         menu::bar(ui, |ui| {
-            menu::menu(ui, "Inspector", |ui| {
+            menu::menu(ui, "Editor", |ui| {
                 egui::Grid::new("inspector settings").show(ui, |ui| {
                     checkbox(ui, &mut inspector_params.enabled, "World Inspector");
                     ui.end_row();
@@ -55,6 +62,12 @@ pub(crate) fn menu_system(world: &mut World) {
                     if flycam_before != flycam_after {
                         menu_events.send(EditorMenuEvent::EnableFlyCams(flycam_after));
                     }
+
+                    if frame_time_diagnostics {
+                        checkbox(ui, &mut editor_settings.performance_panel, "Performance Panel");
+                    }
+
+                    ui.end_row();
                 });
             });
 
@@ -67,6 +80,46 @@ pub(crate) fn menu_system(world: &mut World) {
             }
         });
     });
+}
+
+pub(crate) fn performance_panel(
+    egui_context: Res<EguiContext>,
+    mut editor_settings: ResMut<EditorSettings>,
+    diagnostics: ResMut<Diagnostics>,
+) {
+    if !editor_settings.performance_panel {
+        return;
+    };
+
+    let diagnostics = diagnostics
+        .get(FrameTimeDiagnosticsPlugin::FPS)
+        .and_then(Diagnostic::average)
+        .zip(
+            diagnostics
+                .get(FrameTimeDiagnosticsPlugin::FRAME_TIME)
+                .and_then(Diagnostic::average),
+        );
+    let (fps, frame_time) = match diagnostics {
+        Some(value) => value,
+        None => {
+            warn!("Add the `FrameTimeDiagnosticsPlugin` to see the performance editor panel.");
+            return;
+        }
+    };
+
+    egui::Window::new("Performance")
+        .open(&mut editor_settings.performance_panel)
+        .resizable(false)
+        .show(&egui_context.ctx, |ui| {
+            egui::Grid::new("frame time diagnostics").show(ui, |ui| {
+                ui.label("FPS");
+                ui.label(format!("{:.2}", fps));
+                ui.end_row();
+                ui.label("Frame Time");
+                ui.label(format!("{:.4}", frame_time));
+                ui.end_row();
+            });
+        });
 }
 
 pub(crate) fn currently_inspected_system(world: &mut World) {

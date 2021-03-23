@@ -44,6 +44,7 @@ impl Plugin for EditorPlugin {
         app.add_system(ui::menu_system.exclusive_system());
         app.add_system(ui::currently_inspected_system.exclusive_system());
         app.add_system(ui::handle_menu_event.system());
+        app.add_system(ui::performance_panel.system());
 
         app.add_system(drag_and_drop::drag_and_drop_system.exclusive_system());
 
