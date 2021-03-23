@@ -57,7 +57,7 @@ fn main() {
 
 fn despawn_all<T: Component>(mut commands: Commands, query: Query<Entity, With<T>>) {
     for e in query.iter() {
-        commands.despawn_recursive(e);
+        commands.entity(e).despawn_recursive();
     }
 }
 
@@ -68,7 +68,7 @@ fn save(mut events: EventReader<SaveEvent>) {
 }
 
 pub fn setup(mut commands: Commands) {
-    commands.spawn(PerspectiveCameraBundle {
+    commands.spawn_bundle(PerspectiveCameraBundle {
         transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
@@ -80,26 +80,28 @@ mod overworld {
     pub struct StateCleanup;
 
     pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+        commands.insert_resource(ClearColor::default());
         commands
-            .insert_resource(ClearColor::default())
-            .spawn(PbrBundle {
+            .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
                 material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
                 ..Default::default()
             })
-            .with(StateCleanup)
-            .spawn(PbrBundle {
+            .insert(StateCleanup);
+        commands
+            .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                 material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
                 transform: Transform::from_xyz(0.0, 0.5, 0.0),
                 ..Default::default()
             })
-            .with(StateCleanup)
-            .spawn(LightBundle {
+            .insert(StateCleanup);
+        commands
+            .spawn_bundle(LightBundle {
                 transform: Transform::from_xyz(4.0, 8.0, 4.0),
                 ..Default::default()
             })
-            .with(StateCleanup);
+            .insert(StateCleanup);
     }
 }
 
@@ -109,25 +111,27 @@ mod hell {
     pub struct StateCleanup;
 
     pub fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+        commands.insert_resource(ClearColor(Color::rgb(0.01, 0.0, 0.008)));
         commands
-            .insert_resource(ClearColor(Color::rgb(0.01, 0.0, 0.008)))
-            .spawn(PbrBundle {
+            .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
                 material: materials.add(Color::rgb(0.8, 0.1, 0.2).into()),
                 ..Default::default()
             })
-            .with(StateCleanup)
-            .spawn(PbrBundle {
+            .insert(StateCleanup);
+        commands
+            .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                 material: materials.add(Color::rgb(0.4, 0.2, 0.1).into()),
                 transform: Transform::from_xyz(0.0, 0.5, 0.0),
                 ..Default::default()
             })
-            .with(StateCleanup)
-            .spawn(LightBundle {
+            .insert(StateCleanup);
+        commands
+            .spawn_bundle(LightBundle {
                 transform: Transform::from_xyz(4.0, 8.0, 4.0),
                 ..Default::default()
             })
-            .with(StateCleanup);
+            .insert(StateCleanup);
     }
 }

@@ -78,13 +78,14 @@ fn spawn(
     let material = materials.add(Color::WHITE.into());
     let mesh = meshes.add(shape.to_mesh());
 
-    commands
-        .spawn(PbrBundle {
+    let entity = commands
+        .spawn_bundle(PbrBundle {
             material,
             mesh,
             ..Default::default()
         })
-        .for_current_entity(|entity| editor_state.currently_inspected = Some(entity));
+        .id();
+    editor_state.currently_inspected = Some(entity);
 }
 
 struct OpenEditorEvent;

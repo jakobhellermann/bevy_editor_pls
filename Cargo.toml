@@ -10,7 +10,7 @@ default = ["bevy/dynamic"]
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false, features = ["render"] }
 bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui", branch = "bevy-0.5" }
-bevy_mod_picking = { git = "https://github.com/jakobhellermann/bevy_mod_picking" }
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" }
 bevy_fly_camera = { git = "https://github.com/jakobhellermann/bevy_fly_camera" }
 
 [dev-dependencies]

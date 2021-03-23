@@ -3,7 +3,7 @@ use bevy::render::wireframe::WireframeConfig;
 
 use bevy_fly_camera::FlyCameraPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
-use bevy_mod_picking::{pick_labels::MESH_FOCUS, InteractablePickingPlugin, PickingPlugin, PickingPluginState};
+use bevy_mod_picking::{InteractablePickingPlugin, PickingPlugin, PickingPluginState, PickingSystem};
 
 use crate::{drag_and_drop, systems, ui, EditorSettings};
 
@@ -54,7 +54,7 @@ impl Plugin for EditorPlugin {
 
         app.add_system_to_stage(
             CoreStage::PostUpdate,
-            systems::maintain_inspected_entities.system().after(MESH_FOCUS),
+            systems::maintain_inspected_entities.system().after(PickingSystem::Focus),
         );
     }
 }

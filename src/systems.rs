@@ -43,7 +43,7 @@ pub fn make_everything_pickable(
     }
 
     for entity in query.iter_mut() {
-        commands.insert_bundle(entity, PickableBundle::default());
+        commands.entity(entity).insert_bundle(PickableBundle::default());
     }
 }
 pub fn make_camera_picksource(
@@ -57,7 +57,7 @@ pub fn make_camera_picksource(
 
     for (entity, cam) in query.iter_mut() {
         if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
-            commands.insert_bundle(entity, PickingCameraBundle::default());
+            commands.entity(entity).insert_bundle(PickingCameraBundle::default());
         }
     }
 }
@@ -73,13 +73,10 @@ pub fn make_cam_flycam(
 
     for (entity, cam) in query.iter_mut() {
         if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
-            commands.insert(
-                entity,
-                FlyCamera {
-                    enabled: editor_settings.fly_camera,
-                    ..Default::default()
-                },
-            );
+            commands.entity(entity).insert(FlyCamera {
+                enabled: editor_settings.fly_camera,
+                ..Default::default()
+            });
         }
     }
 }
