@@ -26,7 +26,7 @@ pub(crate) fn drag_and_drop_system(world: &mut World) {
         paths
     };
 
-    world.resource_scope(|mut editor_settings: Mut<EditorSettings>, world| {
+    world.resource_scope(|world, mut editor_settings: Mut<EditorSettings>| {
         for path in paths {
             let extension = match path.extension().and_then(OsStr::to_str) {
                 Some(extension) => extension,

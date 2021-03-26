@@ -8,7 +8,7 @@ use bevy::{
 };
 use bevy_editor_pls::{EditorPlugin, EditorSettings};
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum AppState {
     Overworld,
     Hell,
