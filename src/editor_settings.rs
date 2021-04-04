@@ -50,6 +50,15 @@ impl EditorSettings {
         EditorSettings::default()
     }
 
+    /// Returns `EditorSettings` with all the `auto_*` settings enabled:
+    /// All meshes will automatically be [made pickable](EditorSettings::auto_pickable) and the camera gets a [flycam](EditorSettings::auto_flycam) attached.
+    pub fn automagic() -> Self {
+        let mut settings = EditorSettings::default();
+        settings.auto_pickable = true;
+        settings.auto_flycam = true;
+        settings
+    }
+
     /// Adds a event to the **Events** menu.
     /// When the menu item is clicked, the event provided by `get_event` will be sent.
     pub fn add_event<T: Component, F>(&mut self, name: &'static str, get_event: F)
