@@ -6,7 +6,8 @@ use bevy::{
     render::wireframe::WireframePlugin,
     wgpu::{WgpuFeature, WgpuFeatures, WgpuOptions},
 };
-use bevy_editor_pls::{EditorPlugin, EditorSettings};
+use bevy_editor_pls::{EditorAction, EditorPlugin, EditorSettings};
+use bevy_input_actionmap::InputMap;
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum AppState {
@@ -30,6 +31,12 @@ fn editor_settings() -> EditorSettings {
     settings
 }
 
+fn setup_keybinds(mut input: ResMut<InputMap<EditorAction>>) {
+    input.bind(EditorAction::ToggleFlycam, vec![KeyCode::LControl, KeyCode::F]);
+    input.bind(EditorAction::TogglePerformancePanel, vec![KeyCode::LControl, KeyCode::P]);
+    input.bind(EditorAction::ToggleWorldInspector, vec![KeyCode::LControl, KeyCode::W]);
+}
+
 fn main() {
     App::build()
         .insert_resource(WgpuOptions {
@@ -45,6 +52,7 @@ fn main() {
         .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(WireframePlugin)
         .add_plugin(EditorPlugin)
+        .add_system(setup_keybinds.system())
         // states
         .add_state(AppState::Overworld)
         .add_system_set(SystemSet::on_enter(AppState::Overworld).with_system(overworld::setup.system()))

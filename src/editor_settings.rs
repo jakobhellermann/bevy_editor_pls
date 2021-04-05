@@ -2,6 +2,7 @@ use std::{any::Any, path::Path};
 
 use bevy::{app::Events, ecs::world::WorldCell, utils::StableHashMap};
 use bevy::{ecs::component::Component, prelude::*};
+
 use bevy_inspector_egui::egui;
 
 type UiFn = Box<dyn Fn(&mut egui::Ui, &mut dyn Any, &WorldCell) + Send + Sync>;

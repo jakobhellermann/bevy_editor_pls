@@ -2,10 +2,11 @@ use bevy::prelude::*;
 use bevy::render::wireframe::WireframeConfig;
 
 use bevy_fly_camera::FlyCameraPlugin;
+use bevy_input_actionmap::ActionPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{InteractablePickingPlugin, PickingPlugin, PickingPluginState, PickingSystem};
 
-use crate::{drag_and_drop, systems, ui, EditorSettings};
+use crate::{drag_and_drop, systems, ui, EditorAction, EditorSettings};
 
 /// See the [crate-level docs](index.html) for usage
 pub struct EditorPlugin;
@@ -28,6 +29,9 @@ impl Plugin for EditorPlugin {
         // bevy_mod_flycamera
         app.add_plugin(FlyCameraPlugin);
         app.add_system(systems::esc_cursor_grab.system());
+
+        // bevy_input_actionmap
+        app.add_plugin(ActionPlugin::<EditorAction>::default());
 
         // resources
         app.init_resource::<EditorState>().add_event::<ui::EditorMenuEvent>();
@@ -57,6 +61,8 @@ impl Plugin for EditorPlugin {
             CoreStage::PostUpdate,
             systems::maintain_inspected_entities.system().after(PickingSystem::Focus),
         );
+
+        app.add_system(crate::action::action_system.system());
     }
 }
 
