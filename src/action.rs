@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_input_actionmap::InputMap;
 use bevy_inspector_egui::WorldInspectorParams;
 
-use crate::{ui::EditorMenuEvent, EditorSettings};
+use crate::{plugin::EditorState, ui::EditorMenuEvent, EditorSettings};
 
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub enum EditorAction {
@@ -11,11 +11,13 @@ pub enum EditorAction {
     ToggleWireframes,
     ToggleFlycam,
     TogglePerformancePanel,
+    ToggleEditorUi,
 }
 
 pub(crate) fn action_system(
     input: Res<InputMap<EditorAction>>,
     mut settings: ResMut<EditorSettings>,
+    mut state: ResMut<EditorState>,
     mut editor_events: EventWriter<EditorMenuEvent>,
     mut world_inspector_params: ResMut<WorldInspectorParams>,
 ) {
@@ -34,5 +36,8 @@ pub(crate) fn action_system(
     }
     if input.just_active(EditorAction::ToggleWorldInspector) {
         world_inspector_params.enabled = !world_inspector_params.enabled;
+    }
+    if input.just_active(EditorAction::ToggleEditorUi) {
+        state.ui_open = !state.ui_open;
     }
 }

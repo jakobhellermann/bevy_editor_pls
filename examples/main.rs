@@ -35,6 +35,7 @@ fn setup_keybinds(mut input: ResMut<InputMap<EditorAction>>) {
     input.bind(EditorAction::ToggleFlycam, vec![KeyCode::LControl, KeyCode::F]);
     input.bind(EditorAction::TogglePerformancePanel, vec![KeyCode::LControl, KeyCode::P]);
     input.bind(EditorAction::ToggleWorldInspector, vec![KeyCode::LControl, KeyCode::W]);
+    input.bind(EditorAction::ToggleEditorUi, vec![KeyCode::LControl, KeyCode::Escape]);
 }
 
 fn main() {

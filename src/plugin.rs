@@ -66,7 +66,16 @@ impl Plugin for EditorPlugin {
     }
 }
 
-#[derive(Default)]
 pub struct EditorState {
+    pub ui_open: bool,
     pub currently_inspected: Option<Entity>,
+}
+
+impl Default for EditorState {
+    fn default() -> Self {
+        EditorState {
+            ui_open: true,
+            currently_inspected: None,
+        }
+    }
 }
