@@ -5,7 +5,6 @@ authors = ["Jakob Hellermann <jakob.hellermann@protonmail.com>"]
 edition = "2018"
 
 [features]
-default = ["bevy/dynamic"]
 
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false, features = ["render"] }
@@ -14,4 +13,4 @@ bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" }
 bevy_fly_camera = { git = "https://github.com/jakobhellermann/bevy_fly_camera" }
 
 [dev-dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false, features = ["bevy_wgpu", "x11"] }
+bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false, features = ["bevy_wgpu", "x11", "dynamic"] }
