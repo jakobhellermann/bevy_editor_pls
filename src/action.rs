@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_input_actionmap::InputMap;
 use bevy_inspector_egui::WorldInspectorParams;
 
-use crate::{plugin::EditorState, ui::EditorMenuEvent, EditorSettings};
+use crate::{ui::EditorMenuEvent, EditorSettings};
 
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub enum EditorAction {
@@ -17,7 +17,6 @@ pub enum EditorAction {
 pub(crate) fn action_system(
     input: Res<InputMap<EditorAction>>,
     mut settings: ResMut<EditorSettings>,
-    mut state: ResMut<EditorState>,
     mut editor_events: EventWriter<EditorMenuEvent>,
     mut world_inspector_params: ResMut<WorldInspectorParams>,
 ) {
@@ -38,6 +37,6 @@ pub(crate) fn action_system(
         world_inspector_params.enabled = !world_inspector_params.enabled;
     }
     if input.just_active(EditorAction::ToggleEditorUi) {
-        state.ui_open = !state.ui_open;
+        settings.display_ui = !settings.display_ui;
     }
 }

@@ -35,12 +35,11 @@ pub(crate) fn menu_system(world: &mut World) {
     let mut menu_events = world.get_resource_mut::<Events<EditorMenuEvent>>().unwrap();
     let egui_context = world.get_resource::<EguiContext>().unwrap();
     let mut editor_settings = world.get_resource_mut::<EditorSettings>().unwrap();
-    let editor_state = world.get_resource::<EditorState>().unwrap();
     let mut inspector_params = world.get_resource_mut::<WorldInspectorParams>().unwrap();
     let mut wireframe_config = world.get_resource_mut::<WireframeConfig>();
     let diagnostics = world.get_resource::<Diagnostics>().unwrap();
 
-    if !editor_state.ui_open {
+    if !editor_settings.display_ui {
         return;
     }
 

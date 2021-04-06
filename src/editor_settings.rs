@@ -31,6 +31,9 @@ pub struct EditorSettings {
 
     /// Shows a panel displaying the current FPS. Only available if the [`FrameTimeDiagnosticsPlugin`](bevy::diagnostic::FrameTimeDiagnosticsPlugin) is active.
     pub performance_panel: bool,
+
+    /// Controls whether the editor panel is shown.
+    pub display_ui: bool,
 }
 impl Default for EditorSettings {
     fn default() -> Self {
@@ -43,6 +46,7 @@ impl Default for EditorSettings {
             auto_pickable: false,
             auto_flycam: false,
             performance_panel: false,
+            display_ui: true,
         }
     }
 }
