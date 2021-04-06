@@ -60,6 +60,7 @@ mod utils;
 
 pub use bevy_fly_camera;
 pub use bevy_mod_picking;
+pub use bevy_input_actionmap;
 
 pub use action::EditorAction;
 pub use editor_settings::EditorSettings;

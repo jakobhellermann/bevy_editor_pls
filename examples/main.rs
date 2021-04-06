@@ -6,8 +6,8 @@ use bevy::{
     render::wireframe::WireframePlugin,
     wgpu::{WgpuFeature, WgpuFeatures, WgpuOptions},
 };
+use bevy_editor_pls::bevy_input_actionmap::InputMap;
 use bevy_editor_pls::{EditorAction, EditorPlugin, EditorSettings};
-use bevy_input_actionmap::InputMap;
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum AppState {
