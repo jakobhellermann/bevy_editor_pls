@@ -16,3 +16,6 @@ bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_act
 
 [dev-dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false, features = ["bevy_wgpu", "x11", "dynamic"] }
+
+[patch.crates-io]
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
