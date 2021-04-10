@@ -98,7 +98,7 @@ impl EditorSettings {
 
 impl EditorSettings {
     /// Displays `ui` in menu bar `menu`.
-    pub(crate) fn add_menu_item<U>(&mut self, menu: &'static str, ui: U)
+    pub fn add_menu_item<U>(&mut self, menu: &'static str, ui: U)
     where
         U: Fn(&mut egui::Ui, &WorldCell) + Send + Sync + 'static,
     {

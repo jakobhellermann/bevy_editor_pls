@@ -45,7 +45,7 @@ pub(crate) fn menu_system(world: &mut World) {
 
     let frame_time_diagnostics = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS).is_some();
 
-    egui::TopPanel::top("editor_pls top panel").show(&egui_context.ctx, |ui| {
+    egui::TopPanel::top("editor_pls top panel").show(egui_context.ctx(), |ui| {
         menu::bar(ui, |ui| {
             menu::menu(ui, "Editor", |ui| {
                 egui::Grid::new("inspector settings").show(ui, |ui| {
@@ -114,7 +114,7 @@ pub(crate) fn performance_panel(
     egui::Window::new("Performance")
         .open(&mut editor_settings.performance_panel)
         .resizable(false)
-        .show(&egui_context.ctx, |ui| {
+        .show(egui_context.ctx(), |ui| {
             egui::Grid::new("frame time diagnostics").show(ui, |ui| {
                 ui.label("FPS");
                 ui.label(format!("{:.2}", fps));
@@ -153,13 +153,13 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
         return;
     }
 
-    let context = unsafe { Context::new_ptr(&egui_context.ctx, world_ptr) };
+    let context = unsafe { Context::new_ptr(egui_context.ctx(), world_ptr) };
 
     let mut is_open = true;
     egui::Window::new("Inspector")
         .open(&mut is_open)
         .id(egui::Id::new("editor inspector"))
-        .show(&egui_context.ctx, |ui| {
+        .show(egui_context.ctx(), |ui| {
             ui.wrap(|ui| {
                 ui.style_mut().visuals.override_text_color = Some(ui.style().visuals.widgets.hovered.text_color());
                 ui.horizontal(|ui| {

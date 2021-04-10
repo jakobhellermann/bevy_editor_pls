@@ -44,10 +44,10 @@ fn spawn_ui(
     let mut is_open = true;
     egui::Window::new("Spawn Object")
         .open(&mut is_open)
-        .show(&egui_context.ctx, |ui| {
+        .show(egui_context.ctx(), |ui| {
             ui.style_mut().wrap = Some(false);
 
-            let context = bevy_inspector_egui::Context::new_shared(&egui_context.ctx);
+            let context = bevy_inspector_egui::Context::new_shared(egui_context.ctx());
             ui.vertical(|ui| {
                 extension_state.shape.ui(ui, Default::default(), &context);
             });

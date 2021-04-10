@@ -8,14 +8,14 @@ exclude = ["docs/*"]
 [features]
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false, features = ["render"] }
-bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui", branch = "bevy-0.5" }
+bevy = { version = "0.5", default-features = false, features = ["render"] }
+bevy-inspector-egui = "0.4"
 bevy_mod_picking = { version = "0.4" }
-bevy_fly_camera = { git = "https://github.com/jakobhellermann/bevy_fly_camera" }
+bevy_fly_camera = "0.7"
 bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap" }
 
 [dev-dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false, features = ["bevy_wgpu", "x11", "dynamic"] }
+bevy = { version = "0.5", default-features = false, features = ["bevy_wgpu", "x11", "dynamic"] }
 
-[patch.crates-io]
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+# [patch."https://github.com/bevyengine/bevy/"]
+# bevy = { path = "/home/jakob/dev/rust/contrib/bevy/bevy" }

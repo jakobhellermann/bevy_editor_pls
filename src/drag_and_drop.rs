@@ -1,5 +1,3 @@
-use std::ffi::OsStr;
-
 use bevy::{
     app::{Events, ManualEventReader},
     prelude::*,
@@ -28,14 +26,11 @@ pub(crate) fn drag_and_drop_system(world: &mut World) {
 
     world.resource_scope(|world, mut editor_settings: Mut<EditorSettings>| {
         for path in paths {
-            let extension = match path.extension().and_then(OsStr::to_str) {
-                Some(extension) => extension,
-                None => continue,
-            };
+            let path_str = path.to_str().unwrap();
             let handlers = editor_settings
                 .drag_and_drop_handlers
                 .iter_mut()
-                .filter(|(extensions, _)| extensions.iter().any(|e| extension.eq_ignore_ascii_case(e)))
+                .filter(|(extensions, _)| extensions.iter().any(|e| path_str.ends_with(e)))
                 .map(|(_, handler)| handler);
 
             for handler in handlers {
