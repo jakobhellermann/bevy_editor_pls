@@ -22,7 +22,8 @@
 Adds a menu bar to the app which has the following features:
 - you can enable the **World Inspector**
 - you can also enable **click to select**
-  For that to work, you need to tag your camera with `PickingCameraBundle` and your meshes with `PickableBundle`, see the [example](./examples/main.rs) for a full demo.
+  For that to work, you need to tag your camera with `PickingCameraBundle` and your meshes with `PickableBundle` or enable `EditorSettings::auto_clickabl`, see the [example](./examples/main.rs) for a full demo.
+  Ctrl-Click an object to open the inspector.
 - switch to app states you have registered using `EditorSettings::add_state`
 - some more things (flycam, performance panel)
 

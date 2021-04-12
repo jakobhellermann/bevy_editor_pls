@@ -40,7 +40,7 @@ impl Default for EditorSettings {
         EditorSettings {
             menu_items: StableHashMap::default(),
             drag_and_drop_handlers: Vec::new(),
-            click_to_inspect: false,
+            click_to_inspect: true,
             show_wireframes: false,
             fly_camera: false,
             auto_pickable: false,

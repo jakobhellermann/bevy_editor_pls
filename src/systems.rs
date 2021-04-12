@@ -7,12 +7,21 @@ use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCamer
 
 use crate::{plugin::EditorState, utils, EditorSettings};
 
+fn should_inspect_entity(input: &Input<KeyCode>) -> bool {
+    input.pressed(KeyCode::LControl)
+}
+
 pub fn maintain_inspected_entities(
     editor_settings: ResMut<EditorSettings>,
     mut editor_state: ResMut<EditorState>,
     query: Query<(Entity, &Interaction), Changed<Interaction>>,
+    input: Res<Input<KeyCode>>,
 ) {
     if !editor_settings.click_to_inspect {
+        return;
+    }
+
+    if !should_inspect_entity(&input) {
         return;
     }
 
@@ -38,7 +47,7 @@ pub fn make_everything_pickable(
     mut commands: Commands,
     mut query: Query<Entity, (With<Draw>, Without<PickableMesh>, Without<Node>)>,
 ) {
-    if !editor_settings.auto_pickable || !editor_settings.click_to_inspect {
+    if !editor_settings.auto_pickable {
         return;
     }
 
@@ -51,7 +60,7 @@ pub fn make_camera_picksource(
     mut commands: Commands,
     mut query: Query<(Entity, &Camera), Without<PickingCamera>>,
 ) {
-    if !editor_settings.auto_pickable || !editor_settings.click_to_inspect {
+    if !editor_settings.auto_pickable {
         return;
     }
 
