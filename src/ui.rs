@@ -5,6 +5,7 @@ use bevy::{
 };
 use bevy::{diagnostic::Diagnostics, render::wireframe::WireframeConfig};
 use bevy_fly_camera::FlyCamera;
+use bevy_orbit_controls::OrbitCamera;
 
 use crate::{plugin::EditorState, EditorSettings};
 use bevy_inspector_egui::{
@@ -16,15 +17,24 @@ use bevy_inspector_egui::{
 
 pub(crate) enum EditorMenuEvent {
     EnableFlyCams(bool),
+    DisableOrbitCam,
 }
 
-pub(crate) fn handle_menu_event(mut events: EventReader<EditorMenuEvent>, mut flycam_query: Query<&mut FlyCamera>) {
+pub(crate) fn handle_menu_event(
+    mut commands: Commands,
+    mut events: EventReader<EditorMenuEvent>,
+    mut flycam_query: Query<&mut FlyCamera>,
+    orbit_cam_query: Query<Entity, With<OrbitCamera>>,
+) {
     for event in events.iter() {
         match *event {
             EditorMenuEvent::EnableFlyCams(enabled) => {
                 for mut cam in flycam_query.iter_mut() {
                     cam.enabled = enabled;
                 }
+            }
+            EditorMenuEvent::DisableOrbitCam => {
+                orbit_cam_query.for_each(|entity| drop(commands.entity(entity).remove::<OrbitCamera>()))
             }
         }
     }
@@ -59,13 +69,17 @@ pub(crate) fn menu_system(world: &mut World) {
                         ui.end_row();
                     }
 
-                    let flycam_before = editor_settings.fly_camera;
-                    checkbox(ui, &mut editor_settings.fly_camera, "Fly camera");
-                    ui.end_row();
-                    let flycam_after = editor_settings.fly_camera;
-                    if flycam_before != flycam_after {
-                        menu_events.send(EditorMenuEvent::EnableFlyCams(flycam_after));
+                    if checkbox_changed(ui, &mut editor_settings.fly_camera, "Fly camera") {
+                        menu_events.send(EditorMenuEvent::EnableFlyCams(editor_settings.fly_camera));
                     }
+                    ui.end_row();
+
+                    if checkbox_changed(ui, &mut editor_settings.orbit_camera, "Orbit camera") {
+                        if !editor_settings.orbit_camera {
+                            menu_events.send(EditorMenuEvent::DisableOrbitCam);
+                        }
+                    }
+                    ui.end_row();
 
                     if frame_time_diagnostics {
                         checkbox(ui, &mut editor_settings.performance_panel, "Performance Panel");
@@ -199,6 +213,11 @@ fn checkbox(ui: &mut egui::Ui, selected: &mut bool, text: &str) {
     });
 }
 
+fn checkbox_changed(ui: &mut egui::Ui, selected: &mut bool, text: &str) -> bool {
+    let before = *selected;
+    checkbox(ui, selected, text);
+    before != *selected
+}
 fn entity_name(world: &World, entity: Entity) -> String {
     match world.get::<Name>(entity) {
         Some(name) => name.as_str().to_string(),

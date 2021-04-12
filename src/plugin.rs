@@ -30,6 +30,9 @@ impl Plugin for EditorPlugin {
         app.add_plugin(FlyCameraPlugin);
         app.add_system(systems::esc_cursor_grab.system());
 
+        // bevy_orbit_controls
+        app.add_plugin(bevy_orbit_controls::OrbitCameraPlugin);
+
         // bevy_input_actionmap
         app.add_plugin(ActionPlugin::<EditorAction>::default());
 

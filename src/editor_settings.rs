@@ -23,6 +23,7 @@ pub struct EditorSettings {
     /// Whether the camera can be controlled with WASD.
     /// Can be toggled in the editor UI.
     pub fly_camera: bool,
+    pub orbit_camera: bool,
 
     /// If enabled, [`PickableBundle`](bevy_mod_picking::PickableBundle) and [`PickingCameraBundle`](bevy_mod_picking::PickingCameraBundle) will automatically be added to your camera and objects
     pub auto_pickable: bool,
@@ -43,6 +44,7 @@ impl Default for EditorSettings {
             click_to_inspect: true,
             show_wireframes: false,
             fly_camera: false,
+            orbit_camera: false,
             auto_pickable: false,
             auto_flycam: false,
             performance_panel: false,
