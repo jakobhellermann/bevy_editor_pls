@@ -101,7 +101,7 @@ mod overworld {
             })
             .insert(StateCleanup);
         commands
-            .spawn_bundle(LightBundle {
+            .spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(4.0, 8.0, 4.0),
                 ..Default::default()
             })
@@ -132,7 +132,7 @@ mod hell {
             })
             .insert(StateCleanup);
         commands
-            .spawn_bundle(LightBundle {
+            .spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(4.0, 8.0, 4.0),
                 ..Default::default()
             })
