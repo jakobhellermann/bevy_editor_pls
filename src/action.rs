@@ -28,6 +28,9 @@ pub(crate) fn action_system(
     }
     if input.just_active(EditorAction::ToggleFlycam) {
         settings.fly_camera = !settings.fly_camera;
+        if settings.fly_camera {
+            settings.orbit_camera = false;
+        }
         editor_events.send(EditorMenuEvent::EnableFlyCams(settings.fly_camera));
     }
     if input.just_active(EditorAction::TogglePerformancePanel) {
