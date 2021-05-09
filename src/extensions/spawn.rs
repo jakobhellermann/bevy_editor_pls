@@ -47,7 +47,7 @@ fn spawn_ui(
         .show(egui_context.ctx(), |ui| {
             ui.style_mut().wrap = Some(false);
 
-            let context = bevy_inspector_egui::Context::new_shared(egui_context.ctx());
+            let context = bevy_inspector_egui::Context::new_shared(Some(egui_context.ctx()));
             ui.vertical(|ui| {
                 extension_state.shape.ui(ui, Default::default(), &context);
             });

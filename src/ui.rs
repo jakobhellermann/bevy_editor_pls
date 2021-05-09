@@ -167,7 +167,7 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
         return;
     }
 
-    let context = unsafe { Context::new_ptr(egui_context.ctx(), world_ptr) };
+    let context = unsafe { Context::new_ptr(Some(egui_context.ctx()), world_ptr) };
 
     let mut is_open = true;
     egui::Window::new("Inspector")
