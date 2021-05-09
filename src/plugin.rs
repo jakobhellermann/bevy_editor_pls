@@ -28,7 +28,6 @@ impl Plugin for EditorPlugin {
 
         // bevy_mod_flycamera
         app.add_plugin(FlyCameraPlugin);
-        app.add_system(systems::esc_cursor_grab.system());
 
         // bevy_orbit_controls
         app.add_plugin(bevy_orbit_controls::OrbitCameraPlugin);
@@ -39,10 +38,9 @@ impl Plugin for EditorPlugin {
         // resources
         app.init_resource::<EditorState>().add_event::<ui::EditorMenuEvent>();
 
-        let show_wireframes = app
-            .world_mut()
-            .get_resource_or_insert_with(EditorSettings::default)
-            .show_wireframes;
+        let editor_settings = app.world_mut().get_resource_or_insert_with(EditorSettings::default);
+        let show_wireframes = editor_settings.show_wireframes;
+
         if app.world().contains_resource::<WireframeConfig>() {
             app.world_mut().get_resource_mut::<WireframeConfig>().unwrap().global = show_wireframes;
         }

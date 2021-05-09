@@ -7,7 +7,7 @@ use bevy_fly_camera::FlyCamera;
 use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCameraBundle};
 use bevy_orbit_controls::OrbitCamera;
 
-use crate::{plugin::EditorState, utils, EditorSettings};
+use crate::{plugin::EditorState, EditorSettings};
 
 fn should_inspect_entity(input: &Input<KeyCode>) -> bool {
     input.pressed(KeyCode::LControl)
@@ -89,7 +89,7 @@ pub fn make_camera_picksource(
     mut commands: Commands,
     mut query: Query<(Entity, &Camera), Without<PickingCamera>>,
 ) {
-    if !editor_settings.auto_pickable {
+    if !editor_settings.auto_pickable_camera {
         return;
     }
 
@@ -113,15 +113,10 @@ pub fn make_cam_flycam(
         if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
             commands.entity(entity).insert(FlyCamera {
                 enabled: editor_settings.fly_camera,
+                sensitivity: 6.0,
+                only_if_mouse_down: Some(MouseButton::Left),
                 ..Default::default()
             });
         }
-    }
-}
-
-pub fn esc_cursor_grab(keys: Res<Input<KeyCode>>, mut windows: ResMut<Windows>) {
-    let window = windows.get_primary_mut().unwrap();
-    if keys.just_pressed(KeyCode::Escape) {
-        utils::toggle_grab_cursor(window);
     }
 }

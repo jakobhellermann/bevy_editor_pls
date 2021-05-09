@@ -1,6 +1,6 @@
 use std::{any::Any, path::Path};
 
-use bevy::{app::Events, ecs::world::WorldCell, utils::StableHashMap};
+use bevy::{app::Events, ecs::world::WorldCell, utils::StableHashMap, window::WindowId};
 use bevy::{ecs::component::Component, prelude::*};
 
 use bevy_inspector_egui::egui;
@@ -25,8 +25,10 @@ pub struct EditorSettings {
     pub fly_camera: bool,
     pub orbit_camera: bool,
 
-    /// If enabled, [`PickableBundle`](bevy_mod_picking::PickableBundle) and [`PickingCameraBundle`](bevy_mod_picking::PickingCameraBundle) will automatically be added to your camera and objects
+    /// If enabled, [`PickableBundle`](bevy_mod_picking::PickableBundle) will be added to all meshes
     pub auto_pickable: bool,
+    /// If enabled, adds [`PickingCameraBundle`](bevy_mod_picking::PickingCameraBundle) all cameras
+    pub auto_pickable_camera: bool,
     /// If enabled, [`FlyCamera`](bevy_fly_camera::FlyCamera) will automatically be added to your camera
     pub auto_flycam: bool,
 
@@ -35,6 +37,9 @@ pub struct EditorSettings {
 
     /// Controls whether the editor panel is shown.
     pub display_ui: bool,
+
+    /// The window to display the editor in.
+    pub window: WindowId,
 }
 impl Default for EditorSettings {
     fn default() -> Self {
@@ -46,9 +51,11 @@ impl Default for EditorSettings {
             fly_camera: false,
             orbit_camera: false,
             auto_pickable: false,
+            auto_pickable_camera: false,
             auto_flycam: false,
             performance_panel: false,
             display_ui: true,
+            window: WindowId::primary(),
         }
     }
 }
@@ -62,8 +69,14 @@ impl EditorSettings {
     pub fn automagic() -> Self {
         let mut settings = EditorSettings::default();
         settings.auto_pickable = true;
+        settings.auto_pickable_camera = true;
         settings.auto_flycam = true;
         settings
+    }
+
+    pub fn on_window(mut self, window_id: WindowId) -> Self {
+        self.window = window_id;
+        self
     }
 
     /// Adds a event to the **Events** menu.

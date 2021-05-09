@@ -33,6 +33,7 @@ fn spawn_ui(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    editor_settings: Res<EditorSettings>,
     mut editor_state: ResMut<EditorState>,
     mut extension_state: ResMut<SpawnExtensionState>,
     egui_context: Res<EguiContext>,
@@ -41,27 +42,30 @@ fn spawn_ui(
         return;
     }
 
+    let ctx = match egui_context.try_ctx_for_window(editor_settings.window) {
+        Some(ctx) => ctx,
+        None => return,
+    };
+
     let mut is_open = true;
-    egui::Window::new("Spawn Object")
-        .open(&mut is_open)
-        .show(egui_context.ctx(), |ui| {
-            ui.style_mut().wrap = Some(false);
+    egui::Window::new("Spawn Object").open(&mut is_open).show(ctx, |ui| {
+        ui.style_mut().wrap = Some(false);
 
-            let context = bevy_inspector_egui::Context::new_shared(egui_context.ctx());
-            ui.vertical(|ui| {
-                extension_state.shape.ui(ui, Default::default(), &context);
-            });
-
-            if ui.button("Spawn").clicked() {
-                spawn(
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                    &mut editor_state,
-                    &extension_state.shape,
-                );
-            }
+        let context = bevy_inspector_egui::Context::new_shared(Some(egui_context.ctx()));
+        ui.vertical(|ui| {
+            extension_state.shape.ui(ui, Default::default(), &context);
         });
+
+        if ui.button("Spawn").clicked() {
+            spawn(
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+                &mut editor_state,
+                &extension_state.shape,
+            );
+        }
+    });
 
     if !is_open {
         extension_state.open = false;

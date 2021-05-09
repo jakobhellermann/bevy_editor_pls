@@ -49,13 +49,21 @@ pub(crate) fn menu_system(world: &mut World) {
     let mut wireframe_config = world.get_resource_mut::<WireframeConfig>();
     let diagnostics = world.get_resource::<Diagnostics>().unwrap();
 
+    if inspector_params.window != editor_settings.window {
+        inspector_params.window = editor_settings.window;
+    }
+
     if !editor_settings.display_ui {
         return;
     }
 
     let frame_time_diagnostics = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS).is_some();
 
-    egui::TopPanel::top("editor_pls top panel").show(egui_context.ctx(), |ui| {
+    let ctx = match egui_context.try_ctx_for_window(editor_settings.window) {
+        Some(ctx) => ctx,
+        None => return,
+    };
+    egui::TopPanel::top("editor_pls top panel").show(ctx, |ui| {
         menu::bar(ui, |ui| {
             menu::menu(ui, "Editor", |ui| {
                 egui::Grid::new("inspector settings").show(ui, |ui| {
@@ -125,10 +133,15 @@ pub(crate) fn performance_panel(
         }
     };
 
+    let ctx = match egui_context.try_ctx_for_window(editor_settings.window) {
+        Some(ctx) => ctx,
+        None => return,
+    };
+
     egui::Window::new("Performance")
         .open(&mut editor_settings.performance_panel)
         .resizable(false)
-        .show(egui_context.ctx(), |ui| {
+        .show(ctx, |ui| {
             egui::Grid::new("frame time diagnostics").show(ui, |ui| {
                 ui.label("FPS");
                 ui.label(format!("{:.2}", fps));
@@ -167,13 +180,18 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
         return;
     }
 
-    let context = unsafe { Context::new_ptr(egui_context.ctx(), world_ptr) };
+    let ctx = match egui_context.try_ctx_for_window(editor_settings.window) {
+        Some(ctx) => ctx,
+        None => return,
+    };
+
+    let context = unsafe { Context::new_ptr(Some(ctx), world_ptr) };
 
     let mut is_open = true;
     egui::Window::new("Inspector")
         .open(&mut is_open)
         .id(egui::Id::new("editor inspector"))
-        .show(egui_context.ctx(), |ui| {
+        .show(ctx, |ui| {
             ui.wrap(|ui| {
                 ui.style_mut().visuals.override_text_color = Some(ui.style().visuals.widgets.hovered.text_color());
                 ui.horizontal(|ui| {
