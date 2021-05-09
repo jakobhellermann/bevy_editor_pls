@@ -22,19 +22,27 @@ pub(crate) enum EditorMenuEvent {
 
 pub(crate) fn handle_menu_event(
     mut commands: Commands,
+    mut settings: ResMut<EditorSettings>,
     mut events: EventReader<EditorMenuEvent>,
     mut flycam_query: Query<&mut FlyCamera>,
     orbit_cam_query: Query<Entity, With<OrbitCamera>>,
 ) {
+    let mut disable_orbit_cams = || orbit_cam_query.for_each(|entity| drop(commands.entity(entity).remove::<OrbitCamera>()));
+
     for event in events.iter() {
         match *event {
             EditorMenuEvent::EnableFlyCams(enabled) => {
                 for mut cam in flycam_query.iter_mut() {
                     cam.enabled = enabled;
                 }
+
+                if enabled {
+                    disable_orbit_cams();
+                    settings.orbit_camera = false;
+                }
             }
             EditorMenuEvent::DisableOrbitCam => {
-                orbit_cam_query.for_each(|entity| drop(commands.entity(entity).remove::<OrbitCamera>()))
+                disable_orbit_cams();
             }
         }
     }

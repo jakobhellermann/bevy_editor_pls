@@ -7,7 +7,7 @@ use bevy_fly_camera::FlyCamera;
 use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCameraBundle};
 use bevy_orbit_controls::OrbitCamera;
 
-use crate::{plugin::EditorState, EditorSettings};
+use crate::{plugin::EditorState, ui::EditorMenuEvent, EditorSettings};
 
 fn should_inspect_entity(input: &Input<KeyCode>) -> bool {
     input.pressed(KeyCode::LControl)
@@ -17,10 +17,11 @@ fn should_select_orbit_target(input: &Input<KeyCode>) -> bool {
     input.pressed(KeyCode::LAlt)
 }
 
-pub fn maintain_inspected_entities(
+pub(crate) fn maintain_inspected_entities(
     mut commands: Commands,
-    editor_settings: ResMut<EditorSettings>,
+    mut editor_settings: ResMut<EditorSettings>,
     mut editor_state: ResMut<EditorState>,
+    mut editor_events: EventWriter<EditorMenuEvent>,
     query: Query<(Entity, &GlobalTransform, &Interaction), Changed<Interaction>>,
     mut orbit_camera: Query<&mut OrbitCamera>,
     cameras: Query<(Entity, &Camera)>,
@@ -66,6 +67,11 @@ pub fn maintain_inspected_entities(
                 cam.center = transform.translation;
             }
         };
+
+        if editor_settings.fly_camera {
+            editor_settings.fly_camera = false;
+            editor_events.send(EditorMenuEvent::EnableFlyCams(false));
+        }
     }
 }
 
