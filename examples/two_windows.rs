@@ -5,7 +5,7 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         // .add_startup_system(bevy_editor_pls::setup_default_keybindings.system())
-        // .insert_resource(bevy_editor_pls::EditorSettings::automagic())
+        .insert_resource(bevy_editor_pls::EditorSettings::automagic())
         // .add_plugin(bevy_editor_pls::EditorPlugin)
         // .add_plugin(InspectorPlugin::<InspectorQuery<Entity, With<Camera>>>::new())
         .add_plugin(bevy_editor_pls::EditorPluginSecondWindow)

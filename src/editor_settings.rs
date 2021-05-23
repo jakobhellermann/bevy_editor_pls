@@ -34,6 +34,13 @@ pub struct EditorSettings {
     /// If enabled, [`PanCam`](bevy_pancam::Pancam) will automatically be added to your 2d cameras
     pub auto_pancam: bool,
 
+    /// If any of `add_gizmo_plugin`, `auto_gizmo_target` or `auto_gizmo_camera` are `true`, the [`TransformGizmoPlugin`](bevy_transform_gizmo::TransformGizmoPlugin) will be added.
+    pub add_gizmo_plugin: bool,
+    /// If enabled, [`GizmoTransformable`](bevy_transform_gizmo::GizmoTransformable) will added to all meshes
+    pub auto_gizmo_target: bool,
+    /// If enabled, a [`GizmoPickSource`](bevy_transform_gizmo::GizmoPickSource) will automatically be added to your camera
+    pub auto_gizmo_camera: bool,
+
     /// Shows a panel displaying the current FPS. Only available if the [`FrameTimeDiagnosticsPlugin`](bevy::diagnostic::FrameTimeDiagnosticsPlugin) is active.
     pub performance_panel: bool,
 
@@ -55,7 +62,13 @@ impl Default for EditorSettings {
             auto_pickable: false,
             auto_pickable_camera: false,
             auto_flycam: false,
+<<<<<<< HEAD
             auto_pancam: false,
+=======
+            add_gizmo_plugin: false,
+            auto_gizmo_target: false,
+            auto_gizmo_camera: false,
+>>>>>>> f8a6629 (add gizmo plugin)
             performance_panel: false,
             display_ui: true,
             window: WindowId::primary(),
@@ -74,7 +87,12 @@ impl EditorSettings {
         settings.auto_pickable = true;
         settings.auto_pickable_camera = true;
         settings.auto_flycam = true;
+<<<<<<< HEAD
         settings.auto_pancam = true;
+=======
+        settings.auto_gizmo_target = true;
+        settings.auto_gizmo_camera = true;
+>>>>>>> f8a6629 (add gizmo plugin)
         settings
     }
 
