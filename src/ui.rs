@@ -200,7 +200,7 @@ pub(crate) fn currently_inspected_system(world: &mut World) {
         .open(&mut is_open)
         .id(egui::Id::new("editor inspector"))
         .show(ctx, |ui| {
-            ui.wrap(|ui| {
+            ui.scope(|ui| {
                 ui.style_mut().visuals.override_text_color = Some(ui.style().visuals.widgets.hovered.text_color());
                 ui.horizontal(|ui| {
                     ui.heading(name);
@@ -231,7 +231,7 @@ fn checkbox(ui: &mut egui::Ui, selected: &mut bool, text: &str) {
     if ui.selectable_label(false, text).clicked() {
         *selected = !*selected;
     }
-    ui.wrap(|ui| {
+    ui.scope(|ui| {
         let style = &mut ui.style_mut().visuals.widgets;
         style.inactive.bg_fill = style.active.bg_fill;
         ui.spacing_mut().icon_spacing = 0.0;
