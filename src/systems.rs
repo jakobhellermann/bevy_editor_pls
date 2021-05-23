@@ -82,26 +82,38 @@ pub fn make_everything_pickable(
     mut commands: Commands,
     mut query: Query<Entity, (With<Draw>, Without<PickableMesh>, Without<Node>)>,
 ) {
-    if !editor_settings.auto_pickable {
+    if !editor_settings.auto_pickable && !editor_settings.auto_gizmo_target {
         return;
     }
 
-    for entity in query.iter_mut() {
-        commands.entity(entity).insert_bundle(PickableBundle::default());
-    }
+    query.iter_mut().for_each(|entity| {
+        let mut entity = commands.entity(entity);
+        if editor_settings.auto_pickable {
+            entity.insert_bundle(PickableBundle::default());
+        }
+        if editor_settings.auto_gizmo_target {
+            entity.insert(bevy_transform_gizmo::GizmoTransformable);
+        }
+    });
 }
 pub fn make_camera_picksource(
     editor_settings: Res<EditorSettings>,
     mut commands: Commands,
     mut query: Query<(Entity, &Camera), Without<PickingCamera>>,
 ) {
-    if !editor_settings.auto_pickable_camera {
+    if !editor_settings.auto_pickable_camera && !editor_settings.auto_gizmo_camera {
         return;
     }
 
     for (entity, cam) in query.iter_mut() {
         if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
-            commands.entity(entity).insert_bundle(PickingCameraBundle::default());
+            let mut entity = commands.entity(entity);
+            if editor_settings.auto_pickable {
+                entity.insert_bundle(PickingCameraBundle::default());
+            }
+            if editor_settings.auto_gizmo_camera {
+                entity.insert(bevy_transform_gizmo::GizmoPickSource::new());
+            }
         }
     }
 }

@@ -21,6 +21,8 @@ fn editor_settings() -> EditorSettings {
     settings.auto_pickable = true;
     settings.auto_pickable_camera = true;
     settings.auto_flycam = true;
+    settings.auto_gizmo_camera = true;
+    settings.auto_gizmo_target = true;
 
     settings.add_event("Save", || SaveEvent);
     settings.add_event("Quit", || AppExit);

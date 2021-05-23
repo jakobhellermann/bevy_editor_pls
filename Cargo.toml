@@ -10,10 +10,11 @@ exclude = ["docs/*"]
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = ["render"] }
 bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui", branch = "bevy-main" }
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" }
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "master" }
 bevy_fly_camera = { git = "https://github.com/jakobhellermann/bevy_fly_camera" }
 bevy-orbit-controls = "2.0"
 # bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap" }
+bevy_transform_gizmo = { git = "https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/" }
 once_cell = "1.7"
 
 [dev-dependencies]

@@ -41,6 +41,13 @@ impl Plugin for EditorPlugin {
         let editor_settings = app.world_mut().get_resource_or_insert_with(EditorSettings::default);
         let show_wireframes = editor_settings.show_wireframes;
 
+        let add_gizmo_plugin =
+            editor_settings.add_gizmo_plugin || editor_settings.auto_gizmo_target || editor_settings.auto_gizmo_camera;
+
+        if add_gizmo_plugin {
+            app.add_plugin(bevy_transform_gizmo::TransformGizmoPlugin);
+        }
+
         if app.world().contains_resource::<WireframeConfig>() {
             app.world_mut().get_resource_mut::<WireframeConfig>().unwrap().global = show_wireframes;
         }
