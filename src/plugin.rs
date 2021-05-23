@@ -7,7 +7,7 @@ use bevy_input_actionmap::ActionPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{InteractablePickingPlugin, PickingPlugin, PickingPluginState, PickingSystem};
 
-use crate::{drag_and_drop, systems, ui, EditorAction, EditorSettings};
+use crate::{drag_and_drop, systems, ui, EditorSettings};
 
 /// See the [crate-level docs](index.html) for usage
 pub struct EditorPlugin;
@@ -37,7 +37,7 @@ impl Plugin for EditorPlugin {
         app.add_plugin(bevy_orbit_controls::OrbitCameraPlugin);
 
         // bevy_input_actionmap
-        app.add_plugin(ActionPlugin::<EditorAction>::default());
+        // app.add_plugin(ActionPlugin::<EditorAction>::default());
 
         // resources
         app.init_resource::<EditorState>().add_event::<ui::EditorMenuEvent>();
@@ -68,7 +68,7 @@ impl Plugin for EditorPlugin {
             systems::maintain_inspected_entities.system().after(PickingSystem::Focus),
         );
 
-        app.add_system(crate::action::action_system.system());
+        // app.add_system(crate::action::action_system.system());
     }
 }
 

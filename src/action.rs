@@ -1,8 +1,8 @@
-use bevy::prelude::*;
-use bevy_input_actionmap::InputMap;
-use bevy_inspector_egui::WorldInspectorParams;
+// use bevy::prelude::*;
+// use bevy_input_actionmap::InputMap;
+// use bevy_inspector_egui::WorldInspectorParams;
 
-use crate::{ui::EditorMenuEvent, EditorSettings};
+// use crate::{ui::EditorMenuEvent, EditorSettings};
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EditorAction {
@@ -14,6 +14,7 @@ pub enum EditorAction {
     ToggleEditorUi,
 }
 
+/*
 pub(crate) fn action_system(
     input: Res<InputMap<EditorAction>>,
     mut settings: ResMut<EditorSettings>,
@@ -43,3 +44,4 @@ pub(crate) fn action_system(
         settings.display_ui = !settings.display_ui;
     }
 }
+*/

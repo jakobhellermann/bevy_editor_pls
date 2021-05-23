@@ -46,7 +46,7 @@ fn main() {
         .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(WireframePlugin)
         .add_plugin(EditorPlugin)
-        .add_startup_system(bevy_editor_pls::setup_default_keybindings.system())
+        // .add_startup_system(bevy_editor_pls::setup_default_keybindings.system())
         // states
         .add_state(AppState::Overworld)
         .add_system_set(SystemSet::on_enter(AppState::Overworld).with_system(overworld::setup.system()))

@@ -23,7 +23,7 @@ impl Plugin for EditorPluginSecondWindow {
     fn build(&self, app: &mut AppBuilder) {
         app.add_plugin(EditorPlugin)
             .add_state(EditorWindowState::CreateWindow)
-            .add_startup_system(crate::setup_default_keybindings.system())
+            // .add_startup_system(crate::setup_default_keybindings.system())
             .add_system_set(SystemSet::on_update(EditorWindowState::CreateWindow).with_system(setup_window.system()))
             .add_system_set(SystemSet::on_update(EditorWindowState::Setup).with_system(setup_second_window.system()));
 
