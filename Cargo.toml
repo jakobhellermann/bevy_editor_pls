@@ -13,7 +13,7 @@ bevy-inspector-egui = "0.5"
 bevy_mod_picking = { version = "0.4" }
 bevy_fly_camera = { git = "https://github.com/jakobhellermann/bevy_fly_camera" }
 bevy-orbit-controls = "2.0"
-bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap" }
+bevy_input_actionmap = { git = "https://github.com/lightsoutgames/bevy_input_actionmap", branch = "main"  }
 once_cell = "1.7"
 
 [dev-dependencies]
