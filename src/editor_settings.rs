@@ -31,6 +31,8 @@ pub struct EditorSettings {
     pub auto_pickable_camera: bool,
     /// If enabled, [`FlyCamera`](bevy_fly_camera::FlyCamera) will automatically be added to your camera
     pub auto_flycam: bool,
+    /// If enabled, [`PanCam`](bevy_pancam::Pancam) will automatically be added to your 2d cameras
+    pub auto_pancam: bool,
 
     /// Shows a panel displaying the current FPS. Only available if the [`FrameTimeDiagnosticsPlugin`](bevy::diagnostic::FrameTimeDiagnosticsPlugin) is active.
     pub performance_panel: bool,
@@ -53,6 +55,7 @@ impl Default for EditorSettings {
             auto_pickable: false,
             auto_pickable_camera: false,
             auto_flycam: false,
+            auto_pancam: false,
             performance_panel: false,
             display_ui: true,
             window: WindowId::primary(),
@@ -71,6 +74,7 @@ impl EditorSettings {
         settings.auto_pickable = true;
         settings.auto_pickable_camera = true;
         settings.auto_flycam = true;
+        settings.auto_pancam = true;
         settings
     }
 
