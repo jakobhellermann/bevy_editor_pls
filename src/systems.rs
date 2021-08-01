@@ -1,11 +1,12 @@
 use bevy::{
     ecs::system::QuerySingleError,
     prelude::*,
-    render::{camera::Camera, render_graph::base::camera},
+    render::{camera::{Camera, OrthographicProjection}, render_graph::base::camera},
 };
 use bevy_fly_camera::FlyCamera;
 use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCameraBundle};
 use bevy_orbit_controls::OrbitCamera;
+use bevy_pancam::PanCam;
 
 use crate::{plugin::EditorState, EditorSettings};
 
@@ -117,6 +118,22 @@ pub fn make_cam_flycam(
                 only_if_mouse_down: Some(MouseButton::Left),
                 ..Default::default()
             });
+        }
+    }
+}
+
+pub fn make_cam_pancam(
+    editor_settings: Res<EditorSettings>,
+    mut commands: Commands,
+    mut query: Query<(Entity, &Camera), (With<OrthographicProjection>, Without<PanCam>)>,
+) {
+    if !editor_settings.auto_pancam {
+        return;
+    }
+
+    for (entity, cam) in query.iter_mut() {
+        if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_2D) {
+            commands.entity(entity).insert(PanCam::default());
         }
     }
 }
