@@ -8,9 +8,10 @@
 //! ```rust,no_run
 //! use bevy::prelude::*;
 //! use bevy::app::AppExit;
+//! use bevy::asset::AssetPath;
 //! use bevy_editor_pls::{EditorPlugin, EditorSettings};
 //!
-//! #[derive(Clone, Eq, PartialEq)]
+//! #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 //! pub enum AppState {
 //!     MainMenu,
 //!     Game,
@@ -38,7 +39,7 @@
 //! }
 //!
 //! fn main() {
-//!     App::build()
+//!     App::new()
 //!         .insert_resource(editor_settings())
 //!         .add_plugins(DefaultPlugins)
 //!         .add_plugin(EditorPlugin)
@@ -60,7 +61,7 @@ mod ui;
 mod utils;
 
 pub use bevy_fly_camera;
-pub use bevy_input_actionmap;
+//pub use bevy_input_actionmap;
 pub use bevy_mod_picking;
 
 pub use action::EditorAction;
@@ -68,7 +69,9 @@ pub use editor_settings::EditorSettings;
 pub use plugin::EditorPlugin;
 pub use second_window_plugin::EditorPluginSecondWindow;
 
-use bevy::prelude::*;
+// use bevy::prelude::*;
+
+/*
 use bevy_input_actionmap::InputMap;
 /// Sets up the default keybindings for the editor.
 ///
@@ -82,3 +85,4 @@ pub fn setup_default_keybindings(mut input: ResMut<InputMap<EditorAction>>) {
     input.bind(EditorAction::ToggleWorldInspector, vec![KeyCode::LControl, KeyCode::W]);
     input.bind(EditorAction::ToggleEditorUi, vec![KeyCode::LControl, KeyCode::Escape]);
 }
+*/

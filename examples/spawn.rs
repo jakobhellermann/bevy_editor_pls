@@ -2,7 +2,7 @@ use bevy::{asset::AssetPath, prelude::*};
 use bevy_editor_pls::{extensions::EditorExtensionSpawn, EditorPlugin, EditorSettings};
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(Msaa { samples: 4 })
         .insert_resource({
             let mut settings = EditorSettings::new();
@@ -29,7 +29,7 @@ fn main() {
 }
 
 pub fn setup(mut commands: Commands, mut _meshes: ResMut<Assets<Mesh>>, mut _materials: ResMut<Assets<StandardMaterial>>) {
-    commands.spawn_bundle(LightBundle {
+    commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..Default::default()
     });

@@ -1,7 +1,10 @@
 use bevy::{
     ecs::system::QuerySingleError,
     prelude::*,
-    render::{camera::{Camera, OrthographicProjection}, render_graph::base::camera},
+    render::{
+        camera::{Camera, OrthographicProjection},
+        render_graph::base::camera,
+    },
 };
 use bevy_fly_camera::FlyCamera;
 use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCameraBundle};
@@ -52,7 +55,7 @@ pub(crate) fn maintain_inspected_entities(
     }
 
     if editor_settings.orbit_camera && should_select_orbit_target(&input) {
-        match orbit_camera.single_mut() {
+        match orbit_camera.get_single_mut() {
             Err(QuerySingleError::NoEntities(_)) => {
                 let (cam_entity, _) = cameras
                     .iter()
@@ -83,26 +86,38 @@ pub fn make_everything_pickable(
     mut commands: Commands,
     mut query: Query<Entity, (With<Draw>, Without<PickableMesh>, Without<Node>)>,
 ) {
-    if !editor_settings.auto_pickable {
+    if !editor_settings.auto_pickable && !editor_settings.auto_gizmo_target {
         return;
     }
 
-    for entity in query.iter_mut() {
-        commands.entity(entity).insert_bundle(PickableBundle::default());
-    }
+    query.iter_mut().for_each(|entity| {
+        let mut entity = commands.entity(entity);
+        if editor_settings.auto_pickable {
+            entity.insert_bundle(PickableBundle::default());
+        }
+        if editor_settings.auto_gizmo_target {
+            entity.insert(bevy_transform_gizmo::GizmoTransformable);
+        }
+    });
 }
 pub fn make_camera_picksource(
     editor_settings: Res<EditorSettings>,
     mut commands: Commands,
     mut query: Query<(Entity, &Camera), Without<PickingCamera>>,
 ) {
-    if !editor_settings.auto_pickable_camera {
+    if !editor_settings.auto_pickable_camera && !editor_settings.auto_gizmo_camera {
         return;
     }
 
     for (entity, cam) in query.iter_mut() {
         if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
-            commands.entity(entity).insert_bundle(PickingCameraBundle::default());
+            let mut entity = commands.entity(entity);
+            if editor_settings.auto_pickable {
+                entity.insert_bundle(PickingCameraBundle::default());
+            }
+            if editor_settings.auto_gizmo_camera {
+                entity.insert(bevy_transform_gizmo::GizmoPickSource::new());
+            }
         }
     }
 }

@@ -21,6 +21,8 @@ fn editor_settings() -> EditorSettings {
     settings.auto_pickable = true;
     settings.auto_pickable_camera = true;
     settings.auto_flycam = true;
+    settings.auto_gizmo_camera = true;
+    settings.auto_gizmo_target = true;
 
     settings.add_event("Save", || SaveEvent);
     settings.add_event("Quit", || AppExit);
@@ -32,7 +34,7 @@ fn editor_settings() -> EditorSettings {
 }
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(WgpuOptions {
             features: WgpuFeatures {
                 features: vec![WgpuFeature::NonFillPolygonMode],
@@ -46,7 +48,7 @@ fn main() {
         .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(WireframePlugin)
         .add_plugin(EditorPlugin)
-        .add_startup_system(bevy_editor_pls::setup_default_keybindings.system())
+        // .add_startup_system(bevy_editor_pls::setup_default_keybindings.system())
         // states
         .add_state(AppState::Overworld)
         .add_system_set(SystemSet::on_enter(AppState::Overworld).with_system(overworld::setup.system()))
@@ -101,7 +103,7 @@ mod overworld {
             })
             .insert(StateCleanup);
         commands
-            .spawn_bundle(LightBundle {
+            .spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(4.0, 8.0, 4.0),
                 ..Default::default()
             })
@@ -132,7 +134,7 @@ mod hell {
             })
             .insert(StateCleanup);
         commands
-            .spawn_bundle(LightBundle {
+            .spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(4.0, 8.0, 4.0),
                 ..Default::default()
             })

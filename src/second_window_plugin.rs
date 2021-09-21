@@ -20,14 +20,14 @@ use crate::{EditorPlugin, EditorSettings};
 pub struct EditorPluginSecondWindow;
 
 impl Plugin for EditorPluginSecondWindow {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(EditorPlugin)
             .add_state(EditorWindowState::CreateWindow)
-            .add_startup_system(crate::setup_default_keybindings.system())
+            // .add_startup_system(crate::setup_default_keybindings.system())
             .add_system_set(SystemSet::on_update(EditorWindowState::CreateWindow).with_system(setup_window.system()))
             .add_system_set(SystemSet::on_update(EditorWindowState::Setup).with_system(setup_second_window.system()));
 
-        let mut editor_settings = app.world_mut().get_resource_mut::<EditorSettings>().unwrap();
+        let mut editor_settings = app.world.get_resource_mut::<EditorSettings>().unwrap();
         editor_settings.auto_pickable = true;
         editor_settings.fly_camera = true;
 
@@ -92,7 +92,7 @@ fn setup_pipeline(render_graph: &mut RenderGraph, active_cameras: &mut ActiveCam
 
     // add a new render pass for our new window / camera
     let mut second_window_pass = PassNode::<&MainPass>::new(PassDescriptor {
-        color_attachments: vec![msaa.color_attachment_descriptor(
+        color_attachments: vec![msaa.color_attachment(
             TextureAttachment::Input("color_attachment".to_string()),
             TextureAttachment::Input("color_resolve_target".to_string()),
             Operations {
@@ -100,7 +100,7 @@ fn setup_pipeline(render_graph: &mut RenderGraph, active_cameras: &mut ActiveCam
                 store: true,
             },
         )],
-        depth_stencil_attachment: Some(RenderPassDepthStencilAttachmentDescriptor {
+        depth_stencil_attachment: Some(RenderPassDepthStencilAttachment {
             attachment: TextureAttachment::Input("depth".to_string()),
             depth_ops: Some(Operations {
                 load: LoadOp::Clear(1.0),
@@ -149,7 +149,7 @@ fn setup_pipeline(render_graph: &mut RenderGraph, active_cameras: &mut ActiveCam
                 window_id,
                 TextureDescriptor {
                     size: Extent3d {
-                        depth: 1,
+                        depth_or_array_layers: 1,
                         width: 1,
                         height: 1,
                     },

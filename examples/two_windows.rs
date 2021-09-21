@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         // .add_startup_system(bevy_editor_pls::setup_default_keybindings.system())
-        // .insert_resource(bevy_editor_pls::EditorSettings::automagic())
+        .insert_resource(bevy_editor_pls::EditorSettings::automagic())
         // .add_plugin(bevy_editor_pls::EditorPlugin)
         // .add_plugin(InspectorPlugin::<InspectorQuery<Entity, With<Camera>>>::new())
         .add_plugin(bevy_editor_pls::EditorPluginSecondWindow)
@@ -25,7 +25,7 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         ..Default::default()
     });
-    commands.spawn_bundle(LightBundle {
+    commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..Default::default()
     });
