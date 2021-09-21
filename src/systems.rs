@@ -1,7 +1,10 @@
 use bevy::{
     ecs::system::QuerySingleError,
     prelude::*,
-    render::{camera::{Camera, OrthographicProjection}, render_graph::base::camera},
+    render::{
+        camera::{Camera, OrthographicProjection},
+        render_graph::base::camera,
+    },
 };
 use bevy_fly_camera::FlyCamera;
 use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCameraBundle};
@@ -52,7 +55,7 @@ pub(crate) fn maintain_inspected_entities(
     }
 
     if editor_settings.orbit_camera && should_select_orbit_target(&input) {
-        match orbit_camera.single_mut() {
+        match orbit_camera.get_single_mut() {
             Err(QuerySingleError::NoEntities(_)) => {
                 let (cam_entity, _) = cameras
                     .iter()

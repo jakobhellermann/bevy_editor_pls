@@ -2,7 +2,7 @@ use bevy::{asset::AssetPath, prelude::*};
 use bevy_editor_pls::{extensions::EditorExtensionSpawn, EditorPlugin, EditorSettings};
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(Msaa { samples: 4 })
         .insert_resource({
             let mut settings = EditorSettings::new();

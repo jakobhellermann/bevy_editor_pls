@@ -4,8 +4,8 @@ use bevy_inspector_egui::{bevy_egui::EguiContext, egui, Inspectable};
 
 pub struct EditorExtensionSpawn;
 impl Plugin for EditorExtensionSpawn {
-    fn build(&self, app: &mut AppBuilder) {
-        let mut editor_settings = app.world_mut().get_resource_or_insert_with(EditorSettings::default);
+    fn build(&self, app: &mut App) {
+        let mut editor_settings = app.world.get_resource_or_insert_with(EditorSettings::default);
         add_to_editor(&mut editor_settings);
 
         app.init_resource::<SpawnExtensionState>()
