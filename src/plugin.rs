@@ -13,9 +13,9 @@ use crate::{drag_and_drop, systems, ui, EditorSettings};
 pub struct EditorPlugin;
 
 impl Plugin for EditorPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         // bevy-inspector-egui
-        app.world_mut().get_resource_or_insert_with(|| WorldInspectorParams {
+        app.world.get_resource_or_insert_with(|| WorldInspectorParams {
             enabled: false,
             despawnable_entities: true,
             ..Default::default()
@@ -23,7 +23,7 @@ impl Plugin for EditorPlugin {
         app.add_plugin(WorldInspectorPlugin::new());
 
         // bevy_mod_picking
-        if !app.world().contains_resource::<PickingPluginState>() {
+        if !app.world.contains_resource::<PickingPluginState>() {
             app.add_plugin(PickingPlugin).add_plugin(InteractablePickingPlugin);
         };
 
@@ -42,7 +42,7 @@ impl Plugin for EditorPlugin {
         // resources
         app.init_resource::<EditorState>().add_event::<ui::EditorMenuEvent>();
 
-        let editor_settings = app.world_mut().get_resource_or_insert_with(EditorSettings::default);
+        let editor_settings = app.world.get_resource_or_insert_with(EditorSettings::default);
         let show_wireframes = editor_settings.show_wireframes;
 
         let add_gizmo_plugin =
@@ -52,8 +52,8 @@ impl Plugin for EditorPlugin {
             app.add_plugin(bevy_transform_gizmo::TransformGizmoPlugin);
         }
 
-        if app.world().contains_resource::<WireframeConfig>() {
-            app.world_mut().get_resource_mut::<WireframeConfig>().unwrap().global = show_wireframes;
+        if app.world.contains_resource::<WireframeConfig>() {
+            app.world.get_resource_mut::<WireframeConfig>().unwrap().global = show_wireframes;
         }
 
         // systems

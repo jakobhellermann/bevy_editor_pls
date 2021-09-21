@@ -20,14 +20,14 @@ use crate::{EditorPlugin, EditorSettings};
 pub struct EditorPluginSecondWindow;
 
 impl Plugin for EditorPluginSecondWindow {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_plugin(EditorPlugin)
             .add_state(EditorWindowState::CreateWindow)
             // .add_startup_system(crate::setup_default_keybindings.system())
             .add_system_set(SystemSet::on_update(EditorWindowState::CreateWindow).with_system(setup_window.system()))
             .add_system_set(SystemSet::on_update(EditorWindowState::Setup).with_system(setup_second_window.system()));
 
-        let mut editor_settings = app.world_mut().get_resource_mut::<EditorSettings>().unwrap();
+        let mut editor_settings = app.world.get_resource_mut::<EditorSettings>().unwrap();
         editor_settings.auto_pickable = true;
         editor_settings.fly_camera = true;
 

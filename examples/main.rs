@@ -34,7 +34,7 @@ fn editor_settings() -> EditorSettings {
 }
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(WgpuOptions {
             features: WgpuFeatures {
                 features: vec![WgpuFeature::NonFillPolygonMode],
