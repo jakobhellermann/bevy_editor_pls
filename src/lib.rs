@@ -8,9 +8,10 @@
 //! ```rust,no_run
 //! use bevy::prelude::*;
 //! use bevy::app::AppExit;
+//! use bevy::asset::AssetPath;
 //! use bevy_editor_pls::{EditorPlugin, EditorSettings};
 //!
-//! #[derive(Clone, Eq, PartialEq)]
+//! #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 //! pub enum AppState {
 //!     MainMenu,
 //!     Game,
@@ -38,7 +39,7 @@
 //! }
 //!
 //! fn main() {
-//!     App::build()
+//!     App::new()
 //!         .insert_resource(editor_settings())
 //!         .add_plugins(DefaultPlugins)
 //!         .add_plugin(EditorPlugin)
