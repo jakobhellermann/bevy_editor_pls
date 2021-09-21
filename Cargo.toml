@@ -26,3 +26,9 @@ bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-fe
 
 [patch.crates-io]
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+
+# TODO: Remove these after getting the pr merged
+[patch."https://github.com/aevyrie/bevy_mod_picking"]
+bevy_mod_picking = { git = "https://github.com/johanhelsing/bevy_mod_picking", branch = "update-to-latest-bevy" }
+[patch."https://github.com/JulianRuiseco/bevy_mod_picking"]
+bevy_mod_picking = { git = "https://github.com/johanhelsing/bevy_mod_picking", branch = "update-to-latest-bevy" }
