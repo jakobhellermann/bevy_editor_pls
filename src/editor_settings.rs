@@ -31,6 +31,8 @@ pub struct EditorSettings {
     pub auto_pickable_camera: bool,
     /// If enabled, [`FlyCamera`](bevy_fly_camera::FlyCamera) will automatically be added to your camera
     pub auto_flycam: bool,
+    /// If enabled, [`PanCam`](bevy_pancam::Pancam) will automatically be added to your 2d cameras
+    pub auto_pancam: bool,
 
     /// If any of `add_gizmo_plugin`, `auto_gizmo_target` or `auto_gizmo_camera` are `true`, the [`TransformGizmoPlugin`](bevy_transform_gizmo::TransformGizmoPlugin) will be added.
     pub add_gizmo_plugin: bool,
@@ -60,6 +62,7 @@ impl Default for EditorSettings {
             auto_pickable: false,
             auto_pickable_camera: false,
             auto_flycam: false,
+            auto_pancam: false,
             add_gizmo_plugin: false,
             auto_gizmo_target: false,
             auto_gizmo_camera: false,
@@ -81,6 +84,7 @@ impl EditorSettings {
         settings.auto_pickable = true;
         settings.auto_pickable_camera = true;
         settings.auto_flycam = true;
+        settings.auto_pancam = true;
         settings.auto_gizmo_target = true;
         settings.auto_gizmo_camera = true;
         settings

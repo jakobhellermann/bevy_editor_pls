@@ -71,7 +71,7 @@ pub(crate) fn menu_system(world: &mut World) {
         Some(ctx) => ctx,
         None => return,
     };
-    egui::TopPanel::top("editor_pls top panel").show(ctx, |ui| {
+    egui::TopBottomPanel::top("editor_pls top panel").show(ctx, |ui| {
         menu::bar(ui, |ui| {
             menu::menu(ui, "Editor", |ui| {
                 egui::Grid::new("inspector settings").show(ui, |ui| {

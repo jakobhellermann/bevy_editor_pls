@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::render::wireframe::WireframeConfig;
 
 use bevy_fly_camera::FlyCameraPlugin;
+use bevy_pancam::PanCamPlugin;
 // use bevy_input_actionmap::ActionPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{InteractablePickingPlugin, PickingPlugin, PickingPluginState, PickingSystem};
@@ -28,6 +29,9 @@ impl Plugin for EditorPlugin {
 
         // bevy_mod_flycamera
         app.add_plugin(FlyCameraPlugin);
+
+        // bevy_pancam
+        app.add_plugin(PanCamPlugin);
 
         // bevy_orbit_controls
         app.add_plugin(bevy_orbit_controls::OrbitCameraPlugin);
@@ -64,6 +68,7 @@ impl Plugin for EditorPlugin {
         app.add_system(systems::make_everything_pickable.system());
         app.add_system(systems::make_camera_picksource.system());
         app.add_system(systems::make_cam_flycam.system());
+        app.add_system(systems::make_cam_pancam.system());
 
         app.add_system_to_stage(
             CoreStage::PostUpdate,

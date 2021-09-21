@@ -4,7 +4,7 @@
 
 // use crate::{ui::EditorMenuEvent, EditorSettings};
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum EditorAction {
     ToggleWorldInspector,
     ToggleClickToInspect,
