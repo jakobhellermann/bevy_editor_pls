@@ -3,7 +3,7 @@ use bevy::render::wireframe::WireframeConfig;
 
 use bevy_fly_camera::FlyCameraPlugin;
 use bevy_pancam::PanCamPlugin;
-use bevy_input_actionmap::ActionPlugin;
+// use bevy_input_actionmap::ActionPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::{InteractablePickingPlugin, PickingPlugin, PickingPluginState, PickingSystem};
 

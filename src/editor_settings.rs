@@ -62,13 +62,10 @@ impl Default for EditorSettings {
             auto_pickable: false,
             auto_pickable_camera: false,
             auto_flycam: false,
-<<<<<<< HEAD
-            auto_pancam: false,
-=======
             add_gizmo_plugin: false,
             auto_gizmo_target: false,
             auto_gizmo_camera: false,
->>>>>>> f8a6629 (add gizmo plugin)
+            auto_pancam: false,
             performance_panel: false,
             display_ui: true,
             window: WindowId::primary(),
@@ -87,12 +84,8 @@ impl EditorSettings {
         settings.auto_pickable = true;
         settings.auto_pickable_camera = true;
         settings.auto_flycam = true;
-<<<<<<< HEAD
-        settings.auto_pancam = true;
-=======
         settings.auto_gizmo_target = true;
         settings.auto_gizmo_camera = true;
->>>>>>> f8a6629 (add gizmo plugin)
         settings
     }
 
