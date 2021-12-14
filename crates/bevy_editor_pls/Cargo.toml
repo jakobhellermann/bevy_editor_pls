@@ -1,0 +1,13 @@
+[package]
+name = "bevy_editor_pls"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default_windows = ["bevy_editor_pls_default_windows"]
+default = ["default_windows"]
+
+[dependencies]
+bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false }
+bevy_editor_pls_core = { path = "../bevy_editor_pls_core" }
+bevy_editor_pls_default_windows = { path = "../bevy_editor_pls_default_windows", optional = true }
