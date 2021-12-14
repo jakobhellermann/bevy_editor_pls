@@ -11,7 +11,7 @@ impl EditorWindow for InspectorWindow {
     type State = ();
     const NAME: &'static str = "Inspector";
 
-    fn ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
+    fn ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
         let inspected = cx.state::<HierarchyWindow>().unwrap().selected;
         inspector(world, inspected, ui);
     }

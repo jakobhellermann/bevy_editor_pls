@@ -1,10 +1,19 @@
-use bevy::prelude::*;
+use bevy::{
+    diagnostic::FrameTimeDiagnosticsPlugin,
+    prelude::*,
+    render::{options::WgpuOptions, render_resource::WgpuFeatures},
+};
 use bevy_editor_pls::prelude::*;
 
 fn main() {
     App::new()
+        .insert_resource(WgpuOptions {
+            features: WgpuFeatures::POLYGON_MODE_LINE,
+            ..Default::default()
+        })
         .add_plugins(DefaultPlugins)
         .add_plugin(EditorPlugin)
+        .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_startup_system(setup)
         .run();
 }

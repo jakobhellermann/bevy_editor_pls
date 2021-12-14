@@ -184,6 +184,17 @@ impl Editor {
 
         ui.allocate_space(ui.available_size());
     }
+
+    pub fn window_state_mut<W: EditorWindow>(&mut self) -> Option<&mut W::State> {
+        self.window_states
+            .get_mut(&TypeId::of::<W>())
+            .and_then(|s| s.downcast_mut::<W::State>())
+    }
+    pub fn window_state<W: EditorWindow>(&self) -> Option<&W::State> {
+        self.window_states
+            .get(&TypeId::of::<W>())
+            .and_then(|s| s.downcast_ref::<W::State>())
+    }
 }
 
 fn play_pause_button(active: bool, ui: &mut egui::Ui) -> egui::Response {
