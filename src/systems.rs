@@ -1,10 +1,7 @@
 use bevy::{
     ecs::system::QuerySingleError,
     prelude::*,
-    render::{
-        camera::{Camera, OrthographicProjection},
-        render_graph::base::camera,
-    },
+    render::camera::{Camera, CameraPlugin, OrthographicProjection},
 };
 use bevy_fly_camera::FlyCamera;
 use bevy_mod_picking::{PickableBundle, PickableMesh, PickingCamera, PickingCameraBundle};
@@ -59,7 +56,7 @@ pub(crate) fn maintain_inspected_entities(
             Err(QuerySingleError::NoEntities(_)) => {
                 let (cam_entity, _) = cameras
                     .iter()
-                    .find(|(_, cam)| cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D))
+                    .find(|(_, cam)| cam.name.as_ref().map_or(false, |name| name == CameraPlugin::CAMERA_3D))
                     .unwrap();
 
                 commands
@@ -84,7 +81,8 @@ pub(crate) fn maintain_inspected_entities(
 pub fn make_everything_pickable(
     editor_settings: Res<EditorSettings>,
     mut commands: Commands,
-    mut query: Query<Entity, (With<Draw>, Without<PickableMesh>, Without<Node>)>,
+    // TODO: replacement for With<Draw>
+    mut query: Query<Entity, (Without<PickableMesh>, Without<Node>)>,
 ) {
     if !editor_settings.auto_pickable && !editor_settings.auto_gizmo_target {
         return;
@@ -95,6 +93,7 @@ pub fn make_everything_pickable(
         if editor_settings.auto_pickable {
             entity.insert_bundle(PickableBundle::default());
         }
+        #[cfg(feature = "transform_gizmo")]
         if editor_settings.auto_gizmo_target {
             entity.insert(bevy_transform_gizmo::GizmoTransformable);
         }
@@ -110,11 +109,12 @@ pub fn make_camera_picksource(
     }
 
     for (entity, cam) in query.iter_mut() {
-        if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
+        if cam.name.as_ref().map_or(false, |name| name == CameraPlugin::CAMERA_3D) {
             let mut entity = commands.entity(entity);
             if editor_settings.auto_pickable {
                 entity.insert_bundle(PickingCameraBundle::default());
             }
+            #[cfg(feature = "transform_gizmo")]
             if editor_settings.auto_gizmo_camera {
                 entity.insert(bevy_transform_gizmo::GizmoPickSource::new());
             }
@@ -132,7 +132,7 @@ pub fn make_cam_flycam(
     }
 
     for (entity, cam) in query.iter_mut() {
-        if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_3D) {
+        if cam.name.as_ref().map_or(false, |name| name == CameraPlugin::CAMERA_3D) {
             commands.entity(entity).insert(FlyCamera {
                 enabled: editor_settings.fly_camera,
                 sensitivity: 6.0,
@@ -153,7 +153,7 @@ pub fn make_cam_pancam(
     }
 
     for (entity, cam) in query.iter_mut() {
-        if cam.name.as_ref().map_or(false, |name| name == camera::CAMERA_2D) {
+        if cam.name.as_ref().map_or(false, |name| name == CameraPlugin::CAMERA_2D) {
             commands.entity(entity).insert(PanCam::default());
         }
     }

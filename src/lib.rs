@@ -55,7 +55,7 @@ mod drag_and_drop;
 mod editor_settings;
 pub mod extensions;
 mod plugin;
-mod second_window_plugin;
+// mod second_window_plugin;
 mod systems;
 mod ui;
 mod utils;
@@ -67,7 +67,7 @@ pub use bevy_mod_picking;
 pub use action::EditorAction;
 pub use editor_settings::EditorSettings;
 pub use plugin::EditorPlugin;
-pub use second_window_plugin::EditorPluginSecondWindow;
+// pub use second_window_plugin::EditorPluginSecondWindow;
 
 // use bevy::prelude::*;
 

@@ -51,9 +51,9 @@ fn spawn_ui(
     egui::Window::new("Spawn Object").open(&mut is_open).show(ctx, |ui| {
         ui.style_mut().wrap = Some(false);
 
-        let context = bevy_inspector_egui::Context::new_shared(Some(egui_context.ctx()));
+        let mut context = bevy_inspector_egui::Context::new_shared(Some(egui_context.ctx()));
         ui.vertical(|ui| {
-            extension_state.shape.ui(ui, Default::default(), &context);
+            extension_state.shape.ui(ui, Default::default(), &mut context);
         });
 
         if ui.button("Spawn").clicked() {
