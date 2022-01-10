@@ -1,5 +1,6 @@
 use bevy::{
-    diagnostic::FrameTimeDiagnosticsPlugin,
+    asset::diagnostic::AssetCountDiagnosticsPlugin,
+    diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     prelude::*,
     render::{options::WgpuOptions, render_resource::WgpuFeatures},
 };
@@ -14,6 +15,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EditorPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin)
+        .add_plugin(EntityCountDiagnosticsPlugin)
+        .add_plugin(AssetCountDiagnosticsPlugin::<StandardMaterial>::default())
         .add_startup_system(setup)
         .run();
 }
