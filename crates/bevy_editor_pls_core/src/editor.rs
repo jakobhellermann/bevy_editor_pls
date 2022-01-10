@@ -62,7 +62,47 @@ struct EditorInternalState {
     left_panel: Option<TypeId>,
     right_panel: Option<TypeId>,
     bottom_panel: Option<TypeId>,
+    floating_windows: Vec<FloatingWindow>,
     viewport: EditorViewportSize,
+
+    next_floating_window_id: u32,
+}
+
+#[derive(Clone, Copy)]
+enum EditorPanel {
+    Left,
+    Right,
+    Bottom,
+}
+
+struct FloatingWindow {
+    window: TypeId,
+    id: u32,
+    original_panel: Option<EditorPanel>,
+}
+
+impl EditorInternalState {
+    fn next_floating_window_id(&mut self) -> u32 {
+        let id = self.next_floating_window_id;
+        self.next_floating_window_id += 1;
+        id
+    }
+
+    #[allow(unused)]
+    fn active_editor(&self, panel: EditorPanel) -> Option<TypeId> {
+        match panel {
+            EditorPanel::Left => self.left_panel.clone(),
+            EditorPanel::Right => self.right_panel.clone(),
+            EditorPanel::Bottom => self.bottom_panel.clone(),
+        }
+    }
+    fn active_editor_mut(&mut self, panel: EditorPanel) -> &mut Option<TypeId> {
+        match panel {
+            EditorPanel::Left => &mut self.left_panel,
+            EditorPanel::Right => &mut self.right_panel,
+            EditorPanel::Bottom => &mut self.bottom_panel,
+        }
+    }
 }
 
 fn ui_fn<W: EditorWindow>(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
@@ -87,6 +127,19 @@ impl Editor {
             .insert(type_id, Box::new(W::State::default()));
     }
 
+    pub fn window_state_mut<W: EditorWindow>(&mut self) -> Option<&mut W::State> {
+        self.window_states
+            .get_mut(&TypeId::of::<W>())
+            .and_then(|s| s.downcast_mut::<W::State>())
+    }
+    pub fn window_state<W: EditorWindow>(&self) -> Option<&W::State> {
+        self.window_states
+            .get(&TypeId::of::<W>())
+            .and_then(|s| s.downcast_ref::<W::State>())
+    }
+}
+
+impl Editor {
     fn system(world: &mut World) {
         if !world.contains_resource::<EditorInternalState>() {
             let editor = world.get_resource::<Editor>().unwrap();
@@ -95,6 +148,8 @@ impl Editor {
                 left_panel: windows.next(),
                 right_panel: windows.next(),
                 bottom_panel: windows.next(),
+                floating_windows: Vec::new(),
+                next_floating_window_id: 0,
                 viewport: EditorViewportSize::default(),
             };
             world.insert_resource(state);
@@ -121,34 +176,33 @@ impl Editor {
         &mut self,
         world: &mut World,
         ctx: &egui::CtxRef,
-        state: &mut EditorState,
+        editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
     ) {
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            if play_pause_button(state.active, ui).clicked() {
-                state.active = !state.active;
-            }
-        });
+        self.editor_menu_bar(ctx, editor_state, internal_state);
 
-        if !state.active {
+        if !editor_state.active {
+            self.editor_floating_windows(world, ctx, internal_state);
             return;
         }
-        egui::SidePanel::left("left_panel")
+        let res = egui::SidePanel::left("left_panel")
             .resizable(true)
             .show(ctx, |ui| {
                 self.editor_window(world, &mut internal_state.left_panel, ui);
             });
+        self.editor_window_context_menu(res.response, internal_state, EditorPanel::Left);
 
-        egui::SidePanel::right("right_panel")
+        let res = egui::SidePanel::right("right_panel")
             .resizable(true)
             .show(ctx, |ui| {
                 self.editor_window(world, &mut internal_state.right_panel, ui);
             });
+        self.editor_window_context_menu(res.response, internal_state, EditorPanel::Right);
 
         egui::CentralPanel::default()
             .frame(egui::Frame::none())
             .show(ctx, |ui| {
-                egui::TopBottomPanel::bottom("bottom_panel")
+                let res = egui::TopBottomPanel::bottom("bottom_panel")
                     .resizable(true)
                     .default_height(100.0)
                     .frame(
@@ -159,6 +213,7 @@ impl Editor {
                     .show_inside(ui, |ui| {
                         self.editor_window(world, &mut internal_state.bottom_panel, ui);
                     });
+                self.editor_window_context_menu(res.response, internal_state, EditorPanel::Bottom);
 
                 let position = ui.next_widget_position();
                 let size = ui.available_size();
@@ -170,6 +225,37 @@ impl Editor {
                     internal_state.viewport.size = size;
                 }
             });
+
+        self.editor_floating_windows(world, ctx, internal_state);
+    }
+
+    fn editor_menu_bar(
+        &mut self,
+        ctx: &egui::CtxRef,
+        editor_state: &mut EditorState,
+        internal_state: &mut EditorInternalState,
+    ) {
+        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            egui::menu::bar(ui, |ui| {
+                if play_pause_button(editor_state.active, ui).clicked() {
+                    editor_state.active = !editor_state.active;
+                }
+
+                ui.menu_button("Open window", |ui| {
+                    for (&window_id, window) in self.windows.iter() {
+                        if ui.button(window.name).clicked() {
+                            let floating_window_id = internal_state.next_floating_window_id();
+                            internal_state.floating_windows.push(FloatingWindow {
+                                window: window_id,
+                                id: floating_window_id,
+                                original_panel: None,
+                            });
+                            ui.close_menu();
+                        }
+                    }
+                });
+            });
+        });
     }
 
     fn editor_window(
@@ -195,25 +281,83 @@ impl Editor {
             });
 
         if let Some(selected) = selected {
-            let cx = EditorWindowContext {
-                window_states: &mut self.window_states,
-            };
-            let ui_fn = &self.windows.get_mut(selected).unwrap().ui_fn;
-            ui_fn(world, cx, ui);
+            self.editor_window_inner(world, *selected, ui);
         }
 
         ui.allocate_space(ui.available_size());
     }
 
-    pub fn window_state_mut<W: EditorWindow>(&mut self) -> Option<&mut W::State> {
-        self.window_states
-            .get_mut(&TypeId::of::<W>())
-            .and_then(|s| s.downcast_mut::<W::State>())
+    fn editor_window_inner(&mut self, world: &mut World, selected: TypeId, ui: &mut egui::Ui) {
+        let cx = EditorWindowContext {
+            window_states: &mut self.window_states,
+        };
+        let ui_fn = &self.windows.get_mut(&selected).unwrap().ui_fn;
+        ui_fn(world, cx, ui);
     }
-    pub fn window_state<W: EditorWindow>(&self) -> Option<&W::State> {
-        self.window_states
-            .get(&TypeId::of::<W>())
-            .and_then(|s| s.downcast_ref::<W::State>())
+
+    fn editor_window_context_menu(
+        &mut self,
+        response: egui::Response,
+        internal_state: &mut EditorInternalState,
+        panel: EditorPanel,
+    ) {
+        response.context_menu(|ui| {
+            let window_is_set = internal_state.active_editor_mut(panel).is_some();
+
+            if ui
+                .add_enabled(window_is_set, egui::Button::new("Pop out"))
+                .clicked()
+            {
+                let window = std::mem::take(internal_state.active_editor_mut(panel));
+                if let Some(window) = window {
+                    let id = internal_state.next_floating_window_id();
+                    internal_state.floating_windows.push(FloatingWindow {
+                        window,
+                        id,
+                        original_panel: Some(panel),
+                    });
+                }
+
+                ui.close_menu();
+            }
+        });
+    }
+
+    fn editor_floating_windows(
+        &mut self,
+        world: &mut World,
+        ctx: &egui::CtxRef,
+        internal_state: &mut EditorInternalState,
+    ) {
+        let mut close_floating_windows = Vec::new();
+        for (i, floating_window) in internal_state.floating_windows.iter().enumerate() {
+            let id = egui::Id::new(floating_window.id);
+            let title = self.windows[&floating_window.window].name;
+
+            let mut open = true;
+            egui::Window::new(title)
+                .id(id)
+                .open(&mut open)
+                .resizable(true)
+                .default_size((0.0, 0.0))
+                .show(ctx, |ui| {
+                    self.editor_window_inner(world, floating_window.window, ui);
+                    ui.allocate_space(ui.available_size());
+                });
+            if !open {
+                close_floating_windows.push(i);
+            }
+        }
+
+        for &to_remove in close_floating_windows.iter().rev() {
+            let floating_window = internal_state.floating_windows.swap_remove(to_remove);
+
+            if let Some(original_panel) = floating_window.original_panel {
+                internal_state
+                    .active_editor_mut(original_panel)
+                    .get_or_insert(floating_window.window);
+            }
+        }
     }
 }
 
