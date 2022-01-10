@@ -36,7 +36,7 @@ impl<'a> Hierarchy<'a> {
         }
     }
     fn entity_ui(&mut self, entity: Entity, ui: &mut egui::Ui) {
-        let response = CollapsingHeader::new(self.entity_name(entity)).show(ui, |ui| {
+        let response = CollapsingHeader::new(self.entity_name(entity).to_string()).show(ui, |ui| {
             let children = self.world.get::<Children>(entity);
             if let Some(children) = children {
                 let children = children.clone();

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false }
-bevy_egui = { git = "https://github.com/jakobhellermann/bevy_egui", branch = "bevy-main" }
-bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui", branch = "bevy-main" }
+bevy = { version = "0.6", default-features = false }
+bevy_egui = "0.10"
+bevy-inspector-egui = "0.7"
 indexmap = "1.7"

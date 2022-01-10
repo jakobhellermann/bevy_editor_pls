@@ -26,7 +26,7 @@ impl EditorWindow for DebugSettingsWindow {
         let state = cx.state_mut::<DebugSettingsWindow>().unwrap();
 
         Grid::new("debug settings").show(ui, |ui| {
-            let inspect_cx = bevy_inspector_egui::Context::new_shared(None);
+            let mut inspect_cx = bevy_inspector_egui::Context::new_shared(None);
 
             let wireframe_enabled = world
                 .get_resource::<WgpuOptions>()
@@ -41,7 +41,7 @@ impl EditorWindow for DebugSettingsWindow {
             }
             ui.scope(|ui| {
                 ui.set_enabled(wireframe_enabled);
-                if state.wireframes.ui(ui, Default::default(), &inspect_cx) {
+                if state.wireframes.ui(ui, Default::default(), &mut inspect_cx) {
                     world
                         .get_resource_or_insert_with(WireframeConfig::default)
                         .global = state.wireframes;
@@ -50,7 +50,10 @@ impl EditorWindow for DebugSettingsWindow {
             ui.end_row();
 
             ui.label("Performace window");
-            if state.performance_ui.ui(ui, Default::default(), &inspect_cx) {}
+            if state
+                .performance_ui
+                .ui(ui, Default::default(), &mut inspect_cx)
+            {}
             ui.end_row();
         });
     }

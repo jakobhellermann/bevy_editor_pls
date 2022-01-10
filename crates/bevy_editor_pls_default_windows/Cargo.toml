@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main" }
+bevy = { version = "0.6" }
 bevy_editor_pls_core = { path = "../bevy_editor_pls_core" }
-bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui", branch = "bevy-main" }
+bevy-inspector-egui = "0.7"

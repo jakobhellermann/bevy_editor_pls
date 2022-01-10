@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 bevy_editor_pls = { path = "../../crates/bevy_editor_pls" }
-bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
+bevy = { version = "0.6", default-features = false, features = [
     "bevy_winit",
     "x11",
 ] }
