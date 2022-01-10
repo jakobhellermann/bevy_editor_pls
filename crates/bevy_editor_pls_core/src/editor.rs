@@ -1,6 +1,7 @@
 use std::any::{Any, TypeId};
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::render::camera::UpdateCameraProjectionSystem;
+use bevy::{prelude::*, render::camera::Viewport, utils::HashMap};
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
 use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
 use indexmap::IndexMap;
@@ -22,7 +23,14 @@ impl Plugin for EditorPlugin {
 
         app.init_resource::<Editor>()
             .init_resource::<EditorState>()
-            .add_system_to_stage(CoreStage::PostUpdate, Editor::system.exclusive_system());
+            .add_system_to_stage(
+                CoreStage::PostUpdate,
+                Editor::system.exclusive_system().at_start(),
+            )
+            .add_system_to_stage(
+                CoreStage::PostUpdate,
+                set_main_pass_viewport.before(UpdateCameraProjectionSystem),
+            );
     }
 }
 
@@ -54,6 +62,7 @@ struct EditorInternalState {
     left_panel: Option<TypeId>,
     right_panel: Option<TypeId>,
     bottom_panel: Option<TypeId>,
+    viewport: EditorViewportSize,
 }
 
 fn ui_fn<W: EditorWindow>(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
@@ -86,6 +95,7 @@ impl Editor {
                 left_panel: windows.next(),
                 right_panel: windows.next(),
                 bottom_panel: windows.next(),
+                viewport: EditorViewportSize::default(),
             };
             world.insert_resource(state);
         }
@@ -149,6 +159,16 @@ impl Editor {
                     .show_inside(ui, |ui| {
                         self.editor_window(world, &mut internal_state.bottom_panel, ui);
                     });
+
+                let position = ui.next_widget_position();
+                let size = ui.available_size();
+
+                if position != internal_state.viewport.position
+                    || size != internal_state.viewport.size
+                {
+                    internal_state.viewport.position = position;
+                    internal_state.viewport.size = size;
+                }
             });
     }
 
@@ -203,4 +223,46 @@ fn play_pause_button(active: bool, ui: &mut egui::Ui) -> egui::Response {
         false => "⏸",
     };
     ui.add(egui::Button::new(icon).frame(false))
+}
+
+#[derive(Clone, Default)]
+struct EditorViewportSize {
+    position: egui::Pos2,
+    size: egui::Vec2,
+}
+
+fn set_main_pass_viewport(
+    editor_state: Res<EditorState>,
+    internal_state: Res<EditorInternalState>,
+    egui_settings: Res<EguiSettings>,
+    windows: Res<Windows>,
+    mut cameras: Query<&mut Camera>,
+) {
+    fn vec2(egui: egui::Vec2) -> Vec2 {
+        Vec2::new(egui.x, egui.y)
+    }
+    fn vec2_pos(egui: egui::Pos2) -> Vec2 {
+        Vec2::new(egui.x, egui.y)
+    }
+
+    if !(internal_state.is_changed() || editor_state.is_changed()) {
+        return;
+    };
+
+    let scale_factor = windows.get_primary().unwrap().scale_factor() * egui_settings.scale_factor;
+
+    let viewport_pos = vec2_pos(internal_state.viewport.position) * scale_factor as f32;
+    let viewport_size = vec2(internal_state.viewport.size) * scale_factor as f32;
+
+    cameras.iter_mut().for_each(|mut cam| {
+        cam.viewport = editor_state.active.then(|| Viewport {
+            x: viewport_pos.x,
+            y: viewport_pos.y,
+            w: viewport_size.x,
+            h: viewport_size.y,
+            min_depth: 0.0,
+            max_depth: 1.0,
+            scaling_mode: bevy::render::camera::ViewportScalingMode::Pixels,
+        });
+    });
 }

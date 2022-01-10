@@ -1,3 +1,10 @@
 [workspace]
 members = ["crates/*", "examples/*"]
 resolver = "2"
+
+[patch.crates-io]
+bevy = { git = "https://github.com/jakobhellermann/bevy", branch = "camera-viewport" }
+egui = { git = "https://github.com/jakobhellermann/egui", branch = "pub-next-widget-position" }
+
+[profile.dev.package."*"]
+opt-level = 3
