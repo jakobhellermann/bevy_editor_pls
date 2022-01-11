@@ -3,6 +3,9 @@ name = "bevy_editor_pls_core"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+viewport = []
+
 [dependencies]
 bevy = { version = "0.6", default-features = false }
 bevy_egui = "0.10"

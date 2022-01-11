@@ -1,7 +1,6 @@
 use std::any::{Any, TypeId};
 
-use bevy::render::camera::UpdateCameraProjectionSystem;
-use bevy::{prelude::*, render::camera::Viewport, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
 use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
 use indexmap::IndexMap;
@@ -27,11 +26,13 @@ impl Plugin for EditorPlugin {
             .add_system_to_stage(
                 CoreStage::PostUpdate,
                 Editor::system.exclusive_system().at_start(),
-            )
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                set_main_pass_viewport.before(UpdateCameraProjectionSystem),
             );
+
+        #[cfg(feature = "viewport")]
+        app.add_system_to_stage(
+            CoreStage::PostUpdate,
+            set_main_pass_viewport.before(bevy::render::camera::UpdateCameraProjectionSystem),
+        );
     }
 }
 
@@ -510,6 +511,7 @@ fn play_pause_button(active: bool, ui: &mut egui::Ui) -> egui::Response {
     ui.add(egui::Button::new(icon).frame(false))
 }
 
+#[cfg(feature = "viewport")]
 fn set_main_pass_viewport(
     editor_state: Res<EditorState>,
     internal_state: Res<EditorInternalState>,
@@ -527,7 +529,7 @@ fn set_main_pass_viewport(
     let viewport_size = internal_state.viewport.size() * scale_factor as f32;
 
     cameras.iter_mut().for_each(|mut cam| {
-        cam.viewport = editor_state.active.then(|| Viewport {
+        cam.viewport = editor_state.active.then(|| bevy::render::camera::Viewport {
             x: viewport_pos.x,
             y: viewport_pos.y,
             w: viewport_size.x.max(1.0),
