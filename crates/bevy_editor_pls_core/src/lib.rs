@@ -1,3 +1,4 @@
+mod drag_and_drop;
 mod editor;
 pub mod editor_window;
 

@@ -6,6 +6,7 @@ use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
 use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
 use indexmap::IndexMap;
 
+use crate::drag_and_drop;
 use crate::editor_window::{EditorWindow, EditorWindowContext};
 
 pub struct EditorPlugin;
@@ -64,21 +65,46 @@ struct EditorInternalState {
     bottom_panel: Option<TypeId>,
     floating_windows: Vec<FloatingWindow>,
     viewport: EditorViewportSize,
+    active_drag_window: Option<WindowPosition>,
+    active_drop_location: Option<DropLocation>,
 
     next_floating_window_id: u32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 enum EditorPanel {
     Left,
     Right,
     Bottom,
 }
 
+#[derive(Clone)]
 struct FloatingWindow {
     window: TypeId,
     id: u32,
     original_panel: Option<EditorPanel>,
+    initial_position: Option<egui::Pos2>,
+}
+
+#[derive(Debug)]
+enum WindowPosition {
+    Panel(EditorPanel),
+    #[allow(dead_code)]
+    FloatingWindow(u32),
+}
+impl WindowPosition {
+    fn panel(self) -> Option<EditorPanel> {
+        match self {
+            WindowPosition::Panel(panel) => Some(panel),
+            WindowPosition::FloatingWindow(_) => None,
+        }
+    }
+}
+
+#[derive(Debug)]
+enum DropLocation {
+    Panel(EditorPanel),
+    NewFloatingWindow,
 }
 
 impl EditorInternalState {
@@ -88,20 +114,36 @@ impl EditorInternalState {
         id
     }
 
-    #[allow(unused)]
-    fn active_editor(&self, panel: EditorPanel) -> Option<TypeId> {
+    fn active_panel(&self, panel: EditorPanel) -> Option<TypeId> {
         match panel {
             EditorPanel::Left => self.left_panel.clone(),
             EditorPanel::Right => self.right_panel.clone(),
             EditorPanel::Bottom => self.bottom_panel.clone(),
         }
     }
-    fn active_editor_mut(&mut self, panel: EditorPanel) -> &mut Option<TypeId> {
+    fn active_panel_mut(&mut self, panel: EditorPanel) -> &mut Option<TypeId> {
         match panel {
             EditorPanel::Left => &mut self.left_panel,
             EditorPanel::Right => &mut self.right_panel,
             EditorPanel::Bottom => &mut self.bottom_panel,
         }
+    }
+
+    fn set_window(&mut self, location: WindowPosition, window: TypeId) {
+        match location {
+            WindowPosition::Panel(panel) => *self.active_panel_mut(panel) = Some(window),
+            WindowPosition::FloatingWindow(id) => {
+                if let Some(floating_window) = self.floating_windows.iter_mut().find(|a| a.id == id)
+                {
+                    floating_window.window = window;
+                }
+            }
+        }
+    }
+
+    fn is_in_viewport(&self, pos: egui::Pos2) -> bool {
+        let viewport = egui::Rect::from_min_size(self.viewport.position, self.viewport.size);
+        viewport.contains(pos)
     }
 }
 
@@ -150,6 +192,8 @@ impl Editor {
                 bottom_panel: windows.next(),
                 floating_windows: Vec::new(),
                 next_floating_window_id: 0,
+                active_drag_window: None,
+                active_drop_location: None,
                 viewport: EditorViewportSize::default(),
             };
             world.insert_resource(state);
@@ -188,14 +232,14 @@ impl Editor {
         let res = egui::SidePanel::left("left_panel")
             .resizable(true)
             .show(ctx, |ui| {
-                self.editor_window(world, &mut internal_state.left_panel, ui);
+                self.editor_window(world, internal_state, ui, EditorPanel::Left);
             });
         self.editor_window_context_menu(res.response, internal_state, EditorPanel::Left);
 
         let res = egui::SidePanel::right("right_panel")
             .resizable(true)
             .show(ctx, |ui| {
-                self.editor_window(world, &mut internal_state.right_panel, ui);
+                self.editor_window(world, internal_state, ui, EditorPanel::Right);
             });
         self.editor_window_context_menu(res.response, internal_state, EditorPanel::Right);
 
@@ -211,7 +255,7 @@ impl Editor {
                             .stroke(ui.style().visuals.window_stroke()),
                     )
                     .show_inside(ui, |ui| {
-                        self.editor_window(world, &mut internal_state.bottom_panel, ui);
+                        self.editor_window(world, internal_state, ui, EditorPanel::Bottom);
                     });
                 self.editor_window_context_menu(res.response, internal_state, EditorPanel::Bottom);
 
@@ -227,6 +271,8 @@ impl Editor {
             });
 
         self.editor_floating_windows(world, ctx, internal_state);
+
+        self.handle_drag_and_drop(internal_state, ctx);
     }
 
     fn editor_menu_bar(
@@ -249,6 +295,7 @@ impl Editor {
                                 window: window_id,
                                 id: floating_window_id,
                                 original_panel: None,
+                                initial_position: None,
                             });
                             ui.close_menu();
                         }
@@ -261,30 +308,63 @@ impl Editor {
     fn editor_window(
         &mut self,
         world: &mut World,
-        selected: &mut Option<TypeId>,
+        internal_state: &mut EditorInternalState,
         ui: &mut egui::Ui,
+        panel: EditorPanel,
     ) {
-        let selected_text = selected
+        let id = egui::Id::new(panel);
+        let drag_id = id.with("drag");
+
+        let selected_text = internal_state
+            .active_panel(panel)
             .clone()
             .map_or_else(|| "Select a window", |id| self.windows[&id].name);
-        egui::ComboBox::from_id_source("panel select")
-            .selected_text(selected_text)
-            .show_ui(ui, |ui| {
-                for (id, window) in &self.windows {
-                    if ui.selectable_label(false, window.name).clicked() {
-                        *selected = Some(*id);
+
+        egui::menu::bar(ui, |ui| {
+            egui::ComboBox::from_id_source("panel select")
+                .selected_text(selected_text)
+                .show_ui(ui, |ui| {
+                    for (id, window) in &self.windows {
+                        if ui.selectable_label(false, window.name).clicked() {
+                            *internal_state.active_panel_mut(panel) = Some(*id);
+                        }
                     }
-                }
-                if ui.selectable_label(false, "None").clicked() {
-                    *selected = None;
+                    if ui.selectable_label(false, "None").clicked() {
+                        *internal_state.active_panel_mut(panel) = None;
+                    }
+                });
+
+            ui.with_layout(egui::Layout::right_to_left(), |ui| {
+                let can_drag = internal_state.active_panel(panel).is_some();
+
+                let is_being_dragged = drag_and_drop::drag_source(ui, drag_id, can_drag, |ui| {
+                    ui.add_enabled(can_drag, egui::Button::new("☰").frame(false));
+                });
+                if is_being_dragged {
+                    internal_state.active_drag_window = Some(WindowPosition::Panel(panel));
                 }
             });
+        });
 
-        if let Some(selected) = selected {
-            self.editor_window_inner(world, *selected, ui);
+        let some_window_is_being_dragged = internal_state.active_drag_window.is_some();
+        let drop_response = drag_and_drop::drop_target(ui, some_window_is_being_dragged, |ui| {
+            if let Some(selected) = internal_state.active_panel(panel) {
+                self.editor_window_inner(world, selected, ui);
+            }
+
+            ui.allocate_space(ui.available_size());
+        })
+        .response;
+
+        if ui.memory().is_anything_being_dragged() && drop_response.hovered() {
+            internal_state.active_drop_location = Some(DropLocation::Panel(panel));
+        } else {
+            if let Some(DropLocation::Panel(drop_location)) = internal_state.active_drop_location {
+                if drop_location == panel {
+                    internal_state.active_drop_location = None;
+                }
+            }
         }
-
-        ui.allocate_space(ui.available_size());
     }
 
     fn editor_window_inner(&mut self, world: &mut World, selected: TypeId, ui: &mut egui::Ui) {
@@ -302,19 +382,20 @@ impl Editor {
         panel: EditorPanel,
     ) {
         response.context_menu(|ui| {
-            let window_is_set = internal_state.active_editor_mut(panel).is_some();
+            let window_is_set = internal_state.active_panel_mut(panel).is_some();
 
             if ui
                 .add_enabled(window_is_set, egui::Button::new("Pop out"))
                 .clicked()
             {
-                let window = std::mem::take(internal_state.active_editor_mut(panel));
+                let window = std::mem::take(internal_state.active_panel_mut(panel));
                 if let Some(window) = window {
                     let id = internal_state.next_floating_window_id();
                     internal_state.floating_windows.push(FloatingWindow {
                         window,
                         id,
                         original_panel: Some(panel),
+                        initial_position: None,
                     });
                 }
 
@@ -330,20 +411,25 @@ impl Editor {
         internal_state: &mut EditorInternalState,
     ) {
         let mut close_floating_windows = Vec::new();
-        for (i, floating_window) in internal_state.floating_windows.iter().enumerate() {
+        let floating_windows = internal_state.floating_windows.clone();
+        for (i, floating_window) in floating_windows.into_iter().enumerate() {
             let id = egui::Id::new(floating_window.id);
             let title = self.windows[&floating_window.window].name;
 
             let mut open = true;
-            egui::Window::new(title)
+            let mut window = egui::Window::new(title)
                 .id(id)
                 .open(&mut open)
                 .resizable(true)
-                .default_size((0.0, 0.0))
-                .show(ctx, |ui| {
-                    self.editor_window_inner(world, floating_window.window, ui);
-                    ui.allocate_space(ui.available_size());
-                });
+                .default_size((0.0, 0.0));
+            if let Some(initial_position) = floating_window.initial_position {
+                window = window.default_pos(initial_position - egui::Vec2::new(10.0, 10.0))
+            }
+            window.show(ctx, |ui| {
+                self.editor_window_inner(world, floating_window.window, ui);
+                ui.allocate_space(ui.available_size());
+            });
+
             if !open {
                 close_floating_windows.push(i);
             }
@@ -354,10 +440,71 @@ impl Editor {
 
             if let Some(original_panel) = floating_window.original_panel {
                 internal_state
-                    .active_editor_mut(original_panel)
+                    .active_panel_mut(original_panel)
                     .get_or_insert(floating_window.window);
             }
         }
+    }
+
+    fn handle_drag_and_drop(
+        &mut self,
+        internal_state: &mut EditorInternalState,
+        ctx: &egui::CtxRef,
+    ) -> Option<()> {
+        if !ctx.input().pointer.any_released() {
+            return None;
+        }
+
+        let active_window = std::mem::take(&mut internal_state.active_drag_window)?;
+        let drop_location = match std::mem::take(&mut internal_state.active_drop_location) {
+            Some(drop_location) => drop_location,
+            None => {
+                let pos = ctx.input().pointer.interact_pos()?;
+                if internal_state.is_in_viewport(pos) {
+                    DropLocation::NewFloatingWindow
+                } else {
+                    return None;
+                }
+            }
+        };
+
+        let window_id = match active_window {
+            WindowPosition::Panel(panel) => {
+                let window_id = std::mem::take(internal_state.active_panel_mut(panel)).unwrap();
+                window_id
+            }
+            WindowPosition::FloatingWindow(id) => {
+                let index = internal_state
+                    .floating_windows
+                    .iter()
+                    .position(|floating_window| floating_window.id == id)
+                    .unwrap();
+                let floating_window = internal_state.floating_windows.swap_remove(index);
+                floating_window.window
+            }
+        };
+
+        match drop_location {
+            DropLocation::Panel(panel) => {
+                let previous_window = std::mem::take(internal_state.active_panel_mut(panel));
+                *internal_state.active_panel_mut(panel) = Some(window_id);
+
+                if let Some(previous_window) = previous_window {
+                    internal_state.set_window(active_window, previous_window);
+                }
+            }
+            DropLocation::NewFloatingWindow => {
+                let id = internal_state.next_floating_window_id();
+                internal_state.floating_windows.push(FloatingWindow {
+                    window: window_id,
+                    id,
+                    original_panel: active_window.panel(),
+                    initial_position: ctx.input().pointer.interact_pos(),
+                });
+            }
+        }
+
+        Some(())
     }
 }
 
