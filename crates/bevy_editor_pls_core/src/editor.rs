@@ -64,7 +64,7 @@ struct EditorInternalState {
     right_panel: Option<TypeId>,
     bottom_panel: Option<TypeId>,
     floating_windows: Vec<FloatingWindow>,
-    viewport: EditorViewportSize,
+    viewport: egui::Rect,
     active_drag_window: Option<WindowPosition>,
     active_drop_location: Option<DropLocation>,
 
@@ -142,8 +142,7 @@ impl EditorInternalState {
     }
 
     fn is_in_viewport(&self, pos: egui::Pos2) -> bool {
-        let viewport = egui::Rect::from_min_size(self.viewport.position, self.viewport.size);
-        viewport.contains(pos)
+        self.viewport.contains(pos)
     }
 }
 
@@ -194,7 +193,7 @@ impl Editor {
                 next_floating_window_id: 0,
                 active_drag_window: None,
                 active_drop_location: None,
-                viewport: EditorViewportSize::default(),
+                viewport: egui::Rect::EVERYTHING,
             };
             world.insert_resource(state);
         }
@@ -262,12 +261,7 @@ impl Editor {
                 let position = ui.next_widget_position();
                 let size = ui.available_size();
 
-                if position != internal_state.viewport.position
-                    || size != internal_state.viewport.size
-                {
-                    internal_state.viewport.position = position;
-                    internal_state.viewport.size = size;
-                }
+                internal_state.viewport = egui::Rect::from_min_size(position, size);
             });
 
         self.editor_floating_windows(world, ctx, internal_state);
@@ -516,12 +510,6 @@ fn play_pause_button(active: bool, ui: &mut egui::Ui) -> egui::Response {
     ui.add(egui::Button::new(icon).frame(false))
 }
 
-#[derive(Clone, Default)]
-struct EditorViewportSize {
-    position: egui::Pos2,
-    size: egui::Vec2,
-}
-
 fn set_main_pass_viewport(
     editor_state: Res<EditorState>,
     internal_state: Res<EditorInternalState>,
@@ -529,28 +517,21 @@ fn set_main_pass_viewport(
     windows: Res<Windows>,
     mut cameras: Query<&mut Camera>,
 ) {
-    fn vec2(egui: egui::Vec2) -> Vec2 {
-        Vec2::new(egui.x, egui.y)
-    }
-    fn vec2_pos(egui: egui::Pos2) -> Vec2 {
-        Vec2::new(egui.x, egui.y)
-    }
-
     if !(internal_state.is_changed() || editor_state.is_changed()) {
         return;
     };
 
     let scale_factor = windows.get_primary().unwrap().scale_factor() * egui_settings.scale_factor;
 
-    let viewport_pos = vec2_pos(internal_state.viewport.position) * scale_factor as f32;
-    let viewport_size = vec2(internal_state.viewport.size) * scale_factor as f32;
+    let viewport_pos = internal_state.viewport.left_top().to_vec2() * scale_factor as f32;
+    let viewport_size = internal_state.viewport.size() * scale_factor as f32;
 
     cameras.iter_mut().for_each(|mut cam| {
         cam.viewport = editor_state.active.then(|| Viewport {
             x: viewport_pos.x,
             y: viewport_pos.y,
-            w: viewport_size.x,
-            h: viewport_size.y,
+            w: viewport_size.x.max(1.0),
+            h: viewport_size.y.max(1.0),
             min_depth: 0.0,
             max_depth: 1.0,
             scaling_mode: bevy::render::camera::ViewportScalingMode::Pixels,
