@@ -20,6 +20,7 @@ impl Plugin for EditorPlugin {
 
         #[cfg(feature = "default_windows")]
         {
+            use bevy_editor_pls_default_windows::cameras::CameraWindow;
             use bevy_editor_pls_default_windows::debug_settings::DebugSettingsWindow;
             use bevy_editor_pls_default_windows::diagnostics::DiagnosticsWindow;
             use bevy_editor_pls_default_windows::hierarchy::HierarchyWindow;
@@ -29,6 +30,7 @@ impl Plugin for EditorPlugin {
             app.add_editor_window::<InspectorWindow>();
             app.add_editor_window::<DebugSettingsWindow>();
             app.add_editor_window::<DiagnosticsWindow>();
+            app.add_editor_window::<CameraWindow>();
 
             app.add_plugin(bevy::pbr::wireframe::WireframePlugin);
 
