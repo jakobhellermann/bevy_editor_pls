@@ -1,6 +1,8 @@
 use bevy::prelude::Plugin;
 pub use bevy_editor_pls_core::*;
 
+pub use egui;
+
 pub mod prelude {
     pub use crate::{AddEditorWindow, EditorPlugin};
 }
