@@ -41,7 +41,7 @@ pub struct EditorState {
 }
 impl Default for EditorState {
     fn default() -> Self {
-        Self { active: true }
+        Self { active: false }
     }
 }
 
