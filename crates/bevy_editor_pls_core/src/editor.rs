@@ -1,5 +1,6 @@
 use std::any::{Any, TypeId};
 
+use bevy::app::Events;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
 use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
@@ -23,6 +24,7 @@ impl Plugin for EditorPlugin {
 
         app.init_resource::<Editor>()
             .init_resource::<EditorState>()
+            .add_event::<EditorEvent>()
             .add_system_to_stage(
                 CoreStage::PostUpdate,
                 Editor::system.exclusive_system().at_start(),
@@ -34,6 +36,11 @@ impl Plugin for EditorPlugin {
             set_main_pass_viewport.before(bevy::render::camera::UpdateCameraProjectionSystem),
         );
     }
+}
+
+#[non_exhaustive]
+pub enum EditorEvent {
+    Toggle { now_active: bool },
 }
 
 pub struct EditorState {
@@ -210,11 +217,16 @@ impl Editor {
             world.resource_scope(|world, mut editor_state: Mut<EditorState>| {
                 world.resource_scope(
                     |world, mut editor_internal_state: Mut<EditorInternalState>| {
-                        editor.editor_ui(
-                            world,
-                            &ctx,
-                            &mut editor_state,
-                            &mut editor_internal_state,
+                        world.resource_scope(
+                            |world, mut editor_events: Mut<Events<EditorEvent>>| {
+                                editor.editor_ui(
+                                    world,
+                                    &ctx,
+                                    &mut editor_state,
+                                    &mut editor_internal_state,
+                                    &mut editor_events,
+                                );
+                            },
                         );
                     },
                 );
@@ -228,8 +240,9 @@ impl Editor {
         ctx: &egui::CtxRef,
         editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
+        editor_events: &mut Events<EditorEvent>,
     ) {
-        self.editor_menu_bar(ctx, editor_state, internal_state);
+        self.editor_menu_bar(ctx, editor_state, internal_state, editor_events);
 
         if !editor_state.active {
             editor_state.pointer_on_floating_window =
@@ -290,11 +303,15 @@ impl Editor {
         ctx: &egui::CtxRef,
         editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
+        editor_events: &mut Events<EditorEvent>,
     ) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 if play_pause_button(editor_state.active, ui).clicked() {
                     editor_state.active = !editor_state.active;
+                    editor_events.send(EditorEvent::Toggle {
+                        now_active: editor_state.active,
+                    });
                 }
 
                 ui.menu_button("Open window", |ui| {
