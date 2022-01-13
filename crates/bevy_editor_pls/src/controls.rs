@@ -39,6 +39,7 @@ pub struct Binding {
 
 pub struct EditorControls {
     pub select_mesh: Binding,
+    pub play_pause_editor: Binding,
 }
 
 impl Button {
@@ -90,7 +91,7 @@ pub fn editor_controls_system(
     controls: Res<EditorControls>,
     keyboard_input: Res<Input<KeyCode>>,
     mouse_input: Res<Input<MouseButton>>,
-    editor_state: Res<EditorState>,
+    mut editor_state: ResMut<EditorState>,
 
     mut editor_hierarchy_event: EventWriter<EditorHierarchyEvent>,
 ) {
@@ -100,6 +101,13 @@ pub fn editor_controls_system(
     {
         editor_hierarchy_event.send(EditorHierarchyEvent::SelectMesh)
     }
+
+    if controls
+        .play_pause_editor
+        .just_pressed(&keyboard_input, &mouse_input, &editor_state)
+    {
+        editor_state.active = !editor_state.active;
+    }
 }
 
 impl Default for EditorControls {
@@ -108,6 +116,10 @@ impl Default for EditorControls {
             select_mesh: Binding {
                 input: UserInput::Single(Button::Mouse(MouseButton::Left)),
                 conditions: vec![BindingCondition::InViewport(true)],
+            },
+            play_pause_editor: Binding {
+                input: UserInput::Single(Button::Keyboard(KeyCode::Tab)),
+                conditions: Vec::new(),
             },
         }
     }
