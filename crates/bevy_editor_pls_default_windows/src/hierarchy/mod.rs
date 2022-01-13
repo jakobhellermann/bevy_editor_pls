@@ -1,8 +1,6 @@
 pub mod picking;
 
-use std::borrow::Cow;
-
-use bevy::ecs::{system::QuerySingleError, world::EntityRef};
+use bevy::ecs::system::QuerySingleError;
 use bevy::prelude::*;
 use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText};
 
@@ -80,7 +78,8 @@ impl<'a> Hierarchy<'a> {
     fn entity_ui(&mut self, entity: Entity, ui: &mut egui::Ui) {
         let active = self.state.selected == Some(entity);
 
-        let mut text = RichText::new(self.entity_name(entity));
+        let entity_name = bevy_inspector_egui::world_inspector::entity_name(self.world, entity);
+        let mut text = RichText::new(entity_name);
         if active {
             text = text.strong();
         }
@@ -100,26 +99,4 @@ impl<'a> Hierarchy<'a> {
             self.state.selected = Some(entity);
         }
     }
-
-    fn entity_name(&self, entity: Entity) -> Cow<'_, str> {
-        match self.world.get_entity(entity) {
-            Some(entity) => guess_entity_name(entity),
-            None => format!("Entity {} (inexistent)", entity.id()).into(),
-        }
-    }
-}
-
-fn guess_entity_name(entity: EntityRef) -> Cow<'_, str> {
-    if let Some(name) = entity.get::<Name>() {
-        return name.as_str().into();
-    }
-
-    if let Some(camera) = entity.get::<Camera>() {
-        match &camera.name {
-            Some(name) => return name.as_str().into(),
-            None => return "Camera".into(),
-        }
-    }
-
-    format!("Entity {:?}", entity.id()).into()
 }
