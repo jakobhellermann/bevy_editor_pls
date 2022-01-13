@@ -16,7 +16,6 @@ pub fn setup(app: &mut App) {
             CoreStage::PreUpdate,
             SystemSet::new()
                 .with_system(update_raycast_with_cursor)
-                .with_system(handle_editor_events)
                 .with_system(auto_add_editor_picking_set)
                 .after(RaycastSystem::BuildRays),
         );
@@ -30,13 +29,6 @@ fn update_raycast_with_cursor(
         if let Some(cursor_latest) = cursor.iter().last() {
             pick_source.cast_method = RayCastMethod::Screenspace(cursor_latest.position);
         }
-    }
-}
-
-fn handle_editor_events(mut raycast_state: ResMut<EditorRayCastState>, input: Res<Input<KeyCode>>) {
-    if input.just_pressed(KeyCode::Space) {
-        raycast_state.build_rays = !raycast_state.build_rays;
-        raycast_state.update_raycast = !raycast_state.update_raycast;
     }
 }
 

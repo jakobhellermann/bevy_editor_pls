@@ -2,13 +2,15 @@ pub mod picking;
 
 use bevy::prelude::*;
 use bevy::utils::HashSet;
-use bevy_editor_pls_core::EditorState;
+use bevy_editor_pls_core::{EditorEvent, EditorState};
 use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText};
 
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor,
 };
+
+use self::picking::EditorRayCastState;
 
 pub struct HierarchyWindow;
 impl EditorWindow for HierarchyWindow {
@@ -32,12 +34,28 @@ pub enum EditorHierarchyEvent {
 }
 
 fn handle_events(
-    mut events: EventReader<EditorHierarchyEvent>,
+    mut select_mesh_events: EventReader<EditorHierarchyEvent>,
+    mut editor_events: EventReader<EditorEvent>,
+    mut raycast_state: ResMut<EditorRayCastState>,
     editor_camera: Query<&picking::EditorRayCastSource, With<super::cameras::EditorCamera>>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
 ) {
-    for event in events.iter() {
+    for event in editor_events.iter() {
+        match *event {
+            EditorEvent::Toggle { now_active: false } => {
+                raycast_state.build_rays = false;
+                raycast_state.update_raycast = false;
+            }
+            EditorEvent::Toggle { now_active: true } => {
+                raycast_state.build_rays = true;
+                raycast_state.update_raycast = true;
+            }
+            _ => {}
+        }
+    }
+
+    for event in select_mesh_events.iter() {
         match event {
             EditorHierarchyEvent::SelectMesh => {
                 let raycast_source = if editor_state.active {
@@ -48,14 +66,14 @@ fn handle_events(
                 };
                 let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
 
-                if let Some((entity, _interaction)) =
-                    raycast_source.and_then(|source| source.intersect_top())
-                {
-                    info!("Selecting mesh, found {:?}", entity);
-                    state.selected = Some(entity);
-                } else {
-                    info!("Selecting mesh, found none");
-                    state.selected = None;
+                if let Some(raycast_source) = raycast_source {
+                    if let Some((entity, _interaction)) = raycast_source.intersect_top() {
+                        info!("Selecting mesh, found {:?}", entity);
+                        state.selected = Some(entity);
+                    } else {
+                        info!("Selecting mesh, found none");
+                        state.selected = None;
+                    }
                 }
             }
         }
