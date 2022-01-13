@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_editor_pls_core::EditorState;
+use bevy_editor_pls_core::{editor_window::EditorWindow, EditorState};
 use bevy_editor_pls_default_windows::hierarchy::EditorHierarchyEvent;
 
 pub enum Button {
@@ -118,9 +118,67 @@ impl Default for EditorControls {
                 conditions: vec![BindingCondition::InViewport(true)],
             },
             play_pause_editor: Binding {
-                input: UserInput::Single(Button::Keyboard(KeyCode::Tab)),
+                input: UserInput::Single(Button::Keyboard(KeyCode::E)),
                 conditions: Vec::new(),
             },
         }
+    }
+}
+
+impl std::fmt::Display for Button {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Button::Keyboard(key) => write!(f, "{:?}", key),
+            Button::Mouse(mouse) => write!(f, "{:?}", mouse),
+        }
+    }
+}
+
+impl std::fmt::Display for UserInput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UserInput::Single(single) => {
+                write!(f, "{}", single)?;
+            }
+            UserInput::Chord(chord) => {
+                let mut iter = chord.iter();
+                let first = iter.next();
+                if let Some(first) = first {
+                    write!(f, "{}", first)?;
+                }
+
+                for remaining in iter {
+                    write!(f, "+ {}", remaining)?;
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for Binding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.input)
+    }
+}
+
+pub struct ControlsWindow;
+
+impl EditorWindow for ControlsWindow {
+    type State = ();
+    const NAME: &'static str = "Controls";
+
+    fn ui(
+        world: &mut World,
+        _: bevy_editor_pls_core::editor_window::EditorWindowContext,
+        ui: &mut egui::Ui,
+    ) {
+        let controls = world.get_resource::<EditorControls>().unwrap();
+
+        ui.label(egui::RichText::new("Play/Pause editor").strong());
+        ui.label(format!("{}", controls.play_pause_editor));
+
+        ui.label(egui::RichText::new("Select mesh:").strong());
+        ui.label(format!("{}", controls.select_mesh));
     }
 }

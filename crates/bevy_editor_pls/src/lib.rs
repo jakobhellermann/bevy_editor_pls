@@ -34,6 +34,8 @@ impl Plugin for EditorPlugin {
             app.add_editor_window::<CameraWindow>();
             app.add_editor_window::<SceneWindow>();
 
+            app.add_editor_window::<controls::ControlsWindow>();
+
             app.add_plugin(bevy::pbr::wireframe::WireframePlugin);
 
             app.init_resource::<controls::EditorControls>()
