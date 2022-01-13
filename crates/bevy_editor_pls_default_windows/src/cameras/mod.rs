@@ -16,21 +16,24 @@ use editor_cam_render::EDITOR_CAMERA_FLYCAM;
 
 use self::persistent_active_cameras::PersistentActiveCameras;
 
+#[derive(Component)]
+pub struct EditorCamera;
+
 pub struct CameraWindow;
 
-enum EditorCam {
+enum EditorCamKind {
     Flycam,
 }
 
-impl Default for EditorCam {
+impl Default for EditorCamKind {
     fn default() -> Self {
-        EditorCam::Flycam
+        EditorCamKind::Flycam
     }
 }
 
 #[derive(Default)]
 pub struct CameraWindowState {
-    editor_cam: EditorCam,
+    editor_cam: EditorCamKind,
 }
 
 impl EditorWindow for CameraWindow {
@@ -101,7 +104,8 @@ fn spawn_editor_cam(mut commands: Commands) {
         })
         .insert(editor_cam_controls::Flycam::default())
         .insert(crate::hierarchy::picking::EditorRayCastSource::new())
-        .insert(Name::new("Editor fly cam"));
+        .insert(EditorCamera)
+        .insert(Name::new("Editor Flycam 3d"));
 }
 
 fn toggle_editor_cam(
@@ -130,7 +134,7 @@ fn toggle_editor_cam(
             }
 
             match camera_state.editor_cam {
-                EditorCam::Flycam => {
+                EditorCamKind::Flycam => {
                     let (mut cam_transform, mut cam) = flycam.single_mut();
                     cam.enabled = now_active;
 

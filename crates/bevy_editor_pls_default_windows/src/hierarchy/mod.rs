@@ -1,7 +1,8 @@
 pub mod picking;
 
 use bevy::prelude::*;
-use bevy::{ecs::system::QuerySingleError, utils::HashSet};
+use bevy::utils::HashSet;
+use bevy_editor_pls_core::EditorState;
 use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText};
 
 use bevy_editor_pls_core::{
@@ -32,24 +33,28 @@ pub enum EditorHierarchyEvent {
 
 fn handle_events(
     mut events: EventReader<EditorHierarchyEvent>,
-    raycast_source: Query<&picking::EditorRayCastSource>,
+    editor_camera: Query<&picking::EditorRayCastSource, With<super::cameras::EditorCamera>>,
     mut editor: ResMut<Editor>,
+    editor_state: Res<EditorState>,
 ) {
     for event in events.iter() {
         match event {
             EditorHierarchyEvent::SelectMesh => {
-                let raycast_source = match raycast_source.get_single() {
-                    Ok(entity) => entity,
-                    Err(QuerySingleError::NoEntities(_)) => continue,
-                    Err(QuerySingleError::MultipleEntities(_)) => {
-                        panic!("Multiple entities with EditorRayCastSource component!")
-                    }
+                let raycast_source = if editor_state.active {
+                    let raycast_source = editor_camera.single();
+                    Some(raycast_source)
+                } else {
+                    None
                 };
                 let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
 
-                if let Some((entity, _interaction)) = raycast_source.intersect_top() {
+                if let Some((entity, _interaction)) =
+                    raycast_source.and_then(|source| source.intersect_top())
+                {
+                    info!("Selecting mesh, found {:?}", entity);
                     state.selected = Some(entity);
                 } else {
+                    info!("Selecting mesh, found none");
                     state.selected = None;
                 }
             }
