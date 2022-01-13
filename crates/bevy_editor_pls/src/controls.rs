@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_editor_pls_core::{editor_window::EditorWindow, EditorState};
+use bevy_editor_pls_core::{editor_window::EditorWindow, EditorEvent, EditorState};
 use bevy_editor_pls_default_windows::hierarchy::EditorHierarchyEvent;
 
 pub enum Button {
@@ -93,6 +93,7 @@ pub fn editor_controls_system(
     mouse_input: Res<Input<MouseButton>>,
     mut editor_state: ResMut<EditorState>,
 
+    mut editor_events: EventWriter<EditorEvent>,
     mut editor_hierarchy_event: EventWriter<EditorHierarchyEvent>,
 ) {
     if controls
@@ -107,6 +108,9 @@ pub fn editor_controls_system(
         .just_pressed(&keyboard_input, &mouse_input, &editor_state)
     {
         editor_state.active = !editor_state.active;
+        editor_events.send(EditorEvent::Toggle {
+            now_active: editor_state.active,
+        });
     }
 }
 
