@@ -16,6 +16,7 @@ pub struct Flycam {
     pub pitch: f32,
     pub sensitivity: f32,
     pub enabled: bool,
+    pub was_initially_positioned: bool,
 }
 impl Default for Flycam {
     fn default() -> Self {
@@ -24,6 +25,7 @@ impl Default for Flycam {
             pitch: Default::default(),
             sensitivity: 6.0,
             enabled: false,
+            was_initially_positioned: false,
         }
     }
 }
@@ -87,7 +89,7 @@ fn camera_look(
     }
 
     flycam.yaw -= delta.x * flycam.sensitivity * time.delta_seconds();
-    flycam.pitch += delta.y * flycam.sensitivity * time.delta_seconds();
+    flycam.pitch -= delta.y * flycam.sensitivity * time.delta_seconds();
 
     flycam.pitch = flycam.pitch.clamp(-89.0, 89.9);
     // println!("pitch: {}, yaw: {}", options.pitch, options.yaw);
@@ -95,8 +97,7 @@ fn camera_look(
     let yaw_radians = flycam.yaw.to_radians();
     let pitch_radians = flycam.pitch.to_radians();
 
-    transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw_radians)
-        * Quat::from_axis_angle(-Vec3::X, pitch_radians);
+    transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw_radians, pitch_radians, 0.0);
 }
 
 fn toggle_cursor(

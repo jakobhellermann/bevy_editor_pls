@@ -3,7 +3,10 @@ mod editor_cam_render;
 
 mod persistent_active_cameras;
 
-use bevy::{prelude::*, render::camera::ActiveCameras};
+use bevy::{
+    prelude::*,
+    render::camera::{ActiveCameras, CameraPlugin},
+};
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor, EditorEvent,
@@ -107,11 +110,16 @@ fn toggle_editor_cam(
     mut active_cameras_raw: ResMut<ActiveCameras>,
     mut active_cameras: ResMut<PersistentActiveCameras>,
 
-    mut flycam: Query<&mut editor_cam_controls::Flycam>,
+    mut flycam: Query<(&mut Transform, &mut editor_cam_controls::Flycam)>,
+    cameras: Query<&Transform, (With<Camera>, Without<editor_cam_controls::Flycam>)>,
 ) {
     for event in editor_events.iter() {
         if let EditorEvent::Toggle { now_active } = *event {
             let camera_state = editor.window_state_mut::<CameraWindow>().unwrap();
+
+            let cam3d_transform = active_cameras_raw
+                .get(CameraPlugin::CAMERA_3D)
+                .and_then(|cam| cameras.get(cam.entity?).ok());
 
             if now_active {
                 active_cameras.disable_all(&mut active_cameras_raw);
@@ -123,8 +131,18 @@ fn toggle_editor_cam(
 
             match camera_state.editor_cam {
                 EditorCam::Flycam => {
-                    let mut cam = flycam.single_mut();
+                    let (mut cam_transform, mut cam) = flycam.single_mut();
                     cam.enabled = now_active;
+
+                    if !cam.was_initially_positioned {
+                        if let Some(cam3d_transform) = cam3d_transform {
+                            *cam_transform = cam3d_transform.clone();
+                            let (yaw, pitch, _) = cam3d_transform.rotation.to_euler(EulerRot::YXZ);
+                            cam.yaw = yaw.to_degrees();
+                            cam.pitch = pitch.to_degrees();
+                        }
+                        cam.was_initially_positioned = true;
+                    }
                 }
             };
         }
