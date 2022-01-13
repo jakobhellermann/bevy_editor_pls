@@ -25,10 +25,13 @@ fn update_raycast_with_cursor(
     mut cursor: EventReader<CursorMoved>,
     mut query: Query<&mut EditorRayCastSource>,
 ) {
+    let cursor_position = match cursor.iter().last() {
+        Some(cursor_moved) => cursor_moved.position,
+        None => return,
+    };
+
     for mut pick_source in query.iter_mut() {
-        if let Some(cursor_latest) = cursor.iter().last() {
-            pick_source.cast_method = RayCastMethod::Screenspace(cursor_latest.position);
-        }
+        pick_source.cast_method = RayCastMethod::Screenspace(cursor_position);
     }
 }
 

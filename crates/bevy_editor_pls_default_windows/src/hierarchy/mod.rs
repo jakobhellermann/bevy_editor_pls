@@ -1,8 +1,8 @@
 pub mod picking;
 
-use bevy::prelude::*;
 use bevy::utils::HashSet;
-use bevy_editor_pls_core::{EditorEvent, EditorState};
+use bevy::{ecs::system::QuerySingleError, prelude::*};
+use bevy_editor_pls_core::EditorState;
 use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText};
 
 use bevy_editor_pls_core::{
@@ -12,8 +12,6 @@ use bevy_editor_pls_core::{
 
 #[derive(Component)]
 pub struct HideInEditor;
-
-use self::picking::EditorRayCastState;
 
 pub struct HierarchyWindow;
 impl EditorWindow for HierarchyWindow {
@@ -38,13 +36,15 @@ pub enum EditorHierarchyEvent {
 
 fn handle_events(
     mut select_mesh_events: EventReader<EditorHierarchyEvent>,
-    mut editor_events: EventReader<EditorEvent>,
-    mut raycast_state: ResMut<EditorRayCastState>,
+    // mut editor_events: EventReader<EditorEvent>,
+    // mut raycast_state: ResMut<EditorRayCastState>,
     editor_camera: Query<&picking::EditorRayCastSource, With<super::cameras::EditorCamera>>,
+    non_editor_camera: Query<&picking::EditorRayCastSource, Without<super::cameras::EditorCamera>>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
 ) {
-    for event in editor_events.iter() {
+    // TODO: reenable once bevy_mod_raycast has per-source configuration
+    /*for event in editor_events.iter() {
         match *event {
             EditorEvent::Toggle { now_active: false } => {
                 raycast_state.build_rays = false;
@@ -56,7 +56,7 @@ fn handle_events(
             }
             _ => {}
         }
-    }
+    }*/
 
     for event in select_mesh_events.iter() {
         match event {
@@ -65,7 +65,17 @@ fn handle_events(
                     let raycast_source = editor_camera.single();
                     Some(raycast_source)
                 } else {
-                    None
+                    match non_editor_camera.get_single() {
+                        Ok(source) => Some(source),
+                        Err(QuerySingleError::NoEntities(_)) => {
+                            error!("No cameras with `EditorRayCastSource` found, can't click to inspect when the editor is inactive!");
+                            continue;
+                        }
+                        Err(QuerySingleError::MultipleEntities(_)) => {
+                            error!("Multiple cameras with `EditorRayCastSource` found!");
+                            None
+                        }
+                    }
                 };
                 let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
 

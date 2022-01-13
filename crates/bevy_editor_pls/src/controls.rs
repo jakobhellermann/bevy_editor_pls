@@ -191,7 +191,20 @@ impl EditorControls {
             Action::SelectMesh,
             Binding {
                 input: UserInput::Single(Button::Mouse(MouseButton::Left)),
-                conditions: vec![BindingCondition::InViewport(true)],
+                conditions: vec![
+                    BindingCondition::EditorActive(true),
+                    BindingCondition::InViewport(true),
+                ],
+            },
+        );
+        controls.insert(
+            Action::SelectMesh,
+            Binding {
+                input: UserInput::Chord(vec![
+                    Button::Keyboard(KeyCode::LControl),
+                    Button::Mouse(MouseButton::Left),
+                ]),
+                conditions: vec![BindingCondition::EditorActive(false)],
             },
         );
         controls.insert(
