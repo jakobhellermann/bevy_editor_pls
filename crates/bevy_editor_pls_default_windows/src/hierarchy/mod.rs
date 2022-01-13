@@ -10,6 +10,9 @@ use bevy_editor_pls_core::{
     Editor,
 };
 
+#[derive(Component)]
+pub struct HideInEditor;
+
 use self::picking::EditorRayCastState;
 
 pub struct HierarchyWindow;
@@ -92,7 +95,9 @@ struct Hierarchy<'a> {
 
 impl<'a> Hierarchy<'a> {
     fn show(&mut self, ui: &mut egui::Ui) {
-        let mut root_query = self.world.query_filtered::<Entity, Without<Parent>>();
+        let mut root_query = self
+            .world
+            .query_filtered::<Entity, (Without<Parent>, Without<HideInEditor>)>();
 
         let parents: HashSet<Entity> = std::iter::successors(self.state.selected, |&entity| {
             self.world.get::<Parent>(entity).map(|parent| parent.0)

@@ -14,6 +14,8 @@ use bevy_editor_pls_core::{
 use bevy_inspector_egui::egui;
 use editor_cam_render::EDITOR_CAMERA_FLYCAM;
 
+use crate::hierarchy::HideInEditor;
+
 use self::persistent_active_cameras::PersistentActiveCameras;
 
 #[derive(Component)]
@@ -105,6 +107,7 @@ fn spawn_editor_cam(mut commands: Commands) {
         .insert(editor_cam_controls::Flycam::default())
         .insert(crate::hierarchy::picking::EditorRayCastSource::new())
         .insert(EditorCamera)
+        .insert(HideInEditor)
         .insert(Name::new("Editor Flycam 3d"));
 }
 
