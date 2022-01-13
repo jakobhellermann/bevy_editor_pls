@@ -38,10 +38,16 @@ impl Plugin for EditorPlugin {
 
 pub struct EditorState {
     pub active: bool,
+    pub pointer_in_viewport: bool,
+    pub pointer_on_floating_window: bool,
 }
 impl Default for EditorState {
     fn default() -> Self {
-        Self { active: false }
+        Self {
+            active: false,
+            pointer_in_viewport: false,
+            pointer_on_floating_window: false,
+        }
     }
 }
 
@@ -226,7 +232,8 @@ impl Editor {
         self.editor_menu_bar(ctx, editor_state, internal_state);
 
         if !editor_state.active {
-            self.editor_floating_windows(world, ctx, internal_state);
+            editor_state.pointer_on_floating_window =
+                self.editor_floating_windows(world, ctx, internal_state);
             return;
         }
         let res = egui::SidePanel::left("left_panel")
@@ -265,9 +272,17 @@ impl Editor {
                 internal_state.viewport = egui::Rect::from_min_size(position, size);
             });
 
-        self.editor_floating_windows(world, ctx, internal_state);
+        editor_state.pointer_on_floating_window =
+            self.editor_floating_windows(world, ctx, internal_state);
 
         self.handle_drag_and_drop(internal_state, ctx);
+
+        if let Some(interact_pos) = ctx.input().pointer.interact_pos() {
+            editor_state.pointer_in_viewport = internal_state
+                .viewport
+                .expand(-ctx.style().interaction.resize_grab_radius_side)
+                .contains(interact_pos);
+        };
     }
 
     fn editor_menu_bar(
@@ -404,9 +419,12 @@ impl Editor {
         world: &mut World,
         ctx: &egui::CtxRef,
         internal_state: &mut EditorInternalState,
-    ) {
+    ) -> bool {
         let mut close_floating_windows = Vec::new();
         let floating_windows = internal_state.floating_windows.clone();
+
+        let mut cursor_on_floating_window = false;
+
         for (i, floating_window) in floating_windows.into_iter().enumerate() {
             let id = egui::Id::new(floating_window.id);
             let title = self.windows[&floating_window.window].name;
@@ -420,10 +438,22 @@ impl Editor {
             if let Some(initial_position) = floating_window.initial_position {
                 window = window.default_pos(initial_position - egui::Vec2::new(10.0, 10.0))
             }
-            window.show(ctx, |ui| {
+            let response = window.show(ctx, |ui| {
                 self.editor_window_inner(world, floating_window.window, ui);
                 ui.allocate_space(ui.available_size());
             });
+
+            cursor_on_floating_window |= response
+                .and_then(|response| {
+                    let interact_pos = ctx.input().pointer.interact_pos()?;
+                    let in_bounds = response
+                        .response
+                        .rect
+                        .expand(-ctx.style().interaction.resize_grab_radius_side)
+                        .contains(interact_pos);
+                    Some(in_bounds)
+                })
+                .unwrap_or(false);
 
             if !open {
                 close_floating_windows.push(i);
@@ -439,6 +469,8 @@ impl Editor {
                     .get_or_insert(floating_window.window);
             }
         }
+
+        cursor_on_floating_window
     }
 
     fn handle_drag_and_drop(

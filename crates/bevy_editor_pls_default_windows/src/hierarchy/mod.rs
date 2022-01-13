@@ -1,10 +1,15 @@
+pub mod picking;
+
 use std::borrow::Cow;
 
-use bevy::ecs::world::EntityRef;
+use bevy::ecs::{system::QuerySingleError, world::EntityRef};
 use bevy::prelude::*;
-use bevy_inspector_egui::egui::{self, CollapsingHeader};
+use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText};
 
-use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
+use bevy_editor_pls_core::{
+    editor_window::{EditorWindow, EditorWindowContext},
+    Editor,
+};
 
 pub struct HierarchyWindow;
 impl EditorWindow for HierarchyWindow {
@@ -14,6 +19,43 @@ impl EditorWindow for HierarchyWindow {
     fn ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
         let state = cx.state_mut::<HierarchyWindow>().unwrap();
         Hierarchy { world, state }.show(ui);
+    }
+
+    fn app_setup(app: &mut bevy::prelude::App) {
+        picking::setup(app);
+        app.add_event::<EditorHierarchyEvent>()
+            .add_system(handle_events);
+    }
+}
+
+pub enum EditorHierarchyEvent {
+    SelectMesh,
+}
+
+fn handle_events(
+    mut events: EventReader<EditorHierarchyEvent>,
+    raycast_source: Query<&picking::EditorRayCastSource>,
+    mut editor: ResMut<Editor>,
+) {
+    for event in events.iter() {
+        match event {
+            EditorHierarchyEvent::SelectMesh => {
+                let raycast_source = match raycast_source.get_single() {
+                    Ok(entity) => entity,
+                    Err(QuerySingleError::NoEntities(_)) => continue,
+                    Err(QuerySingleError::MultipleEntities(_)) => {
+                        panic!("Multiple entities with EditorRayCastSource component!")
+                    }
+                };
+                let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
+
+                if let Some((entity, _interaction)) = raycast_source.intersect_top() {
+                    state.selected = Some(entity);
+                } else {
+                    state.selected = None;
+                }
+            }
+        }
     }
 }
 
@@ -36,7 +78,13 @@ impl<'a> Hierarchy<'a> {
         }
     }
     fn entity_ui(&mut self, entity: Entity, ui: &mut egui::Ui) {
-        let response = CollapsingHeader::new(self.entity_name(entity).to_string()).show(ui, |ui| {
+        let active = self.state.selected == Some(entity);
+
+        let mut text = RichText::new(self.entity_name(entity));
+        if active {
+            text = text.strong();
+        }
+        let response = CollapsingHeader::new(text).show(ui, |ui| {
             let children = self.world.get::<Children>(entity);
             if let Some(children) = children {
                 let children = children.clone();

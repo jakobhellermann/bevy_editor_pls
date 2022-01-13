@@ -1,7 +1,13 @@
+#[cfg(feature = "default_windows")]
+pub mod controls;
+
 use bevy::prelude::Plugin;
 pub use bevy_editor_pls_core::*;
 
 pub use egui;
+
+#[cfg(feature = "default_windows")]
+pub use bevy_editor_pls_default_windows as default_windows;
 
 pub mod prelude {
     pub use crate::{AddEditorWindow, EditorPlugin};
@@ -25,6 +31,9 @@ impl Plugin for EditorPlugin {
             app.add_editor_window::<DiagnosticsWindow>();
 
             app.add_plugin(bevy::pbr::wireframe::WireframePlugin);
+
+            app.init_resource::<controls::EditorControls>()
+                .add_system(controls::editor_controls_system);
         }
     }
 }
