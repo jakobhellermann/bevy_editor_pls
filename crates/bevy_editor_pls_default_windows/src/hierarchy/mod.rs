@@ -83,20 +83,31 @@ impl<'a> Hierarchy<'a> {
         if active {
             text = text.strong();
         }
-        let response = CollapsingHeader::new(text).show(ui, |ui| {
-            let children = self.world.get::<Children>(entity);
-            if let Some(children) = children {
-                let children = children.clone();
-                ui.label("Children");
-                for &child in children.iter() {
-                    self.entity_ui(child, ui);
+
+        let selected = self.state.selected == Some(entity);
+        let has_children = self
+            .world
+            .get::<Children>(entity)
+            .map_or(false, |children| children.len() > 0);
+
+        let response = CollapsingHeader::new(text)
+            .selectable(true)
+            .selected(selected)
+            .open(if !has_children { Some(false) } else { None })
+            .show(ui, |ui| {
+                let children = self.world.get::<Children>(entity);
+                if let Some(children) = children {
+                    let children = children.clone();
+                    ui.label("Children");
+                    for &child in children.iter() {
+                        self.entity_ui(child, ui);
+                    }
+                } else {
+                    ui.label("No children");
                 }
-            } else {
-                ui.label("No children");
-            }
-        });
+            });
         if response.header_response.clicked() {
-            self.state.selected = Some(entity);
+            self.state.selected = (!selected).then(|| entity);
         }
     }
 }
