@@ -38,7 +38,7 @@ impl Plugin for EditorPlugin {
 
             app.add_plugin(bevy::pbr::wireframe::WireframePlugin);
 
-            app.init_resource::<controls::EditorControls>()
+            app.insert_resource(controls::EditorControls::default_bindings())
                 .add_system(controls::editor_controls_system);
         }
     }

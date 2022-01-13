@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 use bevy_editor_pls_core::{editor_window::EditorWindow, EditorEvent, EditorState};
 use bevy_editor_pls_default_windows::hierarchy::EditorHierarchyEvent;
 
@@ -12,8 +12,9 @@ pub enum UserInput {
     Chord(Vec<Button>),
 }
 
-enum BindingCondition {
+pub enum BindingCondition {
     InViewport(bool),
+    EditorActive(bool),
 }
 
 impl BindingCondition {
@@ -28,18 +29,26 @@ impl BindingCondition {
                         || editor_state.pointer_on_floating_window;
                 }
             }
+            BindingCondition::EditorActive(editor_active) => editor_active == editor_state.active,
         }
     }
 }
 
-pub struct Binding {
-    input: UserInput,
-    conditions: Vec<BindingCondition>,
+impl std::fmt::Display for BindingCondition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            BindingCondition::InViewport(true) => "mouse in viewport",
+            BindingCondition::InViewport(false) => "mouse not in viewport",
+            BindingCondition::EditorActive(true) => "editor is active",
+            BindingCondition::EditorActive(false) => "editor is not active",
+        };
+        f.write_str(str)
+    }
 }
 
-pub struct EditorControls {
-    pub select_mesh: Binding,
-    pub play_pause_editor: Binding,
+pub struct Binding {
+    pub input: UserInput,
+    pub conditions: Vec<BindingCondition>,
 }
 
 impl Button {
@@ -53,6 +62,12 @@ impl Button {
             Button::Mouse(button) => mouse_input.just_pressed(*button),
         }
     }
+    fn pressed(&self, keyboard_input: &Input<KeyCode>, mouse_input: &Input<MouseButton>) -> bool {
+        match self {
+            Button::Keyboard(code) => keyboard_input.pressed(*code),
+            Button::Mouse(button) => mouse_input.pressed(*button),
+        }
+    }
 }
 
 impl UserInput {
@@ -63,7 +78,15 @@ impl UserInput {
     ) -> bool {
         match self {
             UserInput::Single(single) => single.just_pressed(keyboard_input, mouse_input),
-            UserInput::Chord(_) => todo!(),
+            UserInput::Chord(chord) => match chord.as_slice() {
+                [modifiers @ .., final_key] => {
+                    let modifiers_pressed = modifiers
+                        .iter()
+                        .all(|key| key.pressed(keyboard_input, mouse_input));
+                    modifiers_pressed && final_key.just_pressed(keyboard_input, mouse_input)
+                }
+                [] => false,
+            },
         }
     }
 }
@@ -87,6 +110,48 @@ impl Binding {
     }
 }
 
+#[derive(PartialEq, Eq, Hash)]
+pub enum Action {
+    PlayPauseEditor,
+    SelectMesh,
+}
+
+impl std::fmt::Display for Action {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Action::PlayPauseEditor => write!(f, "Play/Pause editor"),
+            Action::SelectMesh => write!(f, "Select mesh to inspect"),
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct EditorControls {
+    pub actions: HashMap<Action, Vec<Binding>>,
+}
+
+impl EditorControls {
+    fn insert(&mut self, action: Action, binding: Binding) {
+        self.actions.entry(action).or_default().push(binding);
+    }
+    fn get(&self, action: &Action) -> &[Binding] {
+        self.actions.get(action).map_or(&[], Vec::as_slice)
+    }
+
+    fn just_pressed(
+        &self,
+        action: Action,
+        keyboard_input: &Input<KeyCode>,
+        mouse_input: &Input<MouseButton>,
+        editor_state: &EditorState,
+    ) -> bool {
+        let bindings = &self.actions.get(&action).unwrap();
+        bindings
+            .iter()
+            .any(|binding| binding.just_pressed(keyboard_input, mouse_input, editor_state))
+    }
+}
+
 pub fn editor_controls_system(
     controls: Res<EditorControls>,
     keyboard_input: Res<Input<KeyCode>>,
@@ -96,17 +161,21 @@ pub fn editor_controls_system(
     mut editor_events: EventWriter<EditorEvent>,
     mut editor_hierarchy_event: EventWriter<EditorHierarchyEvent>,
 ) {
-    if controls
-        .select_mesh
-        .just_pressed(&keyboard_input, &mouse_input, &editor_state)
-    {
+    if controls.just_pressed(
+        Action::SelectMesh,
+        &keyboard_input,
+        &mouse_input,
+        &editor_state,
+    ) {
         editor_hierarchy_event.send(EditorHierarchyEvent::SelectMesh)
     }
 
-    if controls
-        .play_pause_editor
-        .just_pressed(&keyboard_input, &mouse_input, &editor_state)
-    {
+    if controls.just_pressed(
+        Action::PlayPauseEditor,
+        &keyboard_input,
+        &mouse_input,
+        &editor_state,
+    ) {
         editor_state.active = !editor_state.active;
         editor_events.send(EditorEvent::Toggle {
             now_active: editor_state.active,
@@ -114,18 +183,26 @@ pub fn editor_controls_system(
     }
 }
 
-impl Default for EditorControls {
-    fn default() -> Self {
-        Self {
-            select_mesh: Binding {
+impl EditorControls {
+    pub fn default_bindings() -> Self {
+        let mut controls = EditorControls::default();
+
+        controls.insert(
+            Action::SelectMesh,
+            Binding {
                 input: UserInput::Single(Button::Mouse(MouseButton::Left)),
                 conditions: vec![BindingCondition::InViewport(true)],
             },
-            play_pause_editor: Binding {
+        );
+        controls.insert(
+            Action::PlayPauseEditor,
+            Binding {
                 input: UserInput::Single(Button::Keyboard(KeyCode::E)),
                 conditions: Vec::new(),
             },
-        }
+        );
+
+        controls
     }
 }
 
@@ -152,7 +229,7 @@ impl std::fmt::Display for UserInput {
                 }
 
                 for remaining in iter {
-                    write!(f, "+ {}", remaining)?;
+                    write!(f, " + {}", remaining)?;
                 }
             }
         }
@@ -162,7 +239,18 @@ impl std::fmt::Display for UserInput {
 
 impl std::fmt::Display for Binding {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.input)
+        write!(f, "{}", self.input)?;
+
+        let mut conditions = self.conditions.iter();
+        let first_condition = conditions.next();
+        if let Some(first) = first_condition {
+            write!(f, "\n    when {}", first)?;
+        }
+        for remaining in conditions {
+            write!(f, " and {}", remaining)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -179,10 +267,12 @@ impl EditorWindow for ControlsWindow {
     ) {
         let controls = world.get_resource::<EditorControls>().unwrap();
 
-        ui.label(egui::RichText::new("Play/Pause editor").strong());
-        ui.label(format!("{}", controls.play_pause_editor));
-
-        ui.label(egui::RichText::new("Select mesh:").strong());
-        ui.label(format!("{}", controls.select_mesh));
+        for action in &[Action::PlayPauseEditor, Action::SelectMesh] {
+            ui.label(egui::RichText::new(action.to_string()).strong());
+            let bindings = controls.get(action);
+            for binding in bindings {
+                ui.add(egui::Label::new(format!("{}", binding)).wrap(false));
+            }
+        }
     }
 }
