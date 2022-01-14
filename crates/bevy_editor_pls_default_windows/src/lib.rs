@@ -1,3 +1,4 @@
+pub mod add;
 pub mod cameras;
 pub mod debug_settings;
 pub mod diagnostics;

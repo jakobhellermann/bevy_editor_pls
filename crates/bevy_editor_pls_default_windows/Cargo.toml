@@ -11,3 +11,5 @@ bevy = { version = "0.6" }
 bevy_editor_pls_core = { path = "../bevy_editor_pls_core" }
 bevy-inspector-egui = "0.7"
 bevy_mod_raycast = "0.3"
+indexmap = "1.7"
+pretty-type-name = "1.0"
