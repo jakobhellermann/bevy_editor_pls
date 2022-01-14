@@ -134,6 +134,7 @@ impl<'a> Hierarchy<'a> {
         };
 
         let response = CollapsingHeader::new(text)
+            .id_source(entity)
             .selectable(true)
             .selected(selected)
             .open(open)
