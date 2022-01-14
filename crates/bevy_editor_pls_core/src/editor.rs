@@ -71,13 +71,14 @@ pub(crate) type EditorWindowState = Box<dyn Any + Send + Sync>;
 struct EditorWindowData {
     name: &'static str,
     ui_fn: UiFn,
+    menu_ui_fn: UiFn,
 }
 
-struct EditorInternalState {
+pub(crate) struct EditorInternalState {
     left_panel: Option<TypeId>,
     right_panel: Option<TypeId>,
     bottom_panel: Option<TypeId>,
-    floating_windows: Vec<FloatingWindow>,
+    pub(crate) floating_windows: Vec<FloatingWindow>,
     viewport: egui::Rect,
     active_drag_window: Option<WindowPosition>,
     active_drop_location: Option<DropLocation>,
@@ -86,18 +87,18 @@ struct EditorInternalState {
 }
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
-enum EditorPanel {
+pub(crate) enum EditorPanel {
     Left,
     Right,
     Bottom,
 }
 
 #[derive(Clone)]
-struct FloatingWindow {
-    window: TypeId,
-    id: u32,
-    original_panel: Option<EditorPanel>,
-    initial_position: Option<egui::Pos2>,
+pub(crate) struct FloatingWindow {
+    pub(crate) window: TypeId,
+    pub(crate) id: u32,
+    pub(crate) original_panel: Option<EditorPanel>,
+    pub(crate) initial_position: Option<egui::Pos2>,
 }
 
 #[derive(Debug)]
@@ -122,7 +123,7 @@ enum DropLocation {
 }
 
 impl EditorInternalState {
-    fn next_floating_window_id(&mut self) -> u32 {
+    pub(crate) fn next_floating_window_id(&mut self) -> u32 {
         let id = self.next_floating_window_id;
         self.next_floating_window_id += 1;
         id
@@ -163,13 +164,18 @@ impl EditorInternalState {
 fn ui_fn<W: EditorWindow>(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
     W::ui(world, cx, ui);
 }
+fn menu_ui_fn<W: EditorWindow>(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
+    W::menu_ui(world, cx, ui);
+}
 
 impl Editor {
     pub fn add_window<W: EditorWindow>(&mut self) {
         let type_id = std::any::TypeId::of::<W>();
         let ui_fn = Box::new(ui_fn::<W>);
+        let menu_ui_fn = Box::new(menu_ui_fn::<W>);
         let data = EditorWindowData {
             ui_fn,
+            menu_ui_fn,
             name: W::NAME,
         };
         if self.windows.insert(type_id, data).is_some() {
@@ -242,7 +248,7 @@ impl Editor {
         internal_state: &mut EditorInternalState,
         editor_events: &mut Events<EditorEvent>,
     ) {
-        self.editor_menu_bar(ctx, editor_state, internal_state, editor_events);
+        self.editor_menu_bar(world, ctx, editor_state, internal_state, editor_events);
 
         if !editor_state.active {
             editor_state.pointer_on_floating_window =
@@ -300,6 +306,7 @@ impl Editor {
 
     fn editor_menu_bar(
         &mut self,
+        world: &mut World,
         ctx: &egui::CtxRef,
         editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
@@ -315,17 +322,12 @@ impl Editor {
                 }
 
                 ui.menu_button("Open window", |ui| {
-                    for (&window_id, window) in self.windows.iter() {
-                        if ui.button(window.name).clicked() {
-                            let floating_window_id = internal_state.next_floating_window_id();
-                            internal_state.floating_windows.push(FloatingWindow {
-                                window: window_id,
-                                id: floating_window_id,
-                                original_panel: None,
-                                initial_position: None,
-                            });
-                            ui.close_menu();
-                        }
+                    for (&_, window) in self.windows.iter() {
+                        let cx = EditorWindowContext {
+                            window_states: &mut self.window_states,
+                            internal_state,
+                        };
+                        (window.menu_ui_fn)(world, cx, ui);
                     }
                 });
             });
@@ -376,7 +378,7 @@ impl Editor {
         let some_window_is_being_dragged = internal_state.active_drag_window.is_some();
         let drop_response = drag_and_drop::drop_target(ui, some_window_is_being_dragged, |ui| {
             if let Some(selected) = internal_state.active_panel(panel) {
-                self.editor_window_inner(world, selected, ui);
+                self.editor_window_inner(world, internal_state, selected, ui);
             }
 
             ui.allocate_space(ui.available_size());
@@ -394,9 +396,16 @@ impl Editor {
         }
     }
 
-    fn editor_window_inner(&mut self, world: &mut World, selected: TypeId, ui: &mut egui::Ui) {
+    fn editor_window_inner(
+        &mut self,
+        world: &mut World,
+        internal_state: &mut EditorInternalState,
+        selected: TypeId,
+        ui: &mut egui::Ui,
+    ) {
         let cx = EditorWindowContext {
             window_states: &mut self.window_states,
+            internal_state,
         };
         let ui_fn = &self.windows.get_mut(&selected).unwrap().ui_fn;
         ui_fn(world, cx, ui);
@@ -456,7 +465,7 @@ impl Editor {
                 window = window.default_pos(initial_position - egui::Vec2::new(10.0, 10.0))
             }
             let response = window.show(ctx, |ui| {
-                self.editor_window_inner(world, floating_window.window, ui);
+                self.editor_window_inner(world, internal_state, floating_window.window, ui);
                 ui.allocate_space(ui.available_size());
             });
 
