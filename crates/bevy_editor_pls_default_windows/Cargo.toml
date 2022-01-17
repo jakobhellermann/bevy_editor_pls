@@ -3,6 +3,9 @@ name = "bevy_editor_pls_default_windows"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+viewport = []
+
 [dependencies]
 bevy = { version = "0.6" }
 bevy_editor_pls_core = { path = "../bevy_editor_pls_core" }

@@ -60,6 +60,12 @@ impl EditorWindow for CameraWindow {
             .add_startup_system(spawn_editor_cam);
 
         editor_cam_render::setup(app);
+
+        #[cfg(feature = "viewport")]
+        app.add_system_to_stage(
+            CoreStage::PostUpdate,
+            set_main_pass_viewport.before(bevy::render::camera::UpdateCameraProjectionSystem),
+        );
     }
 }
 
@@ -154,4 +160,33 @@ fn toggle_editor_cam(
             };
         }
     }
+}
+
+#[cfg(feature = "viewport")]
+fn set_main_pass_viewport(
+    editor_state: Res<bevy_editor_pls_core::EditorState>,
+    egui_settings: Res<bevy_inspector_egui::bevy_egui::EguiSettings>,
+    windows: Res<Windows>,
+    mut cameras: Query<&mut Camera>,
+) {
+    if !editor_state.is_changed() {
+        return;
+    };
+
+    let scale_factor = windows.get_primary().unwrap().scale_factor() * egui_settings.scale_factor;
+
+    let viewport_pos = editor_state.viewport.left_top().to_vec2() * scale_factor as f32;
+    let viewport_size = editor_state.viewport.size() * scale_factor as f32;
+
+    cameras.iter_mut().for_each(|mut cam| {
+        cam.viewport = editor_state.active.then(|| bevy::render::camera::Viewport {
+            x: viewport_pos.x,
+            y: viewport_pos.y,
+            w: viewport_size.x.max(1.0),
+            h: viewport_size.y.max(1.0),
+            min_depth: 0.0,
+            max_depth: 1.0,
+            scaling_mode: bevy::render::camera::ViewportScalingMode::Pixels,
+        });
+    });
 }

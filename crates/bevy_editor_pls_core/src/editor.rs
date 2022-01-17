@@ -29,12 +29,6 @@ impl Plugin for EditorPlugin {
                 CoreStage::PostUpdate,
                 Editor::system.exclusive_system().at_start(),
             );
-
-        #[cfg(feature = "viewport")]
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
-            set_main_pass_viewport.before(bevy::render::camera::UpdateCameraProjectionSystem),
-        );
     }
 }
 
@@ -47,13 +41,22 @@ pub struct EditorState {
     pub active: bool,
     pub pointer_in_viewport: bool,
     pub pointer_on_floating_window: bool,
+    pub viewport: egui::Rect,
 }
+
+impl EditorState {
+    fn is_in_viewport(&self, pos: egui::Pos2) -> bool {
+        self.viewport.contains(pos)
+    }
+}
+
 impl Default for EditorState {
     fn default() -> Self {
         Self {
             active: false,
             pointer_in_viewport: false,
             pointer_on_floating_window: false,
+            viewport: egui::Rect::NOTHING,
         }
     }
 }
@@ -79,7 +82,6 @@ pub(crate) struct EditorInternalState {
     right_panel: Option<TypeId>,
     bottom_panel: Option<TypeId>,
     pub(crate) floating_windows: Vec<FloatingWindow>,
-    viewport: egui::Rect,
     active_drag_window: Option<WindowPosition>,
     active_drop_location: Option<DropLocation>,
 
@@ -155,10 +157,6 @@ impl EditorInternalState {
             }
         }
     }
-
-    fn is_in_viewport(&self, pos: egui::Pos2) -> bool {
-        self.viewport.contains(pos)
-    }
 }
 
 fn ui_fn<W: EditorWindow>(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
@@ -213,7 +211,6 @@ impl Editor {
                 next_floating_window_id: 0,
                 active_drag_window: None,
                 active_drop_location: None,
-                viewport: egui::Rect::EVERYTHING,
             };
             world.insert_resource(state);
         }
@@ -285,19 +282,18 @@ impl Editor {
                     });
                 self.editor_window_context_menu(res.response, internal_state, EditorPanel::Bottom);
 
-                let position = ui.next_widget_position();
-                let size = ui.available_size();
-
-                internal_state.viewport = egui::Rect::from_min_size(position, size);
+                let (viewport, _) =
+                    ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
+                editor_state.viewport = viewport;
             });
 
         editor_state.pointer_on_floating_window =
             self.editor_floating_windows(world, ctx, internal_state);
 
-        self.handle_drag_and_drop(internal_state, ctx);
+        self.handle_drag_and_drop(editor_state, internal_state, ctx);
 
         if let Some(interact_pos) = ctx.input().pointer.interact_pos() {
-            editor_state.pointer_in_viewport = internal_state
+            editor_state.pointer_in_viewport = editor_state
                 .viewport
                 .expand(-ctx.style().interaction.resize_grab_radius_side)
                 .contains(interact_pos);
@@ -501,6 +497,7 @@ impl Editor {
 
     fn handle_drag_and_drop(
         &mut self,
+        editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
         ctx: &egui::CtxRef,
     ) -> Option<()> {
@@ -513,7 +510,7 @@ impl Editor {
             Some(drop_location) => drop_location,
             None => {
                 let pos = ctx.input().pointer.interact_pos()?;
-                if internal_state.is_in_viewport(pos) {
+                if editor_state.is_in_viewport(pos) {
                     DropLocation::NewFloatingWindow
                 } else {
                     return None;
@@ -567,34 +564,4 @@ fn play_pause_button(active: bool, ui: &mut egui::Ui) -> egui::Response {
         false => "⏸",
     };
     ui.add(egui::Button::new(icon).frame(false))
-}
-
-#[cfg(feature = "viewport")]
-fn set_main_pass_viewport(
-    editor_state: Res<EditorState>,
-    internal_state: Res<EditorInternalState>,
-    egui_settings: Res<EguiSettings>,
-    windows: Res<Windows>,
-    mut cameras: Query<&mut Camera>,
-) {
-    if !(internal_state.is_changed() || editor_state.is_changed()) {
-        return;
-    };
-
-    let scale_factor = windows.get_primary().unwrap().scale_factor() * egui_settings.scale_factor;
-
-    let viewport_pos = internal_state.viewport.left_top().to_vec2() * scale_factor as f32;
-    let viewport_size = internal_state.viewport.size() * scale_factor as f32;
-
-    cameras.iter_mut().for_each(|mut cam| {
-        cam.viewport = editor_state.active.then(|| bevy::render::camera::Viewport {
-            x: viewport_pos.x,
-            y: viewport_pos.y,
-            w: viewport_size.x.max(1.0),
-            h: viewport_size.y.max(1.0),
-            min_depth: 0.0,
-            max_depth: 1.0,
-            scaling_mode: bevy::render::camera::ViewportScalingMode::Pixels,
-        });
-    });
 }
