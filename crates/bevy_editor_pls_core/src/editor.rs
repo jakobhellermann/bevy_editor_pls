@@ -42,6 +42,7 @@ pub struct EditorState {
     pub pointer_in_viewport: bool,
     pub pointer_on_floating_window: bool,
     pub viewport: egui::Rect,
+    pub listening_for_text: bool,
 }
 
 impl EditorState {
@@ -57,6 +58,7 @@ impl Default for EditorState {
             pointer_in_viewport: false,
             pointer_on_floating_window: false,
             viewport: egui::Rect::NOTHING,
+            listening_for_text: false,
         }
     }
 }
@@ -298,6 +300,8 @@ impl Editor {
                 .expand(-ctx.style().interaction.resize_grab_radius_side)
                 .contains(interact_pos);
         };
+
+        editor_state.listening_for_text = ctx.wants_keyboard_input();
     }
 
     fn editor_menu_bar(

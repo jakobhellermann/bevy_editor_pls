@@ -15,6 +15,7 @@ pub enum UserInput {
 pub enum BindingCondition {
     InViewport(bool),
     EditorActive(bool),
+    ListeningForText(bool),
 }
 
 impl BindingCondition {
@@ -30,6 +31,7 @@ impl BindingCondition {
                 }
             }
             BindingCondition::EditorActive(editor_active) => editor_active == editor_state.active,
+            BindingCondition::ListeningForText(listening) => listening == editor_state.listening_for_text,
         }
     }
 }
@@ -41,6 +43,8 @@ impl std::fmt::Display for BindingCondition {
             BindingCondition::InViewport(false) => "mouse not in viewport",
             BindingCondition::EditorActive(true) => "editor is active",
             BindingCondition::EditorActive(false) => "editor is not active",
+            BindingCondition::ListeningForText(true) => "a ui field is listening for text",
+            BindingCondition::ListeningForText(false) => "no ui fields are listening for text",
         };
         f.write_str(str)
     }
@@ -211,7 +215,7 @@ impl EditorControls {
             Action::PlayPauseEditor,
             Binding {
                 input: UserInput::Single(Button::Keyboard(KeyCode::E)),
-                conditions: Vec::new(),
+                conditions: vec![BindingCondition::ListeningForText(false)],
             },
         );
 
