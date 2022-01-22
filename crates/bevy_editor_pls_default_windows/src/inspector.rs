@@ -31,6 +31,11 @@ fn inspector(
         }
     };
 
+    if world.get_entity(inspected).is_none() {
+        ui.label("No entity selected");
+        return;
+    }
+
     world.resource_scope(|world, params: Mut<WorldInspectorParams>| {
         egui::ScrollArea::vertical().show(ui, |ui| {
             InspectorUi::new(world, &*params, add_window_state, inspected).entity(ui, inspected);
