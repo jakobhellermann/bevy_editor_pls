@@ -26,6 +26,11 @@ fn inspector(world: &mut World, inspected: Option<Entity>, ui: &mut egui::Ui) {
         }
     };
 
+    if world.get_entity(inspected).is_none() {
+        ui.label("No entity selected");
+        return;
+    }
+
     world.resource_scope(|world, params: Mut<WorldInspectorParams>| {
         let entity_options = EntityAttributes::default();
         WorldUIContext::new(world, None).entity_ui_inner(
