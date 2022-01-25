@@ -77,6 +77,7 @@ struct EditorWindowData {
     name: &'static str,
     ui_fn: UiFn,
     menu_ui_fn: UiFn,
+    default_size: (f32, f32),
 }
 
 pub(crate) struct EditorInternalState {
@@ -177,6 +178,7 @@ impl Editor {
             ui_fn,
             menu_ui_fn,
             name: W::NAME,
+            default_size: W::DEFAULT_SIZE,
         };
         if self.windows.insert(type_id, data).is_some() {
             panic!(
@@ -456,17 +458,18 @@ impl Editor {
             let title = self.windows[&floating_window.window].name;
 
             let mut open = true;
+            let default_size = self.windows[&floating_window.window].default_size;
             let mut window = egui::Window::new(title)
                 .id(id)
                 .open(&mut open)
                 .resizable(true)
-                .default_size((0.0, 0.0));
+                .default_size(default_size);
             if let Some(initial_position) = floating_window.initial_position {
                 window = window.default_pos(initial_position - egui::Vec2::new(10.0, 10.0))
             }
             let response = window.show(ctx, |ui| {
                 self.editor_window_inner(world, internal_state, floating_window.window, ui);
-                ui.allocate_space(ui.available_size());
+                ui.allocate_space(ui.available_size() - (5.0, 5.0).into());
             });
 
             cursor_on_floating_window |= response

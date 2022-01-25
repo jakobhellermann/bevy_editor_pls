@@ -9,6 +9,7 @@ pub trait EditorWindow: 'static {
     type State: Default + Any + Send + Sync;
 
     const NAME: &'static str;
+    const DEFAULT_SIZE: (f32, f32) = (0.0, 0.0);
 
     fn ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui);
     fn menu_ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
