@@ -1,9 +1,11 @@
 use std::borrow::Cow;
 
-use bevy::prelude::*;
+use bevy::{core::Stopwatch, prelude::*};
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui;
 use indexmap::IndexMap;
+
+use crate::hierarchy::HierarchyWindow;
 
 pub struct AddItem {
     name: Cow<'static, str>,
@@ -28,6 +30,21 @@ impl AddItem {
             world.entity_mut(entity).insert_bundle(bundle);
         })
     }
+
+    pub fn component<T: FromWorld + Component>() -> Self {
+        AddItem::component_named::<T>(pretty_type_name::pretty_type_name::<T>().into())
+    }
+
+    pub fn component_named<T: FromWorld + Component>(name: Cow<'static, str>) -> Self {
+        AddItem::new(name, |world, entity| {
+            let bundle = T::from_world(world);
+            world.entity_mut(entity).insert(bundle);
+        })
+    }
+
+    pub fn add_to_entity(&self, world: &mut World, entity: Entity) {
+        (self.add_to_entity)(world, entity)
+    }
 }
 
 pub struct AddWindowState {
@@ -37,6 +54,12 @@ pub struct AddWindowState {
 impl AddWindowState {
     pub fn add(&mut self, name: &'static str, item: AddItem) {
         self.sections.entry(name).or_default().push(item);
+    }
+
+    pub fn sections(&self) -> impl Iterator<Item = (&'static str, &[AddItem])> {
+        self.sections
+            .iter()
+            .map(|(name, items)| (*name, items.as_slice()))
     }
 }
 
@@ -48,31 +71,57 @@ impl EditorWindow for AddWindow {
     const NAME: &'static str = "Add";
 
     fn ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
-        let state = cx.state::<Self>().unwrap();
-        add_ui(world, ui, state);
+        add_ui_button(world, ui, cx);
     }
 
     fn menu_ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
-        let state = cx.state::<Self>().unwrap();
-        add_ui(world, ui, state);
+        add_ui_button(world, ui, cx);
     }
 }
 
-fn add_ui(world: &mut World, ui: &mut egui::Ui, state: &AddWindowState) {
-    ui.menu_button("Add", |ui| {
-        for (section_name, items) in &state.sections {
-            ui.menu_button(*section_name, |ui| {
+fn add_ui_button(world: &mut World, ui: &mut egui::Ui, mut cx: EditorWindowContext) {
+    let state = cx.state::<AddWindow>().unwrap();
+
+    let response = ui.menu_button("Add", |ui| {
+        add_ui(ui, state).map(|add_item| {
+            let entity = world.spawn().id();
+            add_item.add_to_entity(world, entity);
+            entity
+        })
+    });
+
+    if let Some(Some(entity)) = response.inner {
+        if let Some(hierarchy_state) = cx.state_mut::<HierarchyWindow>() {
+            hierarchy_state.selected = Some(entity);
+        }
+    }
+}
+
+pub fn add_ui<'a>(ui: &mut egui::Ui, state: &'a AddWindowState) -> Option<&'a AddItem> {
+    for (section_name, items) in &state.sections {
+        if section_name.is_empty() {
+            for item in items {
+                if ui.button(item.name.as_ref()).clicked() {
+                    ui.close_menu();
+                    return Some(item);
+                }
+            }
+        } else {
+            let value = ui.menu_button(*section_name, |ui| {
                 for item in items {
                     if ui.button(item.name.as_ref()).clicked() {
-                        let entity = world.spawn().id();
-                        (item.add_to_entity)(world, entity);
-
                         ui.close_menu();
+                        return Some(item);
                     }
                 }
+                None
             });
+            if let Some(Some(value)) = value.inner {
+                return Some(value);
+            }
         }
-    });
+    }
+    None
 }
 
 impl Default for AddWindowState {
@@ -80,6 +129,13 @@ impl Default for AddWindowState {
         let mut state = AddWindowState {
             sections: IndexMap::default(),
         };
+
+        state.add("", AddItem::bundle_named::<()>("Empty".into()));
+
+        state.add("Other", AddItem::component::<Name>());
+        state.add("Other", AddItem::component::<Timer>());
+        state.add("Other", AddItem::component::<Stopwatch>());
+
         state.add("3D", AddItem::bundle_named::<PbrBundle>("PbrBundle".into()));
         state.add(
             "3D",
