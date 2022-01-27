@@ -9,7 +9,7 @@ use bevy::{
 };
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
-    Editor, EditorEvent,
+    Editor, EditorEvent, EditorState,
 };
 use bevy_inspector_egui::egui;
 use editor_cam_render::EDITOR_CAMERA_FLYCAM;
@@ -56,6 +56,7 @@ impl EditorWindow for CameraWindow {
         app.init_resource::<PersistentActiveCameras>();
 
         app.add_plugin(editor_cam_controls::FlycamPlugin)
+            .add_system(set_editor_cam_active.before(editor_cam_controls::CameraSystem::Movement))
             .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
             .add_startup_system(spawn_editor_cam);
 
@@ -115,6 +116,19 @@ fn spawn_editor_cam(mut commands: Commands) {
         .insert(EditorCamera)
         .insert(HideInEditor)
         .insert(Name::new("Editor Flycam 3d"));
+}
+
+fn set_editor_cam_active(
+    editor_state: Res<EditorState>,
+    mut editor_cam: Query<&mut editor_cam_controls::Flycam>,
+) {
+    let mut editor_cam = match editor_cam.get_single_mut() {
+        Ok(cam) => cam,
+        Err(_) => return,
+    };
+
+    let enabled = editor_state.active && !editor_state.listening_for_text;
+    editor_cam.enabled = enabled;
 }
 
 fn toggle_editor_cam(

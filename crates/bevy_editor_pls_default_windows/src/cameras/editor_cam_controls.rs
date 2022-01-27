@@ -4,10 +4,15 @@ use bevy_editor_pls_core::EditorState;
 pub struct FlycamPlugin;
 impl Plugin for FlycamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(camera_movement)
+        app.add_system(camera_movement.label(CameraSystem::Movement))
             .add_system(camera_look)
             .add_system(toggle_cursor);
     }
+}
+
+#[derive(SystemLabel, PartialEq, Eq, Clone, Hash, Debug)]
+pub enum CameraSystem {
+    Movement,
 }
 
 #[derive(Component)]
