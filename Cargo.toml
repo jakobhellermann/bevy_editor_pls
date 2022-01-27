@@ -6,4 +6,4 @@ resolver = "2"
 # bevy = { git = "https://github.com/jakobhellermann/bevy", branch = "camera-viewport" }
 
 [profile.dev.package."*"]
-opt-level = 3
+opt-level = 2
