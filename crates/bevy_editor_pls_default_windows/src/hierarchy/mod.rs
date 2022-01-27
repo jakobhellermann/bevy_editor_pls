@@ -160,6 +160,12 @@ impl<'a> Hierarchy<'a> {
                     ui.label("No children");
                 }
             });
+
+        if selected && ui.input().key_pressed(egui::Key::Delete) {
+            self.state.selected = None;
+            self.world.despawn(entity);
+        }
+
         if response.header_response.clicked() {
             self.state.selected = (!selected).then(|| entity);
         }
