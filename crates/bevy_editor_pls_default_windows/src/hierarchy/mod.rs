@@ -163,6 +163,18 @@ impl<'a> Hierarchy<'a> {
 
         if selected && ui.input().key_pressed(egui::Key::Delete) {
             self.state.selected = None;
+
+            if let Some(&parent) = self.world.get::<Parent>(entity) {
+                if let Some(mut children) = self.world.get_mut::<Children>(parent.0) {
+                    let new_children: Vec<_> = children
+                        .iter()
+                        .copied()
+                        .filter(|&child| child != entity)
+                        .collect();
+                    *children = Children::with(new_children.as_slice());
+                }
+            }
+
             self.world.despawn(entity);
         }
 
