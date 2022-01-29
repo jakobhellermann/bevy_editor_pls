@@ -38,7 +38,7 @@ fn handle_events(
     mut select_mesh_events: EventReader<EditorHierarchyEvent>,
     // mut editor_events: EventReader<EditorEvent>,
     // mut raycast_state: ResMut<EditorRayCastState>,
-    editor_camera: Query<&picking::EditorRayCastSource, With<super::cameras::EditorCamera>>,
+    editor_camera: Query<&picking::EditorRayCastSource, With<super::cameras::ActiveEditorCamera>>,
     non_editor_camera: Query<&picking::EditorRayCastSource, Without<super::cameras::EditorCamera>>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
@@ -62,8 +62,7 @@ fn handle_events(
         match event {
             EditorHierarchyEvent::SelectMesh => {
                 let raycast_source = if editor_state.active {
-                    let raycast_source = editor_camera.single();
-                    Some(raycast_source)
+                    editor_camera.get_single().ok()
                 } else {
                     match non_editor_camera.get_single() {
                         Ok(source) => Some(source),

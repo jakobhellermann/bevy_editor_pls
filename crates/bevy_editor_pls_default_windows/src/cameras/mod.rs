@@ -21,15 +21,21 @@ use self::persistent_active_cameras::PersistentActiveCameras;
 #[derive(Component)]
 pub struct EditorCamera;
 
+#[derive(Component)]
+pub struct EditorCamera3DFree;
+
+#[derive(Component)]
+pub struct ActiveEditorCamera;
+
 pub struct CameraWindow;
 
 enum EditorCamKind {
-    Flycam,
+    D3Free,
 }
 
 impl Default for EditorCamKind {
     fn default() -> Self {
-        EditorCamKind::Flycam
+        EditorCamKind::D3Free
     }
 }
 
@@ -58,7 +64,7 @@ impl EditorWindow for CameraWindow {
         app.add_plugin(editor_cam_controls::FlycamPlugin)
             .add_system(set_editor_cam_active.before(editor_cam_controls::CameraSystem::Movement))
             .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
-            .add_startup_system(spawn_editor_cam);
+            .add_startup_system(spawn_editor_cameras);
 
         editor_cam_render::setup(app);
 
@@ -101,7 +107,7 @@ fn cameras_ui(
     }
 }
 
-fn spawn_editor_cam(mut commands: Commands) {
+fn spawn_editor_cameras(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
             camera: Camera {
@@ -114,8 +120,10 @@ fn spawn_editor_cam(mut commands: Commands) {
         .insert(editor_cam_controls::Flycam::default())
         .insert(crate::hierarchy::picking::EditorRayCastSource::new())
         .insert(EditorCamera)
+        .insert(EditorCamera3DFree)
+        .insert(ActiveEditorCamera)
         .insert(HideInEditor)
-        .insert(Name::new("Editor Flycam 3d"));
+        .insert(Name::new("Editor Camera 3D Free"));
 }
 
 fn set_editor_cam_active(
@@ -150,14 +158,12 @@ fn toggle_editor_cam(
 
             if now_active {
                 active_cameras.disable_all(&mut active_cameras_raw);
-                active_cameras_raw.add(EDITOR_CAMERA_FLYCAM);
             } else {
-                active_cameras_raw.remove(EDITOR_CAMERA_FLYCAM);
                 active_cameras.enable_all(&mut active_cameras_raw);
             }
 
             match camera_state.editor_cam {
-                EditorCamKind::Flycam => {
+                EditorCamKind::D3Free => {
                     let (mut cam_transform, mut cam) = flycam.single_mut();
                     cam.enabled = now_active;
 
