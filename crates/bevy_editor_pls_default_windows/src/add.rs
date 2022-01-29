@@ -1,6 +1,11 @@
 use std::borrow::Cow;
 
-use bevy::{core::Stopwatch, prelude::*};
+use bevy::{
+    core::Stopwatch,
+    pbr::{wireframe::Wireframe, NotShadowCaster, NotShadowReceiver},
+    prelude::*,
+    render::view::RenderLayers,
+};
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui;
 use indexmap::IndexMap;
@@ -132,10 +137,57 @@ impl Default for AddWindowState {
 
         state.add("", AddItem::bundle_named::<()>("Empty".into()));
 
-        state.add("Other", AddItem::component::<Name>());
-        state.add("Other", AddItem::component::<Timer>());
-        state.add("Other", AddItem::component::<Stopwatch>());
+        state.add("Core", AddItem::component::<Name>());
+        state.add("Core", AddItem::component::<Timer>());
+        state.add("Core", AddItem::component::<Stopwatch>());
+        state.add(
+            "Core",
+            AddItem::bundle_named::<(Transform, GlobalTransform)>("Transform".into()),
+        );
 
+        state.add("Rendering", AddItem::component::<RenderLayers>());
+        state.add("Rendering", AddItem::component::<Visibility>());
+        state.add("Rendering", AddItem::component::<Wireframe>());
+        state.add(
+            "Rendering",
+            AddItem::new("NotShadowCaster".into(), |world, entity| {
+                world.entity_mut(entity).insert(NotShadowCaster);
+            }),
+        );
+        state.add(
+            "Rendering",
+            AddItem::new("NotShadowReceiver".into(), |world, entity| {
+                world.entity_mut(entity).insert(NotShadowReceiver);
+            }),
+        );
+
+        state.add(
+            "2D",
+            AddItem::new("Orthographic Camera".into(), |world, entity| {
+                world
+                    .entity_mut(entity)
+                    .insert_bundle(OrthographicCameraBundle::new_2d());
+            }),
+        );
+        state.add("2D", AddItem::bundle::<SpriteBundle>());
+        state.add("2D", AddItem::bundle::<Text2dBundle>());
+
+        state.add(
+            "3D",
+            AddItem::new("Perspective Camera".into(), |world, entity| {
+                world
+                    .entity_mut(entity)
+                    .insert_bundle(PerspectiveCameraBundle::new_3d());
+            }),
+        );
+        state.add(
+            "3D",
+            AddItem::new("Orthographic Camera".into(), |world, entity| {
+                world
+                    .entity_mut(entity)
+                    .insert_bundle(OrthographicCameraBundle::new_3d());
+            }),
+        );
         state.add("3D", AddItem::bundle_named::<PbrBundle>("PbrBundle".into()));
         state.add(
             "3D",
@@ -156,32 +208,11 @@ impl Default for AddWindowState {
             }),
         );
 
-        state.add("2D", AddItem::bundle::<SpriteBundle>());
-
-        state.add(
-            "Cameras",
-            AddItem::new("Perspective 3D".into(), |world, entity| {
-                world
-                    .entity_mut(entity)
-                    .insert_bundle(PerspectiveCameraBundle::new_3d());
-            }),
-        );
-        state.add(
-            "Cameras",
-            AddItem::new("Orthographic 3D".into(), |world, entity| {
-                world
-                    .entity_mut(entity)
-                    .insert_bundle(OrthographicCameraBundle::new_3d());
-            }),
-        );
-        state.add(
-            "Cameras",
-            AddItem::new("Orthographic 2D".into(), |world, entity| {
-                world
-                    .entity_mut(entity)
-                    .insert_bundle(OrthographicCameraBundle::new_2d());
-            }),
-        );
+        state.add("UI", AddItem::bundle::<UiCameraBundle>());
+        state.add("UI", AddItem::bundle::<NodeBundle>());
+        state.add("UI", AddItem::bundle::<TextBundle>());
+        state.add("UI", AddItem::bundle::<ImageBundle>());
+        state.add("UI", AddItem::bundle::<ButtonBundle>());
 
         state
     }
