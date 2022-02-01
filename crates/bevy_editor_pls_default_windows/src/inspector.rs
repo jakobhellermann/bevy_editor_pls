@@ -1,3 +1,5 @@
+use crate::hierarchy::SelectedEntities;
+
 use super::add::{AddWindow, AddWindowState};
 use super::hierarchy::HierarchyWindow;
 use bevy::prelude::{Entity, Mut, World};
@@ -11,7 +13,8 @@ impl EditorWindow for InspectorWindow {
     const NAME: &'static str = "Inspector";
 
     fn ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
-        let inspected = cx.state::<HierarchyWindow>().unwrap().selected;
+        let inspected = &cx.state::<HierarchyWindow>().unwrap().selected;
+
         let add_window_state = cx.state::<AddWindow>();
         inspector(world, inspected, ui, add_window_state);
     }
@@ -19,26 +22,28 @@ impl EditorWindow for InspectorWindow {
 
 fn inspector(
     world: &mut World,
-    inspected: Option<Entity>,
+    inspected: &SelectedEntities,
     ui: &mut egui::Ui,
     add_window_state: Option<&AddWindowState>,
 ) {
-    let inspected = match inspected {
-        Some(inspected) => inspected,
-        None => {
-            ui.label("No entity selected");
-            return;
-        }
-    };
-
-    if world.get_entity(inspected).is_none() {
+    if inspected.is_empty() {
         ui.label("No entity selected");
         return;
     }
 
     world.resource_scope(|world, params: Mut<WorldInspectorParams>| {
         egui::ScrollArea::vertical().show(ui, |ui| {
-            InspectorUi::new(world, &*params, add_window_state, inspected).entity(ui, inspected);
+            let mut inspector_ui = InspectorUi::new(world, &*params, add_window_state);
+
+            match inspected.len() {
+                1 => {
+                    let inspected = inspected.iter().next().unwrap();
+                    inspector_ui.entity(ui, inspected);
+                }
+                _ => {
+                    ui.label("Inspector for multiple entities not yet implemented.");
+                }
+            };
         });
     });
 }
@@ -47,30 +52,27 @@ struct InspectorUi<'a> {
     world: &'a mut World,
     params: &'a WorldInspectorParams,
     add_window_state: Option<&'a AddWindowState>,
-    entity: Entity,
 }
 impl<'a> InspectorUi<'a> {
     fn new(
         world: &'a mut World,
         params: &'a WorldInspectorParams,
         add_window_state: Option<&'a AddWindowState>,
-        entity: Entity,
     ) -> Self {
         Self {
             world,
             params,
             add_window_state,
-            entity,
         }
     }
 
-    fn add_ui(&mut self, ui: &mut egui::Ui) {
+    fn add_ui(&mut self, ui: &mut egui::Ui, entity: Entity) {
         if let Some(add_window_state) = self.add_window_state {
             let layout = egui::Layout::top_down(egui::Align::Center).with_cross_justify(true);
             ui.with_layout(layout, |ui| {
                 ui.menu_button("+", |ui| {
                     if let Some(add_item) = crate::add::add_ui(ui, add_window_state) {
-                        add_item.add_to_entity(self.world, self.entity);
+                        add_item.add_to_entity(self.world, entity);
                     }
                 });
             });
@@ -100,7 +102,7 @@ impl<'a> InspectorUi<'a> {
 
     fn entity(&mut self, ui: &mut egui::Ui, entity: Entity) {
         self.components_ui(ui, entity);
-        self.add_ui(ui);
+        self.add_ui(ui, entity);
     }
 }
 

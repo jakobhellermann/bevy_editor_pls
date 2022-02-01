@@ -1,5 +1,6 @@
 pub mod picking;
 
+use bevy::ecs::entity::Entities;
 use bevy::pbr::wireframe::Wireframe;
 use bevy::render::{RenderApp, RenderStage};
 use bevy::utils::HashSet;
@@ -39,11 +40,17 @@ impl EditorWindow for HierarchyWindow {
     fn app_setup(app: &mut bevy::prelude::App) {
         picking::setup(app);
         app.add_event::<EditorHierarchyEvent>()
+            .add_system_to_stage(CoreStage::PostUpdate, clear_removed_entites)
             .add_system(handle_events);
 
         app.sub_app_mut(RenderApp)
             .add_system_to_stage(RenderStage::Extract, extract_wireframe_for_selected);
     }
+}
+
+fn clear_removed_entites(mut editor: ResMut<Editor>, entities: &Entities) {
+    let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
+    state.selected.retain(|entity| entities.contains(entity));
 }
 
 pub enum EditorHierarchyEvent {
@@ -65,6 +72,7 @@ fn handle_events(
     non_editor_camera: Query<&picking::EditorRayCastSource, Without<super::cameras::EditorCamera>>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
+    input: Res<Input<KeyCode>>,
 ) {
     // TODO: reenable once bevy_mod_raycast has per-source configuration
     /*for event in editor_events.iter() {
@@ -117,11 +125,17 @@ fn handle_events(
             let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
 
             if let Some(entity) = picked_entity {
+                let ctrl = input.any_pressed([KeyCode::LControl, KeyCode::RControl]);
+                let shift = input.any_pressed([KeyCode::LShift, KeyCode::RShift]);
+                let mode = SelectionMode::from_ctrl_shift(ctrl, shift);
+
                 info!("Selecting mesh, found {:?}", entity);
-                state.selected = Some(entity);
+                state
+                    .selected
+                    .select(mode, entity, || std::iter::once(entity));
             } else {
                 info!("Selecting mesh, found none");
-                state.selected = None;
+                state.selected.clear();
             }
         }
     }
@@ -133,15 +147,106 @@ fn extract_wireframe_for_selected(editor: Res<Editor>, mut commands: Commands) {
         .map_or(false, |settings| settings.highlight_selected);
 
     if wireframe_for_selected {
-        if let Some(selected) = editor.window_state::<HierarchyWindow>().unwrap().selected {
+        let selected = &editor.window_state::<HierarchyWindow>().unwrap().selected;
+        for selected in selected.iter() {
             commands.get_or_spawn(selected).insert(Wireframe);
         }
     }
 }
 
 #[derive(Default)]
+pub struct SelectedEntities {
+    entities: Vec<Entity>,
+}
+
+pub enum SelectionMode {
+    Replace,
+    Add,
+    Extend,
+}
+
+impl SelectionMode {
+    pub fn from_ctrl_shift(ctrl: bool, shift: bool) -> SelectionMode {
+        match (ctrl, shift) {
+            (true, _) => SelectionMode::Add,
+            (false, true) => SelectionMode::Extend,
+            (false, false) => SelectionMode::Replace,
+        }
+    }
+}
+
+impl SelectedEntities {
+    pub fn select<I: IntoIterator<Item = Entity>>(
+        &mut self,
+        mode: SelectionMode,
+        entity: Entity,
+        extend_with: impl Fn() -> I,
+    ) {
+        match (self.len(), mode) {
+            (0, _) => {
+                self.insert(entity);
+            }
+            (_, SelectionMode::Replace) => {
+                self.insert_replace(entity);
+            }
+            (_, SelectionMode::Add) => {
+                self.toggle(entity);
+            }
+            (_, SelectionMode::Extend) => {
+                for entity in extend_with() {
+                    self.insert(entity);
+                }
+            }
+        }
+    }
+
+    pub fn contains(&self, entity: Entity) -> bool {
+        self.entities.contains(&entity)
+    }
+    pub fn insert(&mut self, entity: Entity) {
+        if !self.contains(entity) {
+            self.entities.push(entity);
+        }
+    }
+
+    pub fn insert_replace(&mut self, entity: Entity) {
+        self.entities.clear();
+        self.entities.push(entity);
+    }
+
+    pub fn toggle(&mut self, entity: Entity) {
+        if self.remove(entity).is_none() {
+            self.entities.push(entity);
+        }
+    }
+
+    pub fn remove(&mut self, entity: Entity) -> Option<Entity> {
+        if let Some(idx) = self.entities.iter().position(|&e| e == entity) {
+            Some(self.entities.remove(idx))
+        } else {
+            None
+        }
+    }
+    pub fn clear(&mut self) {
+        self.entities.clear();
+    }
+    pub fn retain(&mut self, f: impl Fn(Entity) -> bool) {
+        self.entities.retain(|entity| f(*entity));
+    }
+    pub fn len(&self) -> usize {
+        self.entities.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.entities.len() == 0
+    }
+    pub fn iter(&self) -> impl Iterator<Item = Entity> + '_ {
+        self.entities.iter().copied()
+    }
+}
+
+#[derive(Default)]
 pub struct HierarchyState {
-    pub selected: Option<Entity>,
+    pub selected: SelectedEntities,
 }
 
 struct Hierarchy<'a> {
@@ -156,29 +261,34 @@ impl<'a> Hierarchy<'a> {
             .world
             .query_filtered::<Entity, (Without<Parent>, Without<HideInEditor>)>();
 
-        let parents: HashSet<Entity> = std::iter::successors(self.state.selected, |&entity| {
-            self.world.get::<Parent>(entity).map(|parent| parent.0)
-        })
-        .skip(1)
-        .collect();
+        let always_open: HashSet<Entity> = self
+            .state
+            .selected
+            .iter()
+            .flat_map(|selected| {
+                std::iter::successors(Some(selected), |&entity| {
+                    self.world.get::<Parent>(entity).map(|parent| parent.0)
+                })
+                .skip(1)
+            })
+            .collect();
 
         let mut entities: Vec<_> = root_query.iter(self.world).collect();
         entities.sort();
 
         for entity in entities {
-            self.entity_ui(entity, ui, &parents);
+            self.entity_ui(entity, ui, &always_open);
         }
     }
     fn entity_ui(&mut self, entity: Entity, ui: &mut egui::Ui, always_open: &HashSet<Entity>) {
-        let active = self.state.selected == Some(entity);
+        let selected = self.state.selected.contains(entity);
 
         let entity_name = bevy_inspector_egui::world_inspector::entity_name(self.world, entity);
         let mut text = RichText::new(entity_name);
-        if active {
+        if selected {
             text = text.strong();
         }
 
-        let selected = self.state.selected == Some(entity);
         let has_children = self
             .world
             .get::<Children>(entity)
@@ -220,7 +330,6 @@ impl<'a> Hierarchy<'a> {
                 ui.menu_button("Add", |ui| {
                     if let Some(add_item) = add_ui(ui, add_state) {
                         add_item.add_to_entity(self.world, entity);
-                        self.state.selected = Some(entity);
                         ui.close_menu();
                     }
                 });
@@ -232,24 +341,32 @@ impl<'a> Hierarchy<'a> {
         }
 
         if despawn {
-            self.state.selected = None;
-
-            if let Some(&parent) = self.world.get::<Parent>(entity) {
-                if let Some(mut children) = self.world.get_mut::<Children>(parent.0) {
-                    let new_children: Vec<_> = children
-                        .iter()
-                        .copied()
-                        .filter(|&child| child != entity)
-                        .collect();
-                    *children = Children::with(new_children.as_slice());
+            for entity in self.state.selected.iter() {
+                if let Some(&parent) = self.world.get::<Parent>(entity) {
+                    if let Some(mut children) = self.world.get_mut::<Children>(parent.0) {
+                        let new_children: Vec<_> = children
+                            .iter()
+                            .copied()
+                            .filter(|&child| child != entity)
+                            .collect();
+                        *children = Children::with(new_children.as_slice());
+                    }
                 }
-            }
 
-            self.world.despawn(entity);
+                self.world.despawn(entity);
+            }
+            self.state.selected.clear();
         }
 
         if header_response.clicked() {
-            self.state.selected = (!selected).then(|| entity);
+            let selection_mode = SelectionMode::from_ctrl_shift(
+                ui.input().modifiers.ctrl,
+                ui.input().modifiers.shift,
+            );
+            let extend_with = || std::iter::once(entity); // TODO implement extending selection
+            self.state
+                .selected
+                .select(selection_mode, entity, extend_with);
         }
     }
 }
