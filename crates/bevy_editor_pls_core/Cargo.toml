@@ -8,6 +8,5 @@ viewport = []
 
 [dependencies]
 bevy = { version = "0.6", default-features = false }
-bevy_egui = "0.10"
-bevy-inspector-egui = "0.7"
+bevy-inspector-egui = "0.8"
 indexmap = "1.7"

@@ -1,8 +1,9 @@
 use std::any::{Any, TypeId};
 
 use bevy::app::Events;
+use bevy::window::WindowId;
 use bevy::{prelude::*, utils::HashMap};
-use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
+use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
 use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
 use indexmap::IndexMap;
 
@@ -219,7 +220,7 @@ impl Editor {
             world.insert_resource(state);
         }
 
-        let ctx = world.get_resource::<EguiContext>().unwrap().ctx().clone();
+        let ctx = world.get_resource_mut::<EguiContext>().unwrap().ctx_for_window_mut(WindowId::primary()).clone();
         world.resource_scope(|world, mut editor: Mut<Editor>| {
             world.resource_scope(|world, mut editor_state: Mut<EditorState>| {
                 world.resource_scope(
