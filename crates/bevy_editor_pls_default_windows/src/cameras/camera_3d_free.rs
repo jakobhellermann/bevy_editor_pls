@@ -21,7 +21,6 @@ pub struct Flycam {
     pub pitch: f32,
     pub sensitivity: f32,
     pub enabled: bool,
-    pub was_initially_positioned: bool,
 }
 impl Default for Flycam {
     fn default() -> Self {
@@ -30,7 +29,6 @@ impl Default for Flycam {
             pitch: Default::default(),
             sensitivity: 6.0,
             enabled: false,
-            was_initially_positioned: false,
         }
     }
 }

@@ -1,4 +1,5 @@
-mod editor_cam_controls;
+mod camera_2d_panzoom;
+mod camera_3d_free;
 mod editor_cam_render;
 
 mod persistent_active_cameras;
@@ -12,24 +13,35 @@ use bevy_editor_pls_core::{
     Editor, EditorEvent, EditorState,
 };
 use bevy_inspector_egui::egui;
-use editor_cam_render::EDITOR_CAMERA_FLYCAM;
+use editor_cam_render::EDITOR_CAMERA_3D_FLYCAM;
 
 use crate::hierarchy::HideInEditor;
 
-use self::persistent_active_cameras::PersistentActiveCameras;
+use self::{
+    editor_cam_render::EDITOR_CAMERA_2D_PAN_ZOOM,
+    persistent_active_cameras::PersistentActiveCameras,
+};
 
+// Present on all editor cameras
 #[derive(Component)]
 pub struct EditorCamera;
 
-#[derive(Component)]
-pub struct EditorCamera3DFree;
-
+// Present on only the one active editor camera
 #[derive(Component)]
 pub struct ActiveEditorCamera;
+
+// Marker component for the 3d free camera
+#[derive(Component)]
+pub struct EditorCamera3dFree;
+
+// Marker component for the 2d pan+zoom camera
+#[derive(Component)]
+pub struct EditorCamera2dPanZoom;
 
 pub struct CameraWindow;
 
 enum EditorCamKind {
+    D2PanZoom,
     D3Free,
 }
 
@@ -42,6 +54,7 @@ impl Default for EditorCamKind {
 #[derive(Default)]
 pub struct CameraWindowState {
     editor_cam: EditorCamKind,
+    has_decided_initial_cam: bool,
 }
 
 impl EditorWindow for CameraWindow {
@@ -61,8 +74,9 @@ impl EditorWindow for CameraWindow {
     fn app_setup(app: &mut App) {
         app.init_resource::<PersistentActiveCameras>();
 
-        app.add_plugin(editor_cam_controls::FlycamPlugin)
-            .add_system(set_editor_cam_active.before(editor_cam_controls::CameraSystem::Movement))
+        app.add_plugin(camera_3d_free::FlycamPlugin)
+            .add_plugin(camera_2d_panzoom::PanCamPlugin)
+            .add_system(set_editor_cam_active.before(camera_3d_free::CameraSystem::Movement))
             .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
             .add_startup_system(spawn_editor_cameras);
 
@@ -107,28 +121,49 @@ fn cameras_ui(
     }
 }
 
+// Indicates that the camera should be moved to the position of the corresponding main app camera.
+// Used to ensure that when switching to the editor for the first time, the camera will match
+// the view of the in-game camera.
+#[derive(Component)]
+struct NeedsInitialPosition;
+
 fn spawn_editor_cameras(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
             camera: Camera {
-                name: Some(EDITOR_CAMERA_FLYCAM.to_string()),
+                name: Some(EDITOR_CAMERA_3D_FLYCAM.to_string()),
                 ..Default::default()
             },
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Default::default()
         })
-        .insert(editor_cam_controls::Flycam::default())
+        .insert(camera_3d_free::Flycam::default())
         .insert(crate::hierarchy::picking::EditorRayCastSource::new())
         .insert(EditorCamera)
-        .insert(EditorCamera3DFree)
-        .insert(ActiveEditorCamera)
+        .insert(EditorCamera3dFree)
         .insert(HideInEditor)
+        .insert(NeedsInitialPosition)
         .insert(Name::new("Editor Camera 3D Free"));
+
+    commands
+        .spawn_bundle(OrthographicCameraBundle {
+            camera: Camera {
+                name: Some(EDITOR_CAMERA_2D_PAN_ZOOM.to_string()),
+                ..Default::default()
+            },
+            ..OrthographicCameraBundle::new_2d()
+        })
+        .insert(camera_2d_panzoom::PanCam::default())
+        .insert(EditorCamera)
+        .insert(EditorCamera2dPanZoom)
+        .insert(HideInEditor)
+        .insert(NeedsInitialPosition)
+        .insert(Name::new("Editor Camera 2D Pan/Zoom"));
 }
 
 fn set_editor_cam_active(
     editor_state: Res<EditorState>,
-    mut editor_cam: Query<&mut editor_cam_controls::Flycam>,
+    mut editor_cam: Query<&mut camera_3d_free::Flycam>,
 ) {
     let mut editor_cam = match editor_cam.get_single_mut() {
         Ok(cam) => cam,
@@ -140,17 +175,47 @@ fn set_editor_cam_active(
 }
 
 fn toggle_editor_cam(
+    mut commands: Commands,
     mut editor_events: EventReader<EditorEvent>,
     mut editor: ResMut<Editor>,
     mut active_cameras_raw: ResMut<ActiveCameras>,
     mut active_cameras: ResMut<PersistentActiveCameras>,
 
-    mut flycam: Query<(&mut Transform, &mut editor_cam_controls::Flycam)>,
-    cameras: Query<&Transform, (With<Camera>, Without<editor_cam_controls::Flycam>)>,
+    mut query_camera_3d_free: Query<
+        (
+            Entity,
+            &mut Transform,
+            &mut camera_3d_free::Flycam,
+            Option<&NeedsInitialPosition>,
+        ),
+        (With<EditorCamera3dFree>, Without<EditorCamera2dPanZoom>),
+    >,
+    mut query_camera_2d_pan_zoom: Query<
+        (
+            Entity,
+            &mut Transform,
+            &mut camera_2d_panzoom::PanCam,
+            Option<&NeedsInitialPosition>,
+        ),
+        (With<EditorCamera2dPanZoom>, Without<EditorCamera3dFree>),
+    >,
+
+    cameras: Query<
+        &Transform,
+        (
+            With<Camera>,
+            Without<EditorCamera3dFree>,
+            Without<EditorCamera2dPanZoom>,
+        ),
+    >,
 ) {
     for event in editor_events.iter() {
         if let EditorEvent::Toggle { now_active } = *event {
             let camera_state = editor.window_state_mut::<CameraWindow>().unwrap();
+
+            let cam2d_transform = active_cameras_raw
+                .get(CameraPlugin::CAMERA_2D)
+                .and_then(|cam| cameras.get(cam.entity?).ok());
 
             let cam3d_transform = active_cameras_raw
                 .get(CameraPlugin::CAMERA_3D)
@@ -162,19 +227,52 @@ fn toggle_editor_cam(
                 active_cameras.enable_all(&mut active_cameras_raw);
             }
 
+            if !camera_state.has_decided_initial_cam {
+                match (cam2d_transform.is_some(), cam3d_transform.is_some()) {
+                    (true, false) => {
+                        camera_state.editor_cam = EditorCamKind::D2PanZoom;
+                        let cam_2d = query_camera_2d_pan_zoom.single().0;
+                        commands.entity(cam_2d).insert(ActiveEditorCamera);
+                    }
+                    (false, true) => {
+                        camera_state.editor_cam = {
+                            let cam_3d = query_camera_3d_free.single().0;
+                            commands.entity(cam_3d).insert(ActiveEditorCamera);
+                            EditorCamKind::D3Free
+                        }
+                    }
+                    (false, false) | (true, true) => {}
+                }
+
+                camera_state.has_decided_initial_cam = true;
+            }
+
             match camera_state.editor_cam {
                 EditorCamKind::D3Free => {
-                    let (mut cam_transform, mut cam) = flycam.single_mut();
+                    let (entity, mut cam_transform, mut cam, needs_initial_position) =
+                        query_camera_3d_free.single_mut();
                     cam.enabled = now_active;
 
-                    if !cam.was_initially_positioned {
+                    if needs_initial_position.is_some() {
                         if let Some(cam3d_transform) = cam3d_transform {
                             *cam_transform = cam3d_transform.clone();
                             let (yaw, pitch, _) = cam3d_transform.rotation.to_euler(EulerRot::YXZ);
                             cam.yaw = yaw.to_degrees();
                             cam.pitch = pitch.to_degrees();
                         }
-                        cam.was_initially_positioned = true;
+                        commands.entity(entity).remove::<NeedsInitialPosition>();
+                    }
+                }
+                EditorCamKind::D2PanZoom => {
+                    let (entity, mut cam_transform, mut cam, needs_initial_position) =
+                        query_camera_2d_pan_zoom.single_mut();
+                    cam.enabled = now_active;
+
+                    if needs_initial_position.is_some() {
+                        if let Some(cam2d_transform) = cam2d_transform {
+                            *cam_transform = cam2d_transform.clone();
+                        }
+                        commands.entity(entity).remove::<NeedsInitialPosition>();
                     }
                 }
             };
