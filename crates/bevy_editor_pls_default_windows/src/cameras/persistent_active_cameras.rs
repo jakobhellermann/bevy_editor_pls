@@ -9,8 +9,19 @@ pub struct PersistentActiveCameras {
 impl PersistentActiveCameras {
     pub fn update(&mut self, active_cameras: &ActiveCameras) {
         for camera in active_cameras.iter() {
-            self.active_cameras.insert(camera.name.clone());
+            self.inactive_cameras.remove(&camera.name);
+            if !self.active_cameras.contains(&camera.name) {
+                self.active_cameras.insert(camera.name.clone());
+            }
         }
+
+        self.active_cameras.retain(|cam| {
+            let still_active = active_cameras.get(cam).is_some();
+            if !still_active {
+                self.inactive_cameras.insert(cam.clone());
+            }
+            still_active
+        });
     }
 
     pub fn enable(&mut self, camera: String, active_cameras: &mut ActiveCameras) {
