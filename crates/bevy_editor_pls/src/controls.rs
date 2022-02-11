@@ -23,15 +23,15 @@ impl BindingCondition {
         match *self {
             BindingCondition::InViewport(in_viewport) => {
                 if in_viewport {
-                    return (editor_state.pointer_in_viewport || !editor_state.active)
-                        && !editor_state.pointer_on_floating_window;
+                    return !editor_state.pointer_used();
                 } else {
-                    return !editor_state.pointer_in_viewport && editor_state.active
-                        || editor_state.pointer_on_floating_window;
+                    return editor_state.pointer_used();
                 }
             }
             BindingCondition::EditorActive(editor_active) => editor_active == editor_state.active,
-            BindingCondition::ListeningForText(listening) => listening == editor_state.listening_for_text,
+            BindingCondition::ListeningForText(listening) => {
+                listening == editor_state.listening_for_text
+            }
         }
     }
 }

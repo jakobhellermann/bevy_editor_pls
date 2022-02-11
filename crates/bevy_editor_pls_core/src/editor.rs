@@ -40,10 +40,10 @@ pub enum EditorEvent {
 
 pub struct EditorState {
     pub active: bool,
-    pub pointer_in_viewport: bool,
-    pub pointer_on_floating_window: bool,
-    pub viewport: egui::Rect,
+    pointer_used: bool,
+    editor_interaction_active: bool,
     pub listening_for_text: bool,
+    pub viewport: egui::Rect,
 }
 
 impl EditorState {
@@ -51,8 +51,8 @@ impl EditorState {
         self.viewport.contains(pos)
     }
 
-    pub fn pointer_in_editor(&self) -> bool {
-        !self.pointer_in_viewport || self.pointer_on_floating_window
+    pub fn pointer_used(&self) -> bool {
+        self.pointer_used || self.editor_interaction_active
     }
 }
 
@@ -60,10 +60,10 @@ impl Default for EditorState {
     fn default() -> Self {
         Self {
             active: false,
-            pointer_in_viewport: false,
-            pointer_on_floating_window: false,
-            viewport: egui::Rect::NOTHING,
+            pointer_used: false,
+            editor_interaction_active: false,
             listening_for_text: false,
+            viewport: egui::Rect::NOTHING,
         }
     }
 }
@@ -261,8 +261,8 @@ impl Editor {
         self.editor_menu_bar(world, ctx, editor_state, internal_state, editor_events);
 
         if !editor_state.active {
-            editor_state.pointer_on_floating_window =
-                self.editor_floating_windows(world, ctx, internal_state);
+            self.editor_floating_windows(world, ctx, internal_state);
+            editor_state.pointer_used = ctx.is_pointer_over_area();
             return;
         }
         let res = egui::SidePanel::left("left_panel")
@@ -279,6 +279,10 @@ impl Editor {
             });
         self.editor_window_context_menu(res.response, internal_state, EditorPanel::Right);
 
+        self.editor_floating_windows(world, ctx, internal_state);
+
+        editor_state.pointer_used = ctx.is_pointer_over_area();
+
         egui::CentralPanel::default()
             .frame(egui::Frame::none())
             .show(ctx, |ui| {
@@ -293,26 +297,30 @@ impl Editor {
                     .show_inside(ui, |ui| {
                         self.editor_window(world, internal_state, ui, EditorPanel::Bottom);
                     });
-                self.editor_window_context_menu(res.response, internal_state, EditorPanel::Bottom);
+                let res = self.editor_window_context_menu(
+                    res.response,
+                    internal_state,
+                    EditorPanel::Bottom,
+                );
+                editor_state.pointer_used |= pointer_in_response(&res, ctx);
 
                 let (viewport, _) =
                     ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
                 editor_state.viewport = viewport;
             });
 
-        editor_state.pointer_on_floating_window =
-            self.editor_floating_windows(world, ctx, internal_state);
-
         self.handle_drag_and_drop(editor_state, internal_state, ctx);
 
-        if let Some(interact_pos) = ctx.input().pointer.interact_pos() {
-            editor_state.pointer_in_viewport = editor_state
-                .viewport
-                .expand(-ctx.style().interaction.resize_grab_radius_side)
-                .contains(interact_pos);
-        };
-
         editor_state.listening_for_text = ctx.wants_keyboard_input();
+        editor_state.pointer_used |= ctx.is_using_pointer();
+
+        if ctx.input().pointer.press_start_time().is_some() {
+            if editor_state.pointer_used {
+                editor_state.editor_interaction_active = true;
+            }
+        } else {
+            editor_state.editor_interaction_active = false;
+        }
     }
 
     fn editor_menu_bar(
@@ -427,7 +435,7 @@ impl Editor {
         response: egui::Response,
         internal_state: &mut EditorInternalState,
         panel: EditorPanel,
-    ) {
+    ) -> egui::Response {
         response.context_menu(|ui| {
             let window_is_set = internal_state.active_panel_mut(panel).is_some();
 
@@ -448,7 +456,7 @@ impl Editor {
 
                 ui.close_menu();
             }
-        });
+        })
     }
 
     fn editor_floating_windows(
@@ -456,11 +464,9 @@ impl Editor {
         world: &mut World,
         ctx: &egui::CtxRef,
         internal_state: &mut EditorInternalState,
-    ) -> bool {
+    ) {
         let mut close_floating_windows = Vec::new();
         let floating_windows = internal_state.floating_windows.clone();
-
-        let mut cursor_on_floating_window = false;
 
         for (i, floating_window) in floating_windows.into_iter().enumerate() {
             let id = egui::Id::new(floating_window.id);
@@ -476,22 +482,10 @@ impl Editor {
             if let Some(initial_position) = floating_window.initial_position {
                 window = window.default_pos(initial_position - egui::Vec2::new(10.0, 10.0))
             }
-            let response = window.show(ctx, |ui| {
+            window.show(ctx, |ui| {
                 self.editor_window_inner(world, internal_state, floating_window.window, ui);
                 ui.allocate_space(ui.available_size() - (5.0, 5.0).into());
             });
-
-            cursor_on_floating_window |= response
-                .and_then(|response| {
-                    let interact_pos = ctx.input().pointer.interact_pos()?;
-                    let in_bounds = response
-                        .response
-                        .rect
-                        .expand(-ctx.style().interaction.resize_grab_radius_side)
-                        .contains(interact_pos);
-                    Some(in_bounds)
-                })
-                .unwrap_or(false);
 
             if !open {
                 close_floating_windows.push(i);
@@ -507,8 +501,6 @@ impl Editor {
                     .get_or_insert(floating_window.window);
             }
         }
-
-        cursor_on_floating_window
     }
 
     fn handle_drag_and_drop(
@@ -580,4 +572,15 @@ fn play_pause_button(active: bool, ui: &mut egui::Ui) -> egui::Response {
         false => "⏸",
     };
     ui.add(egui::Button::new(icon).frame(false))
+}
+
+fn pointer_in_response(response: &egui::Response, ctx: &egui::CtxRef) -> bool {
+    let interact_pos = match ctx.input().pointer.interact_pos() {
+        Some(pos) => pos,
+        None => return false,
+    };
+    response
+        .rect
+        .expand(-ctx.style().interaction.resize_grab_radius_side)
+        .contains(interact_pos)
 }

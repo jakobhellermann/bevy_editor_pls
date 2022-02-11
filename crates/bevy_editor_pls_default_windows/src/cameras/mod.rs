@@ -174,8 +174,8 @@ fn set_editor_cam_active(
     let mut editor_cam_2d_panzoom = editor_cam_2d_panzoom.single_mut();
 
     editor_cam_3d_free.enable_movement = editor_state.active && !editor_state.listening_for_text;
-    editor_cam_3d_free.enable_look = editor_state.active && !editor_state.pointer_in_editor();
-    editor_cam_2d_panzoom.enabled = editor_state.active && !editor_state.pointer_in_editor();
+    editor_cam_3d_free.enable_look = editor_state.active && !editor_state.pointer_used();
+    editor_cam_2d_panzoom.enabled = editor_state.active && !editor_state.pointer_used();
 }
 
 fn toggle_editor_cam(
