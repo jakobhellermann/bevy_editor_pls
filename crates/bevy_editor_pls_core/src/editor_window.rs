@@ -42,6 +42,33 @@ impl EditorWindowContext<'_> {
             .and_then(|s| s.downcast_ref::<W::State>())
     }
 
+    pub fn state_mut_pair<'a, W1: EditorWindow, W2: EditorWindow>(
+        &'a mut self,
+    ) -> (Option<&'a mut W1::State>, Option<&'a mut W2::State>) {
+        assert_ne!(TypeId::of::<W1>(), TypeId::of::<W2>());
+
+        let a = self
+            .window_states
+            .get_mut(&TypeId::of::<W1>())
+            .and_then(|state| state.downcast_mut::<W1::State>())
+            .map(|state| state as *mut _);
+        let b = self
+            .window_states
+            .get_mut(&TypeId::of::<W2>())
+            .and_then(|state| state.downcast_mut::<W2::State>())
+            .map(|state| state as *mut _);
+
+        if let (Some(a), Some(b)) = (a, b) {
+            assert_ne!(
+                a as *mut (), b as *mut (),
+                "the two keys must not resolve to the same value"
+            );
+        }
+
+        // Safety: we have &mut self access, the values are distinct and the lifetime is tied to &'a self
+        (a.map(|a| unsafe { &mut *a }), b.map(|b| unsafe { &mut *b }))
+    }
+
     pub fn open_floating_window<W: ?Sized + EditorWindow>(&mut self) {
         let floating_window_id = self.internal_state.next_floating_window_id();
         let window_id = std::any::TypeId::of::<W>();

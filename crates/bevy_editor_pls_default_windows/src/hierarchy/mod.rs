@@ -10,6 +10,8 @@ use bevy_editor_pls_core::{
     Editor,
 };
 
+use crate::add::{add_ui, AddWindow, AddWindowState};
+
 #[derive(Component)]
 pub struct HideInEditor;
 
@@ -19,8 +21,15 @@ impl EditorWindow for HierarchyWindow {
     const NAME: &'static str = "Hierarchy";
 
     fn ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
-        let state = cx.state_mut::<HierarchyWindow>().unwrap();
-        Hierarchy { world, state }.show(ui);
+        let (hierarchy_state, add_state) = cx.state_mut_pair::<HierarchyWindow, AddWindow>();
+        let hierarchy_state = hierarchy_state.unwrap();
+
+        Hierarchy {
+            world,
+            state: hierarchy_state,
+            add_state: add_state.as_deref(),
+        }
+        .show(ui);
     }
 
     fn app_setup(app: &mut bevy::prelude::App) {
@@ -100,6 +109,7 @@ pub struct HierarchyState {
 struct Hierarchy<'a> {
     world: &'a mut World,
     state: &'a mut HierarchyState,
+    add_state: Option<&'a AddWindowState>,
 }
 
 impl<'a> Hierarchy<'a> {
@@ -164,6 +174,16 @@ impl<'a> Hierarchy<'a> {
         let header_response = response.header_response.context_menu(|ui| {
             if ui.button("Despawn").clicked() {
                 despawn = true;
+            }
+
+            if let Some(add_state) = self.add_state {
+                ui.menu_button("Add", |ui| {
+                    if let Some(add_item) = add_ui(ui, add_state) {
+                        add_item.add_to_entity(self.world, entity);
+                        self.state.selected = Some(entity);
+                        ui.close_menu();
+                    }
+                });
             }
         });
 
