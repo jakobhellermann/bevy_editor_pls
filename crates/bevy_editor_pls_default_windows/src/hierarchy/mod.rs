@@ -160,7 +160,18 @@ impl<'a> Hierarchy<'a> {
                 }
             });
 
+        let mut despawn = false;
+        let header_response = response.header_response.context_menu(|ui| {
+            if ui.button("Despawn").clicked() {
+                despawn = true;
+            }
+        });
+
         if selected && ui.input().key_pressed(egui::Key::Delete) {
+            despawn = true;
+        }
+
+        if despawn {
             self.state.selected = None;
 
             if let Some(&parent) = self.world.get::<Parent>(entity) {
@@ -177,7 +188,7 @@ impl<'a> Hierarchy<'a> {
             self.world.despawn(entity);
         }
 
-        if response.header_response.clicked() {
+        if header_response.clicked() {
             self.state.selected = (!selected).then(|| entity);
         }
     }
