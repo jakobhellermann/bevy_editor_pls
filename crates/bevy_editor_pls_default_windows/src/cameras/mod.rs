@@ -76,7 +76,11 @@ impl EditorWindow for CameraWindow {
 
         app.add_plugin(camera_3d_free::FlycamPlugin)
             .add_plugin(camera_2d_panzoom::PanCamPlugin)
-            .add_system(set_editor_cam_active.before(camera_3d_free::CameraSystem::Movement))
+            .add_system(
+                set_editor_cam_active
+                    .before(camera_3d_free::CameraSystem::Movement)
+                    .before(camera_2d_panzoom::CameraSystem::Movement),
+            )
             .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
             .add_startup_system(spawn_editor_cameras);
 
@@ -163,15 +167,14 @@ fn spawn_editor_cameras(mut commands: Commands) {
 
 fn set_editor_cam_active(
     editor_state: Res<EditorState>,
-    mut editor_cam: Query<&mut camera_3d_free::Flycam>,
+    mut editor_cam_3d_free: Query<&mut camera_3d_free::Flycam>,
+    mut editor_cam_2d_panzoom: Query<&mut camera_2d_panzoom::PanCam>,
 ) {
-    let mut editor_cam = match editor_cam.get_single_mut() {
-        Ok(cam) => cam,
-        Err(_) => return,
-    };
+    let mut editor_cam_3d_free = editor_cam_3d_free.single_mut();
+    let mut editor_cam_2d_panzoom = editor_cam_2d_panzoom.single_mut();
 
-    let enabled = editor_state.active && !editor_state.listening_for_text;
-    editor_cam.enabled = enabled;
+    editor_cam_3d_free.enabled = editor_state.active && !editor_state.listening_for_text;
+    editor_cam_2d_panzoom.enabled = editor_state.active && !editor_state.pointer_in_editor();
 }
 
 fn toggle_editor_cam(

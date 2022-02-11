@@ -6,12 +6,18 @@ use bevy::{
     render::camera::OrthographicProjection,
 };
 
+#[derive(SystemLabel, PartialEq, Eq, Clone, Hash, Debug)]
+pub enum CameraSystem {
+    Movement,
+}
+
 #[derive(Default)]
 pub struct PanCamPlugin;
 
 impl Plugin for PanCamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(camera_movement).add_system(camera_zoom);
+        app.add_system(camera_movement.label(CameraSystem::Movement))
+            .add_system(camera_zoom.label(CameraSystem::Movement));
     }
 }
 

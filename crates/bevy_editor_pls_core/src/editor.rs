@@ -50,6 +50,10 @@ impl EditorState {
     fn is_in_viewport(&self, pos: egui::Pos2) -> bool {
         self.viewport.contains(pos)
     }
+
+    pub fn pointer_in_editor(&self) -> bool {
+        !self.pointer_in_viewport || self.pointer_on_floating_window
+    }
 }
 
 impl Default for EditorState {
@@ -220,7 +224,11 @@ impl Editor {
             world.insert_resource(state);
         }
 
-        let ctx = world.get_resource_mut::<EguiContext>().unwrap().ctx_for_window_mut(WindowId::primary()).clone();
+        let ctx = world
+            .get_resource_mut::<EguiContext>()
+            .unwrap()
+            .ctx_for_window_mut(WindowId::primary())
+            .clone();
         world.resource_scope(|world, mut editor: Mut<Editor>| {
             world.resource_scope(|world, mut editor_state: Mut<EditorState>| {
                 world.resource_scope(
