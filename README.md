@@ -56,7 +56,6 @@ impl EditorWindow for MyEditorWindow {
 ## Missing features
 
 - scene import
-- better editor camera controls (2D, orbit camera)
-- add components and bundles from the editor
+- better editor camera controls (orbit camera, ...)
 - transform gizmos
 - visualization of invisible entities in editor (to see where the camera is for example)
