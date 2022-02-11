@@ -20,7 +20,8 @@ pub struct Flycam {
     pub yaw: f32,
     pub pitch: f32,
     pub sensitivity: f32,
-    pub enabled: bool,
+    pub enable_movement: bool,
+    pub enable_look: bool,
 }
 impl Default for Flycam {
     fn default() -> Self {
@@ -28,7 +29,8 @@ impl Default for Flycam {
             yaw: Default::default(),
             pitch: Default::default(),
             sensitivity: 6.0,
-            enabled: false,
+            enable_movement: false,
+            enable_look: false,
         }
     }
 }
@@ -39,7 +41,7 @@ fn camera_movement(
     keyboard_input: Res<Input<KeyCode>>,
 ) {
     let (flycam, mut cam_transform) = cam.single_mut();
-    if !flycam.enabled {
+    if !flycam.enable_movement {
         return;
     }
 
@@ -80,7 +82,7 @@ fn camera_look(
     if !mouse_input.pressed(MouseButton::Right) {
         return;
     }
-    if !flycam.enabled {
+    if !flycam.enable_look {
         return;
     }
     let mut delta: Vec2 = Vec2::ZERO;

@@ -173,7 +173,8 @@ fn set_editor_cam_active(
     let mut editor_cam_3d_free = editor_cam_3d_free.single_mut();
     let mut editor_cam_2d_panzoom = editor_cam_2d_panzoom.single_mut();
 
-    editor_cam_3d_free.enabled = editor_state.active && !editor_state.listening_for_text;
+    editor_cam_3d_free.enable_movement = editor_state.active && !editor_state.listening_for_text;
+    editor_cam_3d_free.enable_look = editor_state.active && !editor_state.pointer_in_editor();
     editor_cam_2d_panzoom.enabled = editor_state.active && !editor_state.pointer_in_editor();
 }
 
@@ -254,7 +255,7 @@ fn toggle_editor_cam(
                 EditorCamKind::D3Free => {
                     let (entity, mut cam_transform, mut cam, needs_initial_position) =
                         query_camera_3d_free.single_mut();
-                    cam.enabled = now_active;
+                    cam.enable_movement = now_active;
 
                     if needs_initial_position.is_some() {
                         if let Some(cam3d_transform) = cam3d_transform {
