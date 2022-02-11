@@ -124,7 +124,9 @@ impl<'a> Hierarchy<'a> {
         .skip(1)
         .collect();
 
-        let entities: Vec<_> = root_query.iter(self.world).collect();
+        let mut entities: Vec<_> = root_query.iter(self.world).collect();
+        entities.sort();
+
         for entity in entities {
             self.entity_ui(entity, ui, &parents);
         }
