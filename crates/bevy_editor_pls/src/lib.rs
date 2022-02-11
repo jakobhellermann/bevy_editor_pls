@@ -27,6 +27,7 @@ impl Plugin for EditorPlugin {
             use bevy_editor_pls_default_windows::hierarchy::HierarchyWindow;
             use bevy_editor_pls_default_windows::inspector::InspectorWindow;
             use bevy_editor_pls_default_windows::scenes::SceneWindow;
+            use bevy_editor_pls_default_windows::windows::WindowsWindow;
 
             app.add_editor_window::<HierarchyWindow>();
             app.add_editor_window::<InspectorWindow>();
@@ -35,6 +36,7 @@ impl Plugin for EditorPlugin {
             app.add_editor_window::<DiagnosticsWindow>();
             app.add_editor_window::<CameraWindow>();
             app.add_editor_window::<SceneWindow>();
+            app.add_editor_window::<WindowsWindow>();
 
             app.add_editor_window::<controls::ControlsWindow>();
 

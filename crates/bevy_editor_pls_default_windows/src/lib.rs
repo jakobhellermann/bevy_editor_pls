@@ -5,3 +5,4 @@ pub mod diagnostics;
 pub mod hierarchy;
 pub mod inspector;
 pub mod scenes;
+pub mod windows;
