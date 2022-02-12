@@ -26,10 +26,6 @@ use self::{
 #[derive(Component)]
 pub struct EditorCamera;
 
-// Present on only the one active editor camera
-#[derive(Component)]
-pub struct ActiveEditorCamera;
-
 // Marker component for the 3d free camera
 #[derive(Component)]
 pub struct EditorCamera3dFree;
@@ -263,15 +259,9 @@ fn toggle_editor_cam(
                 match (cam2d_transform.is_some(), cam3d_transform.is_some()) {
                     (true, false) => {
                         camera_state.editor_cam = EditorCamKind::D2PanZoom;
-                        let cam_2d = query_camera_2d_pan_zoom.single().0;
-                        commands.entity(cam_2d).insert(ActiveEditorCamera);
                     }
                     (false, true) => {
-                        camera_state.editor_cam = {
-                            let cam_3d = query_camera_3d_free.single().0;
-                            commands.entity(cam_3d).insert(ActiveEditorCamera);
-                            EditorCamKind::D3Free
-                        }
+                        camera_state.editor_cam = EditorCamKind::D3Free;
                     }
                     (false, false) | (true, true) => {}
                 }
