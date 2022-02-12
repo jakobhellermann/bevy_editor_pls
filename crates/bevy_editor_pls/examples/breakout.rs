@@ -21,7 +21,6 @@ fn main() {
                 .with_system(ball_movement_system),
         )
         .add_system(scoreboard_system)
-        .add_system(bevy::input::system::exit_on_esc_system)
         .run();
 }
 
