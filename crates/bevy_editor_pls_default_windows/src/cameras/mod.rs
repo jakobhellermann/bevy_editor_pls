@@ -46,6 +46,19 @@ pub enum EditorCamKind {
     D3Free,
 }
 
+impl EditorCamKind {
+    fn name(self) -> &'static str {
+        match self {
+            EditorCamKind::D2PanZoom => "2D (Pan/Zoom)",
+            EditorCamKind::D3Free => "3D (Free)",
+        }
+    }
+
+    fn all() -> [EditorCamKind; 2] {
+        [EditorCamKind::D2PanZoom, EditorCamKind::D3Free]
+    }
+}
+
 impl Default for EditorCamKind {
     fn default() -> Self {
         EditorCamKind::D3Free
@@ -69,6 +82,20 @@ impl EditorWindow for CameraWindow {
                 active_cameras.update(&active_cameras_raw);
                 cameras_ui(ui, &mut active_cameras, active_cameras_raw);
             });
+        });
+    }
+
+    fn viewport_toolbar_ui(_world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
+        let state = cx.state_mut::<CameraWindow>().unwrap();
+        ui.menu_button(state.editor_cam.name(), |ui| {
+            for camera in EditorCamKind::all() {
+                ui.horizontal(|ui| {
+                    if ui.button(camera.name()).clicked() {
+                        state.editor_cam = camera;
+                        ui.close_menu();
+                    }
+                });
+            }
         });
     }
 
