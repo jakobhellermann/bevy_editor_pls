@@ -247,6 +247,7 @@ impl SelectedEntities {
 #[derive(Default)]
 pub struct HierarchyState {
     pub selected: SelectedEntities,
+    pub rename_info: (bool, String),
 }
 
 struct Hierarchy<'a> {
@@ -284,7 +285,7 @@ impl<'a> Hierarchy<'a> {
         let selected = self.state.selected.contains(entity);
 
         let entity_name = bevy_inspector_egui::world_inspector::entity_name(self.world, entity);
-        let mut text = RichText::new(entity_name);
+        let mut text = RichText::new(entity_name.clone());
         if selected {
             text = text.strong();
         }
@@ -333,6 +334,11 @@ impl<'a> Hierarchy<'a> {
                         ui.close_menu();
                     }
                 });
+            }
+
+            if ui.button("Rename").clicked() {
+                self.state.rename_info = (true, entity_name);
+                ui.close_menu();
             }
         });
 
