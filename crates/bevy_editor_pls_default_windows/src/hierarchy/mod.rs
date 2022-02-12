@@ -247,7 +247,7 @@ impl SelectedEntities {
 #[derive(Default)]
 pub struct HierarchyState {
     pub selected: SelectedEntities,
-    pub rename_info: (bool, String),
+    pub rename_info: (u64, bool, String),
 }
 
 struct Hierarchy<'a> {
@@ -303,6 +303,13 @@ impl<'a> Hierarchy<'a> {
             None
         };
 
+        let (renamed_entity_bits, renaming, current_rename) = &mut self.state.rename_info;
+        if *renaming && *renamed_entity_bits == entity.to_bits() {
+            ui.text_edit_singleline(current_rename);
+
+            return;
+        }
+
         let response = CollapsingHeader::new(text)
             .id_source(entity)
             .selectable(true)
@@ -337,7 +344,7 @@ impl<'a> Hierarchy<'a> {
             }
 
             if ui.button("Rename").clicked() {
-                self.state.rename_info = (true, entity_name);
+                self.state.rename_info = (entity.to_bits(), true, entity_name);
                 ui.close_menu();
             }
         });
