@@ -7,12 +7,12 @@ use bevy::{
 };
 
 #[derive(SystemLabel, PartialEq, Eq, Clone, Hash, Debug)]
-pub enum CameraSystem {
+pub(crate) enum CameraSystem {
     Movement,
 }
 
 #[derive(Default)]
-pub struct PanCamPlugin;
+pub(crate) struct PanCamPlugin;
 
 impl Plugin for PanCamPlugin {
     fn build(&self, app: &mut App) {
@@ -23,7 +23,7 @@ impl Plugin for PanCamPlugin {
 
 // Zoom doesn't work on bevy 0.5 due to: https://github.com/bevyengine/bevy/pull/2015
 fn camera_zoom(
-    mut query: Query<(&PanCam, &mut OrthographicProjection)>,
+    mut query: Query<(&PanCamControls, &mut OrthographicProjection)>,
     mut scroll_events: EventReader<MouseWheel>,
 ) {
     let pixels_per_line = 100.; // Maybe make configurable?
@@ -47,7 +47,7 @@ fn camera_zoom(
 fn camera_movement(
     mut windows: ResMut<Windows>,
     mouse_buttons: Res<Input<MouseButton>>,
-    mut query: Query<(&PanCam, &mut Transform, &OrthographicProjection)>,
+    mut query: Query<(&PanCamControls, &mut Transform, &OrthographicProjection)>,
     mut last_pos: Local<Option<Vec2>>,
 ) {
     let window = windows.get_primary_mut().unwrap();
@@ -81,12 +81,12 @@ fn camera_movement(
 }
 
 #[derive(Component)]
-pub struct PanCam {
+pub struct PanCamControls {
     pub enabled: bool,
     pub grab_buttons: Vec<MouseButton>,
 }
 
-impl Default for PanCam {
+impl Default for PanCamControls {
     fn default() -> Self {
         Self {
             enabled: true,

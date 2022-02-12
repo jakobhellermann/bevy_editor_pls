@@ -1,5 +1,5 @@
-mod camera_2d_panzoom;
-mod camera_3d_free;
+pub mod camera_2d_panzoom;
+pub mod camera_3d_free;
 mod editor_cam_render;
 
 mod persistent_active_cameras;
@@ -83,7 +83,7 @@ impl EditorWindow for CameraWindow {
                     .before(camera_2d_panzoom::CameraSystem::Movement),
             )
             .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
-            .add_startup_system(spawn_editor_cameras);
+            .add_startup_system_to_stage(StartupStage::PreStartup, spawn_editor_cameras);
 
         editor_cam_render::setup(app);
 
@@ -142,7 +142,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Default::default()
         })
-        .insert(camera_3d_free::Flycam::default())
+        .insert(camera_3d_free::FlycamControls::default())
         .insert(crate::hierarchy::picking::EditorRayCastSource::new())
         .insert(EditorCamera)
         .insert(EditorCamera3dFree)
@@ -158,7 +158,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
             },
             ..OrthographicCameraBundle::new_2d()
         })
-        .insert(camera_2d_panzoom::PanCam::default())
+        .insert(camera_2d_panzoom::PanCamControls::default())
         .insert(EditorCamera)
         .insert(EditorCamera2dPanZoom)
         .insert(HideInEditor)
@@ -168,8 +168,8 @@ fn spawn_editor_cameras(mut commands: Commands) {
 
 fn set_editor_cam_active(
     editor_state: Res<EditorState>,
-    mut editor_cam_3d_free: Query<&mut camera_3d_free::Flycam>,
-    mut editor_cam_2d_panzoom: Query<&mut camera_2d_panzoom::PanCam>,
+    mut editor_cam_3d_free: Query<&mut camera_3d_free::FlycamControls>,
+    mut editor_cam_2d_panzoom: Query<&mut camera_2d_panzoom::PanCamControls>,
 ) {
     let mut editor_cam_3d_free = editor_cam_3d_free.single_mut();
     let mut editor_cam_2d_panzoom = editor_cam_2d_panzoom.single_mut();
@@ -190,7 +190,7 @@ fn toggle_editor_cam(
         (
             Entity,
             &mut Transform,
-            &mut camera_3d_free::Flycam,
+            &mut camera_3d_free::FlycamControls,
             Option<&NeedsInitialPosition>,
         ),
         (With<EditorCamera3dFree>, Without<EditorCamera2dPanZoom>),
@@ -199,7 +199,7 @@ fn toggle_editor_cam(
         (
             Entity,
             &mut Transform,
-            &mut camera_2d_panzoom::PanCam,
+            &mut camera_2d_panzoom::PanCamControls,
             Option<&NeedsInitialPosition>,
         ),
         (With<EditorCamera2dPanZoom>, Without<EditorCamera3dFree>),

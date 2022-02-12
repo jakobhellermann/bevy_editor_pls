@@ -52,6 +52,61 @@ impl EditorWindow for MyEditorWindow {
 }
 ```
 
+### Controls
+
+The default controls are:
+- `E` to toggle the editor
+- `Space` (or `Ctrl+Space` when not in editor) to pause/unpause time
+- `Click` (or `Ctrl+Click` when not in editor) to select mesh
+
+- `WASD + Ctrl/Shift` + `Shift` for a speed boost for the free 3d camera
+- `Click + Drag` for the pan/zoom 2d camera
+
+<details>
+<summary>Changing the default controls</summary>
+
+```rust
+use bevy_editor_pls::EditorPlugin;
+use bevy_editor_pls::controls;
+use bevy_editor_pls_default_windows::hierarchy::picking::EditorRayCastSource;
+
+fn main() {
+    App::new()
+        // ..
+        .add_plugin(EditorPlugin)
+        .insert_resource(editor_controls())
+        .add_startup_system(set_cam3d_controls)
+        // ..
+        .run();
+}
+
+fn editor_controls() -> EditorControls {
+    let mut editor_controls = EditorControls::default_bindings();
+    editor_controls.unbind(controls::Action::PlayPauseEditor);
+
+    editor_controls.insert(
+        controls::Action::PlayPauseEditor,
+        controls::Binding {
+            input: controls::UserInput::Single(controls::Button::Keyboard(KeyCode::Escape)),
+            conditions: vec![controls::BindingCondition::ListeningForText(false)],
+        },
+    );
+
+    editor_controls
+}
+
+fn set_cam3d_controls(
+    mut query: Query<&mut bevy_editor_pls::default_windows::cameras::camera_3d_free::FlycamControls>,
+) {
+    let mut controls = query.single_mut();
+    controls.key_up = KeyCode::Q;
+    controls.key_down = KeyCode::E;
+}
+```
+
+</details>
+
+<br>
 
 ## Missing features
 

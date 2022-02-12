@@ -141,7 +141,7 @@ pub struct EditorControls {
 }
 
 impl EditorControls {
-    fn insert(&mut self, action: Action, binding: Binding) {
+    pub fn insert(&mut self, action: Action, binding: Binding) {
         self.actions.entry(action).or_default().push(binding);
     }
     fn get(&self, action: &Action) -> &[Binding] {
@@ -205,6 +205,10 @@ pub fn editor_controls_system(
 }
 
 impl EditorControls {
+    pub fn unbind(&mut self, action: Action) {
+        self.actions.remove(&action);
+    }
+
     pub fn default_bindings() -> Self {
         let mut controls = EditorControls::default();
 

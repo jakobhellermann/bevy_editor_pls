@@ -3,7 +3,7 @@ use bevy_editor_pls_core::EditorState;
 
 use crate::debug_settings::EditorTime;
 
-pub struct FlycamPlugin;
+pub(crate) struct FlycamPlugin;
 impl Plugin for FlycamPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(camera_movement.label(CameraSystem::Movement))
@@ -13,19 +13,27 @@ impl Plugin for FlycamPlugin {
 }
 
 #[derive(SystemLabel, PartialEq, Eq, Clone, Hash, Debug)]
-pub enum CameraSystem {
+pub(crate) enum CameraSystem {
     Movement,
 }
 
 #[derive(Component)]
-pub struct Flycam {
+pub struct FlycamControls {
     pub yaw: f32,
     pub pitch: f32,
     pub sensitivity: f32,
     pub enable_movement: bool,
     pub enable_look: bool,
+
+    pub key_forward: KeyCode,
+    pub key_back: KeyCode,
+    pub key_left: KeyCode,
+    pub key_right: KeyCode,
+    pub key_up: KeyCode,
+    pub key_down: KeyCode,
+    pub key_boost: KeyCode,
 }
-impl Default for Flycam {
+impl Default for FlycamControls {
     fn default() -> Self {
         Self {
             yaw: Default::default(),
@@ -33,12 +41,19 @@ impl Default for Flycam {
             sensitivity: 6.0,
             enable_movement: false,
             enable_look: false,
+            key_forward: KeyCode::W,
+            key_back: KeyCode::S,
+            key_left: KeyCode::A,
+            key_right: KeyCode::D,
+            key_up: KeyCode::Space,
+            key_down: KeyCode::LControl,
+            key_boost: KeyCode::LShift,
         }
     }
 }
 
 fn camera_movement(
-    mut cam: Query<(&Flycam, &mut Transform)>,
+    mut cam: Query<(&FlycamControls, &mut Transform)>,
     time: Res<EditorTime>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
@@ -48,18 +63,18 @@ fn camera_movement(
     }
 
     let if_then_1 = |b| if b { 1.0 } else { 0.0 };
-    let forward = if_then_1(keyboard_input.pressed(KeyCode::W))
-        - if_then_1(keyboard_input.pressed(KeyCode::S));
-    let sideways = if_then_1(keyboard_input.pressed(KeyCode::D))
-        - if_then_1(keyboard_input.pressed(KeyCode::A));
-    let up = if_then_1(keyboard_input.pressed(KeyCode::Space))
-        - if_then_1(keyboard_input.pressed(KeyCode::LControl));
+    let forward = if_then_1(keyboard_input.pressed(flycam.key_forward))
+        - if_then_1(keyboard_input.pressed(flycam.key_back));
+    let sideways = if_then_1(keyboard_input.pressed(flycam.key_right))
+        - if_then_1(keyboard_input.pressed(flycam.key_left));
+    let up = if_then_1(keyboard_input.pressed(flycam.key_up))
+        - if_then_1(keyboard_input.pressed(flycam.key_down));
 
     if forward == 0.0 && sideways == 0.0 && up == 0.0 {
         return;
     }
 
-    let speed = if keyboard_input.pressed(KeyCode::LShift) {
+    let speed = if keyboard_input.pressed(flycam.key_boost) {
         20.0
     } else {
         5.0
@@ -78,7 +93,7 @@ fn camera_look(
     time: Res<EditorTime>,
     mouse_input: Res<Input<MouseButton>>,
     mut mouse_motion_event_reader: EventReader<MouseMotion>,
-    mut query: Query<(&mut Flycam, &mut Transform)>,
+    mut query: Query<(&mut FlycamControls, &mut Transform)>,
 ) {
     let (mut flycam, mut transform) = query.single_mut();
     if !mouse_input.pressed(MouseButton::Right) {
