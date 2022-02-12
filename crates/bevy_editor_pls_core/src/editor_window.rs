@@ -20,6 +20,9 @@ pub trait EditorWindow: 'static {
             ui.close_menu();
         }
     }
+    fn viewport_toolbar_ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
+        let _ = (world, cx, ui);
+    }
 
     fn app_setup(app: &mut App) {
         let _ = app;

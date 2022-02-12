@@ -82,6 +82,7 @@ struct EditorWindowData {
     name: &'static str,
     ui_fn: UiFn,
     menu_ui_fn: UiFn,
+    viewport_toolbar_ui_fn: UiFn,
     default_size: (f32, f32),
 }
 
@@ -173,15 +174,24 @@ fn ui_fn<W: EditorWindow>(world: &mut World, cx: EditorWindowContext, ui: &mut e
 fn menu_ui_fn<W: EditorWindow>(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
     W::menu_ui(world, cx, ui);
 }
+fn viewport_toolbar_ui_fn<W: EditorWindow>(
+    world: &mut World,
+    cx: EditorWindowContext,
+    ui: &mut egui::Ui,
+) {
+    W::viewport_toolbar_ui(world, cx, ui);
+}
 
 impl Editor {
     pub fn add_window<W: EditorWindow>(&mut self) {
         let type_id = std::any::TypeId::of::<W>();
         let ui_fn = Box::new(ui_fn::<W>);
         let menu_ui_fn = Box::new(menu_ui_fn::<W>);
+        let viewport_toolbar_ui_fn = Box::new(viewport_toolbar_ui_fn::<W>);
         let data = EditorWindowData {
             ui_fn,
             menu_ui_fn,
+            viewport_toolbar_ui_fn,
             name: W::NAME,
             default_size: W::DEFAULT_SIZE,
         };
@@ -303,6 +313,18 @@ impl Editor {
                     EditorPanel::Bottom,
                 );
                 editor_state.pointer_used |= pointer_in_response(&res, ctx);
+
+                egui::TopBottomPanel::top("viewport_top_panel")
+                    .frame(egui::Frame::none().margin(ui.spacing().window_padding))
+                    .show(ctx, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.style_mut().spacing.button_padding = egui::vec2(2.0, 0.0);
+                            let height = ui.spacing().interact_size.y;
+                            ui.set_min_size(egui::vec2(ui.available_width(), height));
+
+                            self.editor_viewport_ui(world, ui, internal_state);
+                        });
+                    });
 
                 let (viewport, _) =
                     ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
@@ -563,6 +585,21 @@ impl Editor {
         }
 
         Some(())
+    }
+
+    fn editor_viewport_ui(
+        &mut self,
+        world: &mut World,
+        ui: &mut egui::Ui,
+        internal_state: &mut EditorInternalState,
+    ) {
+        for (_, window) in self.windows.iter() {
+            let cx = EditorWindowContext {
+                window_states: &mut self.window_states,
+                internal_state,
+            };
+            (window.viewport_toolbar_ui_fn)(world, cx, ui);
+        }
     }
 }
 
