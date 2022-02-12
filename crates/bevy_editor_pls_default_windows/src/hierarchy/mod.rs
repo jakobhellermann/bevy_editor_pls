@@ -11,6 +11,7 @@ use bevy_editor_pls_core::{
 };
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
+use crate::cameras::{CameraWindow, EditorCamKind};
 
 #[derive(Component)]
 pub struct HideInEditor;
@@ -47,7 +48,14 @@ fn handle_events(
     mut select_mesh_events: EventReader<EditorHierarchyEvent>,
     // mut editor_events: EventReader<EditorEvent>,
     // mut raycast_state: ResMut<EditorRayCastState>,
-    editor_camera: Query<&picking::EditorRayCastSource, With<super::cameras::ActiveEditorCamera>>,
+    _editor_camera_2d_panzoom: Query<
+        (&GlobalTransform, &Camera),
+        With<super::cameras::EditorCamera2dPanZoom>,
+    >,
+    editor_camera_3d_free: Query<
+        &picking::EditorRayCastSource,
+        With<super::cameras::EditorCamera3dFree>,
+    >,
     non_editor_camera: Query<&picking::EditorRayCastSource, Without<super::cameras::EditorCamera>>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
@@ -68,12 +76,13 @@ fn handle_events(
     }*/
 
     for event in select_mesh_events.iter() {
-        match event {
-            EditorHierarchyEvent::SelectMesh => {
-                let raycast_source = if editor_state.active {
-                    editor_camera.get_single().ok()
-                } else {
-                    match non_editor_camera.get_single() {
+        #[allow(irrefutable_let_patterns)]
+        if let EditorHierarchyEvent::SelectMesh = event {
+            let editor_camera = editor.window_state::<CameraWindow>().unwrap().editor_cam;
+
+            let picked_entity = match (editor_state.active, editor_camera) {
+                (false, _) => {
+                    let source = match non_editor_camera.get_single() {
                         Ok(source) => Some(source),
                         Err(QuerySingleError::NoEntities(_)) => {
                             error!("No cameras with `EditorRayCastSource` found, can't click to inspect when the editor is inactive!");
@@ -81,21 +90,32 @@ fn handle_events(
                         }
                         Err(QuerySingleError::MultipleEntities(_)) => {
                             error!("Multiple cameras with `EditorRayCastSource` found!");
-                            None
+                            continue;
                         }
-                    }
-                };
-                let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
-
-                if let Some(raycast_source) = raycast_source {
-                    if let Some((entity, _interaction)) = raycast_source.intersect_top() {
-                        info!("Selecting mesh, found {:?}", entity);
-                        state.selected = Some(entity);
-                    } else {
-                        info!("Selecting mesh, found none");
-                        state.selected = None;
-                    }
+                    };
+                    source
+                        .and_then(|source| source.intersect_top())
+                        .map(|(entity, _)| entity)
                 }
+                (true, EditorCamKind::D2PanZoom) => {
+                    // TODO: pick sprites
+                    // let (cam_transform, cam) = editor_camera_2d_panzoom.single();
+                    continue;
+                }
+                (true, EditorCamKind::D3Free) => {
+                    let source = editor_camera_3d_free.single();
+                    source.intersect_top().map(|(entity, _)| entity)
+                }
+            };
+
+            let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
+
+            if let Some(entity) = picked_entity {
+                info!("Selecting mesh, found {:?}", entity);
+                state.selected = Some(entity);
+            } else {
+                info!("Selecting mesh, found none");
+                state.selected = None;
             }
         }
     }

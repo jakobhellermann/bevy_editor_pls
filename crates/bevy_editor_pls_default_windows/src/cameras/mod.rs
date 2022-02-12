@@ -40,7 +40,8 @@ pub struct EditorCamera2dPanZoom;
 
 pub struct CameraWindow;
 
-enum EditorCamKind {
+#[derive(Clone, Copy)]
+pub enum EditorCamKind {
     D2PanZoom,
     D3Free,
 }
@@ -53,7 +54,7 @@ impl Default for EditorCamKind {
 
 #[derive(Default)]
 pub struct CameraWindowState {
-    editor_cam: EditorCamKind,
+    pub editor_cam: EditorCamKind,
     has_decided_initial_cam: bool,
 }
 
