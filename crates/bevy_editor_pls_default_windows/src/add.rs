@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use bevy::{
-    core::Stopwatch,
     pbr::{wireframe::Wireframe, NotShadowCaster, NotShadowReceiver},
     prelude::*,
     render::view::RenderLayers,
@@ -138,8 +137,6 @@ impl Default for AddWindowState {
         state.add("", AddItem::bundle_named::<()>("Empty".into()));
 
         state.add("Core", AddItem::component::<Name>());
-        state.add("Core", AddItem::component::<Timer>());
-        state.add("Core", AddItem::component::<Stopwatch>());
         state.add(
             "Core",
             AddItem::bundle_named::<(Transform, GlobalTransform)>("Transform".into()),
