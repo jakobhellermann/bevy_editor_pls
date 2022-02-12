@@ -190,16 +190,25 @@ fn spawn_editor_cameras(mut commands: Commands) {
 }
 
 fn set_editor_cam_active(
+    editor: Res<Editor>,
     editor_state: Res<EditorState>,
     mut editor_cam_3d_free: Query<&mut camera_3d_free::FlycamControls>,
     mut editor_cam_2d_panzoom: Query<&mut camera_2d_panzoom::PanCamControls>,
 ) {
+    let editor_cam = editor.window_state::<CameraWindow>().unwrap().editor_cam;
+
     let mut editor_cam_3d_free = editor_cam_3d_free.single_mut();
     let mut editor_cam_2d_panzoom = editor_cam_2d_panzoom.single_mut();
 
-    editor_cam_3d_free.enable_movement = editor_state.active && !editor_state.listening_for_text;
-    editor_cam_3d_free.enable_look = editor_state.active && !editor_state.pointer_used();
-    editor_cam_2d_panzoom.enabled = editor_state.active && !editor_state.pointer_used();
+    editor_cam_3d_free.enable_movement = matches!(editor_cam, EditorCamKind::D3Free)
+        && editor_state.active
+        && !editor_state.listening_for_text;
+    editor_cam_3d_free.enable_look = matches!(editor_cam, EditorCamKind::D3Free)
+        && editor_state.active
+        && !editor_state.pointer_used();
+    editor_cam_2d_panzoom.enabled = matches!(editor_cam, EditorCamKind::D2PanZoom)
+        && editor_state.active
+        && !editor_state.pointer_used();
 }
 
 fn toggle_editor_cam(
@@ -219,12 +228,7 @@ fn toggle_editor_cam(
         (With<EditorCamera3dFree>, Without<EditorCamera2dPanZoom>),
     >,
     mut query_camera_2d_pan_zoom: Query<
-        (
-            Entity,
-            &mut Transform,
-            &mut camera_2d_panzoom::PanCamControls,
-            Option<&NeedsInitialPosition>,
-        ),
+        (Entity, &mut Transform, Option<&NeedsInitialPosition>),
         (With<EditorCamera2dPanZoom>, Without<EditorCamera3dFree>),
     >,
 
@@ -273,8 +277,6 @@ fn toggle_editor_cam(
                 EditorCamKind::D3Free => {
                     let (entity, mut cam_transform, mut cam, needs_initial_position) =
                         query_camera_3d_free.single_mut();
-                    cam.enable_movement = now_active;
-
                     if needs_initial_position.is_some() {
                         if let Some(cam3d_transform) = cam3d_transform {
                             *cam_transform = cam3d_transform.clone();
@@ -286,10 +288,8 @@ fn toggle_editor_cam(
                     }
                 }
                 EditorCamKind::D2PanZoom => {
-                    let (entity, mut cam_transform, mut cam, needs_initial_position) =
+                    let (entity, mut cam_transform, needs_initial_position) =
                         query_camera_2d_pan_zoom.single_mut();
-                    cam.enabled = now_active;
-
                     if needs_initial_position.is_some() {
                         if let Some(cam2d_transform) = cam2d_transform {
                             *cam_transform = cam2d_transform.clone();
