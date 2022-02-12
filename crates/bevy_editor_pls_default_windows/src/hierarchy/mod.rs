@@ -385,11 +385,19 @@ impl<'a> Hierarchy<'a> {
 }
 
 fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut String, renaming: &mut bool, world: &mut World) {
-    let edit = ui.text_edit_singleline(current_rename);
+    use egui::widgets::text_edit::{TextEdit, TextEditState};
+
+    let edit_state = match TextEdit::load_state(ui.ctx(), egui::Id::new(entity)) {
+        Some(state) => state,
+        None => TextEditState::default(),
+    };
+
+    let edit = TextEdit::singleline(current_rename);
+    let response = ui.add(edit);
 
     let mut finished = false;
 
-    if edit.lost_focus() {
+    if response.lost_focus() {
         *renaming = false;
         finished = true;
 
@@ -410,7 +418,9 @@ fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut Stri
         }
     }
 
-    if !finished && !edit.has_focus() {
-        edit.request_focus();
+    if !finished && !response.has_focus() {
+        response.request_focus();
     }
+
+    TextEdit::store_state(ui.ctx(), egui::Id::new(entity), edit_state);
 }
