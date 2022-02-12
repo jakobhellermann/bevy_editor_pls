@@ -56,7 +56,7 @@ impl EditorWindow for MyEditorWindow {
 
 The default controls are:
 - `E` to toggle the editor
-- `Space` (or `Ctrl+Space` when not in editor) to pause/unpause time
+- `Ctrl+Enter` to pause/unpause time
 - `Click` (or `Ctrl+Click` when not in editor) to select mesh
 
 - `WASD + Ctrl/Shift` + `Shift` for a speed boost for the free 3d camera

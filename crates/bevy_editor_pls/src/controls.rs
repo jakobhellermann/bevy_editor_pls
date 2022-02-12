@@ -215,21 +215,11 @@ impl EditorControls {
         controls.insert(
             Action::PauseUnpauseTime,
             Binding {
-                input: UserInput::Single(Button::Keyboard(KeyCode::Space)),
-                conditions: vec![
-                    BindingCondition::EditorActive(true),
-                    BindingCondition::ListeningForText(false),
-                ],
-            },
-        );
-        controls.insert(
-            Action::PauseUnpauseTime,
-            Binding {
                 input: UserInput::Chord(vec![
                     Button::Keyboard(KeyCode::LControl),
-                    Button::Keyboard(KeyCode::Space),
+                    Button::Keyboard(KeyCode::Return),
                 ]),
-                conditions: vec![BindingCondition::EditorActive(false)],
+                conditions: vec![BindingCondition::ListeningForText(false)],
             },
         );
 
