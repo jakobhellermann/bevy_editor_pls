@@ -1,5 +1,7 @@
 pub mod picking;
 
+use bevy::pbr::wireframe::Wireframe;
+use bevy::render::{RenderApp, RenderStage};
 use bevy::utils::HashSet;
 use bevy::{ecs::system::QuerySingleError, prelude::*};
 use bevy_editor_pls_core::EditorState;
@@ -12,6 +14,7 @@ use bevy_editor_pls_core::{
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
 use crate::cameras::{CameraWindow, EditorCamKind};
+use crate::debug_settings::DebugSettingsWindow;
 
 #[derive(Component)]
 pub struct HideInEditor;
@@ -37,6 +40,9 @@ impl EditorWindow for HierarchyWindow {
         picking::setup(app);
         app.add_event::<EditorHierarchyEvent>()
             .add_system(handle_events);
+
+        app.sub_app_mut(RenderApp)
+            .add_system_to_stage(RenderStage::Extract, extract_wireframe_for_selected);
     }
 }
 
@@ -117,6 +123,18 @@ fn handle_events(
                 info!("Selecting mesh, found none");
                 state.selected = None;
             }
+        }
+    }
+}
+
+fn extract_wireframe_for_selected(editor: Res<Editor>, mut commands: Commands) {
+    let wireframe_for_selected = editor
+        .window_state::<DebugSettingsWindow>()
+        .map_or(false, |settings| settings.highlight_selected);
+
+    if wireframe_for_selected {
+        if let Some(selected) = editor.window_state::<HierarchyWindow>().unwrap().selected {
+            commands.get_or_spawn(selected).insert(Wireframe);
         }
     }
 }

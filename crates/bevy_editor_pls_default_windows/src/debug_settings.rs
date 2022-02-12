@@ -5,9 +5,18 @@ use bevy::{
 use bevy_editor_pls_core::editor_window::EditorWindow;
 use bevy_inspector_egui::{egui::Grid, Inspectable};
 
-#[derive(Default)]
 pub struct DebugSettingsWindowState {
     pub wireframes: bool,
+    pub highlight_selected: bool,
+}
+
+impl Default for DebugSettingsWindowState {
+    fn default() -> Self {
+        Self {
+            wireframes: false,
+            highlight_selected: true,
+        }
+    }
 }
 
 pub struct DebugSettingsWindow;
@@ -43,6 +52,17 @@ impl EditorWindow for DebugSettingsWindow {
                         .get_resource_or_insert_with(WireframeConfig::default)
                         .global = state.wireframes;
                 }
+            });
+            ui.end_row();
+
+            if !wireframe_enabled {
+                state.highlight_selected = false;
+            }
+
+            ui.label("Highlight selected entity");
+            ui.scope(|ui| {
+                ui.set_enabled(wireframe_enabled);
+                ui.checkbox(&mut state.highlight_selected, "");
             });
             ui.end_row();
         });
