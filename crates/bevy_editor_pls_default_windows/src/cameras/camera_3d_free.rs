@@ -1,6 +1,8 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_editor_pls_core::EditorState;
 
+use crate::debug_settings::EditorTime;
+
 pub struct FlycamPlugin;
 impl Plugin for FlycamPlugin {
     fn build(&self, app: &mut App) {
@@ -37,7 +39,7 @@ impl Default for Flycam {
 
 fn camera_movement(
     mut cam: Query<(&Flycam, &mut Transform)>,
-    time: Res<Time>,
+    time: Res<EditorTime>,
     keyboard_input: Res<Input<KeyCode>>,
 ) {
     let (flycam, mut cam_transform) = cam.single_mut();
@@ -64,7 +66,7 @@ fn camera_movement(
     };
 
     let movement =
-        Vec3::new(sideways, forward, up).normalize_or_zero() * speed * time.delta_seconds();
+        Vec3::new(sideways, forward, up).normalize_or_zero() * speed * time.0.delta_seconds();
 
     let diff = cam_transform.forward() * movement.y
         + cam_transform.right() * movement.x
@@ -73,7 +75,7 @@ fn camera_movement(
 }
 
 fn camera_look(
-    time: Res<Time>,
+    time: Res<EditorTime>,
     mouse_input: Res<Input<MouseButton>>,
     mut mouse_motion_event_reader: EventReader<MouseMotion>,
     mut query: Query<(&mut Flycam, &mut Transform)>,
@@ -93,8 +95,8 @@ fn camera_look(
         return;
     }
 
-    flycam.yaw -= delta.x * flycam.sensitivity * time.delta_seconds();
-    flycam.pitch -= delta.y * flycam.sensitivity * time.delta_seconds();
+    flycam.yaw -= delta.x * flycam.sensitivity * time.0.delta_seconds();
+    flycam.pitch -= delta.y * flycam.sensitivity * time.0.delta_seconds();
 
     flycam.pitch = flycam.pitch.clamp(-89.0, 89.9);
     // println!("pitch: {}, yaw: {}", options.pitch, options.yaw);
