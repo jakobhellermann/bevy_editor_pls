@@ -305,7 +305,7 @@ impl<'a> Hierarchy<'a> {
 
         let (renamed_entity_bits, renaming, current_rename) = &mut self.state.rename_info;
         if *renaming && *renamed_entity_bits == entity.to_bits() {
-            ui.text_edit_singleline(current_rename);
+            rename_entity_ui(ui, entity, current_rename, renaming, self.world);
 
             return;
         }
@@ -380,6 +380,28 @@ impl<'a> Hierarchy<'a> {
             self.state
                 .selected
                 .select(selection_mode, entity, extend_with);
+        }
+    }
+}
+
+fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut String, renaming: &mut bool, world: &mut World) {
+    if ui.text_edit_singleline(current_rename).lost_focus() {
+        *renaming = false;
+
+        match world.get_entity_mut(entity) {
+            Some(mut ent_mut) => {
+                match ent_mut.get_mut::<Name>() {
+                    Some(mut name) => {
+                        name.set(current_rename.clone());
+                    },
+                    None => {
+                        ent_mut.insert(Name::new(current_rename.clone()));
+                    }
+                }
+            },
+            None => {
+                error!("Failed to get renamed entity");
+            }
         }
     }
 }
