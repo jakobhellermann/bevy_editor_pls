@@ -385,8 +385,13 @@ impl<'a> Hierarchy<'a> {
 }
 
 fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut String, renaming: &mut bool, world: &mut World) {
-    if ui.text_edit_singleline(current_rename).lost_focus() {
+    let edit = ui.text_edit_singleline(current_rename);
+
+    let mut finished = false;
+
+    if edit.lost_focus() {
         *renaming = false;
+        finished = true;
 
         match world.get_entity_mut(entity) {
             Some(mut ent_mut) => {
@@ -403,5 +408,9 @@ fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut Stri
                 error!("Failed to get renamed entity");
             }
         }
+    }
+
+    if !finished && !edit.has_focus() {
+        edit.request_focus();
     }
 }
