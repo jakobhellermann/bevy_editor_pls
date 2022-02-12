@@ -64,7 +64,6 @@ impl Default for EditorCamKind {
 #[derive(Default)]
 pub struct CameraWindowState {
     pub editor_cam: EditorCamKind,
-    has_decided_initial_cam: bool,
 }
 
 impl EditorWindow for CameraWindow {
@@ -106,6 +105,7 @@ impl EditorWindow for CameraWindow {
                     .before(camera_2d_panzoom::CameraSystem::Movement),
             )
             .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
+            .add_system(initial_camera_setup)
             .add_startup_system_to_stage(StartupStage::PreStartup, spawn_editor_cameras);
 
         editor_cam_render::setup(app);
@@ -212,28 +212,39 @@ fn set_editor_cam_active(
 }
 
 fn toggle_editor_cam(
-    mut commands: Commands,
     mut editor_events: EventReader<EditorEvent>,
-    mut editor: ResMut<Editor>,
     mut active_cameras_raw: ResMut<ActiveCameras>,
     mut active_cameras: ResMut<PersistentActiveCameras>,
+) {
+    for event in editor_events.iter() {
+        if let EditorEvent::Toggle { now_active } = *event {
+            if now_active {
+                active_cameras.disable_all(&mut active_cameras_raw);
+            } else {
+                active_cameras.enable_all(&mut active_cameras_raw);
+            }
+        }
+    }
+}
+
+fn initial_camera_setup(
+    mut has_decided_initial_cam: Local<bool>,
+    mut was_positioned_3d_free: Local<bool>,
+    mut was_positioned_2d_panzoom: Local<bool>,
+
+    mut editor: ResMut<Editor>,
 
     mut query_camera_3d_free: Query<
-        (
-            Entity,
-            &mut Transform,
-            &mut camera_3d_free::FlycamControls,
-            Option<&NeedsInitialPosition>,
-        ),
+        (&mut Transform, &mut camera_3d_free::FlycamControls),
         (With<EditorCamera3dFree>, Without<EditorCamera2dPanZoom>),
     >,
     mut query_camera_2d_pan_zoom: Query<
-        (Entity, &mut Transform, Option<&NeedsInitialPosition>),
+        &mut Transform,
         (With<EditorCamera2dPanZoom>, Without<EditorCamera3dFree>),
     >,
 
     cameras: Query<
-        &Transform,
+        (&Camera, &Transform),
         (
             With<Camera>,
             Without<EditorCamera3dFree>,
@@ -241,63 +252,54 @@ fn toggle_editor_cam(
         ),
     >,
 ) {
-    for event in editor_events.iter() {
-        if let EditorEvent::Toggle { now_active } = *event {
-            let camera_state = editor.window_state_mut::<CameraWindow>().unwrap();
+    let mut cam2d = None;
+    let mut cam3d = None;
 
-            let cam2d_transform = active_cameras_raw
-                .get(CameraPlugin::CAMERA_2D)
-                .and_then(|cam| cameras.get(cam.entity?).ok());
+    for (camera, transform) in cameras.iter() {
+        if camera.name.as_deref() == Some(CameraPlugin::CAMERA_2D) {
+            cam2d = Some(transform);
+        }
+        if camera.name.as_deref() == Some(CameraPlugin::CAMERA_3D) {
+            cam3d = Some(transform);
+        }
+    }
 
-            let cam3d_transform = active_cameras_raw
-                .get(CameraPlugin::CAMERA_3D)
-                .and_then(|cam| cameras.get(cam.entity?).ok());
+    if !*has_decided_initial_cam {
+        let camera_state = editor.window_state_mut::<CameraWindow>().unwrap();
 
-            if now_active {
-                active_cameras.disable_all(&mut active_cameras_raw);
-            } else {
-                active_cameras.enable_all(&mut active_cameras_raw);
+        match (cam2d.is_some(), cam3d.is_some()) {
+            (true, false) => {
+                camera_state.editor_cam = EditorCamKind::D2PanZoom;
+                *has_decided_initial_cam = true;
             }
-
-            if !camera_state.has_decided_initial_cam {
-                match (cam2d_transform.is_some(), cam3d_transform.is_some()) {
-                    (true, false) => {
-                        camera_state.editor_cam = EditorCamKind::D2PanZoom;
-                    }
-                    (false, true) => {
-                        camera_state.editor_cam = EditorCamKind::D3Free;
-                    }
-                    (false, false) | (true, true) => {}
-                }
-
-                camera_state.has_decided_initial_cam = true;
+            (false, true) => {
+                camera_state.editor_cam = EditorCamKind::D3Free;
+                *has_decided_initial_cam = true;
             }
+            (true, true) => {
+                camera_state.editor_cam = EditorCamKind::default();
+                *has_decided_initial_cam = true;
+            }
+            (false, false) => return,
+        }
+    }
 
-            match camera_state.editor_cam {
-                EditorCamKind::D3Free => {
-                    let (entity, mut cam_transform, mut cam, needs_initial_position) =
-                        query_camera_3d_free.single_mut();
-                    if needs_initial_position.is_some() {
-                        if let Some(cam3d_transform) = cam3d_transform {
-                            *cam_transform = cam3d_transform.clone();
-                            let (yaw, pitch, _) = cam3d_transform.rotation.to_euler(EulerRot::YXZ);
-                            cam.yaw = yaw.to_degrees();
-                            cam.pitch = pitch.to_degrees();
-                        }
-                        commands.entity(entity).remove::<NeedsInitialPosition>();
-                    }
-                }
-                EditorCamKind::D2PanZoom => {
-                    let (entity, mut cam_transform, needs_initial_position) =
-                        query_camera_2d_pan_zoom.single_mut();
-                    if needs_initial_position.is_some() {
-                        if let Some(cam2d_transform) = cam2d_transform {
-                            *cam_transform = cam2d_transform.clone();
-                        }
-                        commands.entity(entity).remove::<NeedsInitialPosition>();
-                    }
-                }
-            };
+    if !*was_positioned_3d_free {
+        let (mut cam_transform, mut cam) = query_camera_3d_free.single_mut();
+        if let Some(cam3d_transform) = cam3d {
+            *cam_transform = cam3d_transform.clone();
+            let (yaw, pitch, _) = cam3d_transform.rotation.to_euler(EulerRot::YXZ);
+            cam.yaw = yaw.to_degrees();
+            cam.pitch = pitch.to_degrees();
+            *was_positioned_3d_free = true;
+        }
+    }
+
+    if !*was_positioned_2d_panzoom {
+        let mut cam_transform = query_camera_2d_pan_zoom.single_mut();
+        if let Some(cam2d_transform) = cam2d {
+            *cam_transform = cam2d_transform.clone();
+            *was_positioned_2d_panzoom = true;
         }
     }
 }
