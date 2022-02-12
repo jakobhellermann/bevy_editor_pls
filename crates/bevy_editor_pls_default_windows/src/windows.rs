@@ -1,7 +1,7 @@
 use bevy::{
     math::{IVec2, Vec2},
     prelude::World,
-    window::{WindowId, WindowMode, Windows},
+    window::{PresentMode, WindowId, WindowMode, Windows},
 };
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::{
@@ -63,6 +63,27 @@ fn window_ui(windows: &mut Windows, ui: &mut egui::Ui) {
             }
             ui.end_row();
 
+            ui.label("present_mode");
+            let mut present_mode = window.present_mode();
+            let mut present_mode_changed = false;
+            egui::ComboBox::from_id_source("present_mode")
+                .selected_text(format!("{:?}", present_mode))
+                .show_ui(ui, |ui| {
+                    present_mode_changed |= ui
+                        .selectable_value(&mut present_mode, PresentMode::Fifo, "Fifo")
+                        .changed();
+                    present_mode_changed |= ui
+                        .selectable_value(&mut present_mode, PresentMode::Immediate, "Immediate")
+                        .changed();
+                    present_mode_changed |= ui
+                        .selectable_value(&mut present_mode, PresentMode::Mailbox, "Mailbox")
+                        .changed();
+                });
+            if present_mode_changed {
+                window.set_present_mode(present_mode);
+            }
+            ui.end_row();
+
             ui.label("size");
             let mut size = Vec2::new(window.width(), window.height());
             let mut size_attributes = Vec2dAttributes::positive();
@@ -95,13 +116,6 @@ fn window_ui(windows: &mut Windows, ui: &mut egui::Ui) {
             let mut title = window.title().to_string();
             if title.ui(ui, Default::default(), &mut cx) {
                 window.set_title(title);
-            }
-            ui.end_row();
-
-            ui.label("vsync");
-            let mut vsync = window.vsync();
-            if vsync.ui(ui, Default::default(), &mut cx) {
-                window.set_vsync(vsync);
             }
             ui.end_row();
 
