@@ -1,17 +1,20 @@
 use bevy::{prelude::*, utils::HashMap};
-use bevy_editor_pls_core::{editor_window::EditorWindow, EditorEvent, EditorState};
+use bevy_editor_pls_core::{editor_window::EditorWindow, Editor, EditorEvent, EditorState};
 use bevy_editor_pls_default_windows::hierarchy::EditorHierarchyEvent;
 
+#[derive(Debug)]
 pub enum Button {
     Keyboard(KeyCode),
     Mouse(MouseButton),
 }
 
+#[derive(Debug)]
 pub enum UserInput {
     Single(Button),
     Chord(Vec<Button>),
 }
 
+#[derive(Debug)]
 pub enum BindingCondition {
     InViewport(bool),
     EditorActive(bool),
@@ -50,6 +53,7 @@ impl std::fmt::Display for BindingCondition {
     }
 }
 
+#[derive(Debug)]
 pub struct Binding {
     pub input: UserInput,
     pub conditions: Vec<BindingCondition>,
@@ -118,6 +122,7 @@ impl Binding {
 pub enum Action {
     PlayPauseEditor,
     SelectMesh,
+    PauseUnpauseTime,
 }
 
 impl std::fmt::Display for Action {
@@ -125,6 +130,7 @@ impl std::fmt::Display for Action {
         match self {
             Action::PlayPauseEditor => write!(f, "Play/Pause editor"),
             Action::SelectMesh => write!(f, "Select mesh to inspect"),
+            Action::PauseUnpauseTime => write!(f, "Pause/Unpause time"),
         }
     }
 }
@@ -161,9 +167,9 @@ pub fn editor_controls_system(
     keyboard_input: Res<Input<KeyCode>>,
     mouse_input: Res<Input<MouseButton>>,
     mut editor_state: ResMut<EditorState>,
-
     mut editor_events: EventWriter<EditorEvent>,
     mut editor_hierarchy_event: EventWriter<EditorHierarchyEvent>,
+    mut editor: ResMut<Editor>,
 ) {
     if controls.just_pressed(
         Action::SelectMesh,
@@ -185,11 +191,43 @@ pub fn editor_controls_system(
             now_active: editor_state.active,
         });
     }
+
+    if controls.just_pressed(
+        Action::PauseUnpauseTime,
+        &keyboard_input,
+        &mouse_input,
+        &editor_state,
+    ) {
+        if let Some(default_window) = editor.window_state_mut::<bevy_editor_pls_default_windows::debug_settings::DebugSettingsWindow>() {
+            default_window.pause_time = !default_window.pause_time;
+        }
+    }
 }
 
 impl EditorControls {
     pub fn default_bindings() -> Self {
         let mut controls = EditorControls::default();
+
+        controls.insert(
+            Action::PauseUnpauseTime,
+            Binding {
+                input: UserInput::Single(Button::Keyboard(KeyCode::Space)),
+                conditions: vec![
+                    BindingCondition::EditorActive(true),
+                    BindingCondition::ListeningForText(false),
+                ],
+            },
+        );
+        controls.insert(
+            Action::PauseUnpauseTime,
+            Binding {
+                input: UserInput::Chord(vec![
+                    Button::Keyboard(KeyCode::LControl),
+                    Button::Keyboard(KeyCode::Space),
+                ]),
+                conditions: vec![BindingCondition::EditorActive(false)],
+            },
+        );
 
         controls.insert(
             Action::SelectMesh,
@@ -284,7 +322,11 @@ impl EditorWindow for ControlsWindow {
     ) {
         let controls = world.get_resource::<EditorControls>().unwrap();
 
-        for action in &[Action::PlayPauseEditor, Action::SelectMesh] {
+        for action in &[
+            Action::PlayPauseEditor,
+            Action::PauseUnpauseTime,
+            Action::SelectMesh,
+        ] {
             ui.label(egui::RichText::new(action.to_string()).strong());
             let bindings = controls.get(action);
             for binding in bindings {
