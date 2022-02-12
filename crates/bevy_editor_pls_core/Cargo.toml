@@ -8,6 +8,6 @@ license = "MIT OR Apache-2.0"
 viewport = []
 
 [dependencies]
-bevy = { version = "0.6", default-features = false }
-bevy-inspector-egui = "0.8"
+bevy = { git = "https://github.com/bevyengine/bevy", default-features = false }
+bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui", branch = "bevy-main" }
 indexmap = "1.7"

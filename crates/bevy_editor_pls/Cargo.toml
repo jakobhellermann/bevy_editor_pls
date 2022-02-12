@@ -10,13 +10,13 @@ default = ["default_windows"]
 viewport = ["bevy_editor_pls_default_windows/viewport"]
 
 [dependencies]
-bevy = { version = "0.6", default-features = false }
+bevy = { git = "https://github.com/bevyengine/bevy", default-features = false }
 egui = "0.16"
 bevy_editor_pls_core = { path = "../bevy_editor_pls_core" }
 bevy_editor_pls_default_windows = { path = "../bevy_editor_pls_default_windows", optional = true }
 
 [dev-dependencies]
-bevy = { version = "0.6", default-features = false, features = [
+bevy = { git = "https://github.com/bevyengine/bevy", default-features = false, features = [
     "bevy_winit",
     "x11",
 ] }
