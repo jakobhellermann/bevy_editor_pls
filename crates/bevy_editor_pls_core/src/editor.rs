@@ -1,7 +1,7 @@
 use std::any::{Any, TypeId};
 
 use bevy::app::Events;
-use bevy::window::WindowId;
+use bevy::window::{WindowId, WindowMode};
 use bevy::{prelude::*, utils::HashMap};
 use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
 use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
@@ -354,7 +354,7 @@ impl Editor {
         editor_events: &mut Events<EditorEvent>,
     ) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+            let bar_response = egui::menu::bar(ui, |ui| {
                 if play_pause_button(editor_state.active, ui).clicked() {
                     editor_state.active = !editor_state.active;
                     editor_events.send(EditorEvent::Toggle {
@@ -371,7 +371,22 @@ impl Editor {
                         (window.menu_ui_fn)(world, cx, ui);
                     }
                 });
-            });
+            })
+            .response
+            .interact(egui::Sense::click());
+
+            if bar_response.double_clicked() {
+                if let Some(window) = world
+                    .get_resource_mut::<Windows>()
+                    .unwrap()
+                    .get_primary_mut()
+                {
+                    match window.mode() {
+                        WindowMode::Windowed => window.set_mode(WindowMode::Fullscreen),
+                        _ => window.set_mode(WindowMode::Windowed),
+                    }
+                }
+            }
         });
     }
 
