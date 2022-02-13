@@ -247,6 +247,7 @@ impl SelectedEntities {
 #[derive(Default)]
 pub struct HierarchyState {
     pub selected: SelectedEntities,
+    pub rename_info: (u64, bool, String),
 }
 
 struct Hierarchy<'a> {
@@ -284,7 +285,7 @@ impl<'a> Hierarchy<'a> {
         let selected = self.state.selected.contains(entity);
 
         let entity_name = bevy_inspector_egui::world_inspector::entity_name(self.world, entity);
-        let mut text = RichText::new(entity_name);
+        let mut text = RichText::new(entity_name.clone());
         if selected {
             text = text.strong();
         }
@@ -301,6 +302,13 @@ impl<'a> Hierarchy<'a> {
         } else {
             None
         };
+
+        let (renamed_entity_bits, renaming, current_rename) = &mut self.state.rename_info;
+        if *renaming && *renamed_entity_bits == entity.to_bits() {
+            rename_entity_ui(ui, entity, current_rename, renaming, self.world);
+
+            return;
+        }
 
         let response = CollapsingHeader::new(text)
             .id_source(entity)
@@ -333,6 +341,11 @@ impl<'a> Hierarchy<'a> {
                         ui.close_menu();
                     }
                 });
+            }
+
+            if ui.button("Rename").clicked() {
+                self.state.rename_info = (entity.to_bits(), true, entity_name);
+                ui.close_menu();
             }
         });
 
@@ -369,4 +382,54 @@ impl<'a> Hierarchy<'a> {
                 .select(selection_mode, entity, extend_with);
         }
     }
+}
+
+fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut String, renaming: &mut bool, world: &mut World) {
+    use egui::widgets::text_edit::{CCursorRange, TextEdit, TextEditOutput};
+    use epaint::text::cursor::CCursor;
+
+    let id = egui::Id::new(entity);
+
+    let edit = TextEdit::singleline(current_rename).id(id);
+    let TextEditOutput { 
+        response, 
+        galley: _, 
+        state: mut edit_state, 
+        cursor_range: _ 
+    } = edit.show(ui);
+
+    // Runs once to end renaming
+    if response.lost_focus() {
+        *renaming = false;
+
+        match world.get_entity_mut(entity) {
+            Some(mut ent_mut) => {
+                match ent_mut.get_mut::<Name>() {
+                    Some(mut name) => {
+                        name.set(current_rename.clone());
+                    },
+                    None => {
+                        ent_mut.insert(Name::new(current_rename.clone()));
+                    }
+                }
+            },
+            None => {
+                error!("Failed to get renamed entity");
+            }
+        }
+    }
+
+    // Runs once when renaming begins
+    if !response.has_focus() {
+        response.request_focus();
+
+        edit_state.set_ccursor_range(Some(
+            CCursorRange::two(
+                CCursor::new(0), 
+                CCursor::new(current_rename.len())
+            )
+        ));
+    }
+
+    TextEdit::store_state(ui.ctx(), id, edit_state);
 }
