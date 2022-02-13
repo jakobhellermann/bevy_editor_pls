@@ -107,18 +107,22 @@ fn handle_events(
 
             let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
 
-            if let Some(entity) = picked_entity {
-                let ctrl = input.any_pressed([KeyCode::LControl, KeyCode::RControl]);
-                let shift = input.any_pressed([KeyCode::LShift, KeyCode::RShift]);
-                let mode = SelectionMode::from_ctrl_shift(ctrl, shift);
+            let ctrl = input.any_pressed([KeyCode::LControl, KeyCode::RControl]);
+            let shift = input.any_pressed([KeyCode::LShift, KeyCode::RShift]);
+            let mode = SelectionMode::from_ctrl_shift(ctrl, shift);
 
+            if let Some(entity) = picked_entity {
                 info!("Selecting mesh, found {:?}", entity);
                 state
                     .selected
                     .select(mode, entity, || std::iter::once(entity));
             } else {
                 info!("Selecting mesh, found none");
-                state.selected.clear();
+
+                match mode {
+                    SelectionMode::Replace | SelectionMode::Add => state.selected.clear(),
+                    SelectionMode::Extend => {}
+                }
             }
         }
     }
