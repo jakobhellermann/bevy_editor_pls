@@ -149,12 +149,6 @@ fn cameras_ui(
     }
 }
 
-// Indicates that the camera should be moved to the position of the corresponding main app camera.
-// Used to ensure that when switching to the editor for the first time, the camera will match
-// the view of the in-game camera.
-#[derive(Component)]
-struct NeedsInitialPosition;
-
 fn spawn_editor_cameras(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
@@ -170,7 +164,6 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(EditorCamera)
         .insert(EditorCamera3dFree)
         .insert(HideInEditor)
-        .insert(NeedsInitialPosition)
         .insert(Name::new("Editor Camera 3D Free"));
 
     commands
@@ -185,7 +178,6 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(EditorCamera)
         .insert(EditorCamera2dPanZoom)
         .insert(HideInEditor)
-        .insert(NeedsInitialPosition)
         .insert(Name::new("Editor Camera 2D Pan/Zoom"));
 }
 
