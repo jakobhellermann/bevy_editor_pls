@@ -1,7 +1,7 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_editor_pls_core::EditorState;
 
-use crate::debug_settings::EditorTime;
+use crate::debug_settings::fake_time::EditorTime;
 
 pub(crate) struct FlycamPlugin;
 impl Plugin for FlycamPlugin {
