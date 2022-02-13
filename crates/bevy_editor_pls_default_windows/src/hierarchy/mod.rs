@@ -385,21 +385,22 @@ impl<'a> Hierarchy<'a> {
 }
 
 fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut String, renaming: &mut bool, world: &mut World) {
-    use egui::widgets::text_edit::{TextEdit, TextEditState};
+    use egui::widgets::text_edit::{CCursorRange, TextEdit, TextEditOutput};
+    use epaint::text::cursor::CCursor;
 
-    let edit_state = match TextEdit::load_state(ui.ctx(), egui::Id::new(entity)) {
-        Some(state) => state,
-        None => TextEditState::default(),
-    };
+    let id = egui::Id::new(entity);
 
-    let edit = TextEdit::singleline(current_rename);
-    let response = ui.add(edit);
+    let edit = TextEdit::singleline(current_rename).id(id);
+    let TextEditOutput { 
+        response, 
+        galley: _, 
+        state: mut edit_state, 
+        cursor_range: _ 
+    } = edit.show(ui);
 
-    let mut finished = false;
-
+    // Runs once to end renaming
     if response.lost_focus() {
         *renaming = false;
-        finished = true;
 
         match world.get_entity_mut(entity) {
             Some(mut ent_mut) => {
@@ -418,9 +419,17 @@ fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut Stri
         }
     }
 
-    if !finished && !response.has_focus() {
+    // Runs once when renaming begins
+    if !response.has_focus() {
         response.request_focus();
+
+        edit_state.set_ccursor_range(Some(
+            CCursorRange::two(
+                CCursor::new(0), 
+                CCursor::new(current_rename.len())
+            )
+        ));
     }
 
-    TextEdit::store_state(ui.ctx(), egui::Id::new(entity), edit_state);
+    TextEdit::store_state(ui.ctx(), id, edit_state);
 }
