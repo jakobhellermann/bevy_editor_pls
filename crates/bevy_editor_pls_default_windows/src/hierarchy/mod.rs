@@ -92,7 +92,7 @@ fn handle_events(
     for event in select_mesh_events.iter() {
         #[allow(irrefutable_let_patterns)]
         if let EditorHierarchyEvent::SelectMesh = event {
-            let editor_camera = editor.window_state::<CameraWindow>().unwrap().editor_cam;
+            let editor_camera = editor.window_state::<CameraWindow>().unwrap().editor_cam();
 
             let picked_entity = match (editor_state.active, editor_camera) {
                 (false, _) => {
