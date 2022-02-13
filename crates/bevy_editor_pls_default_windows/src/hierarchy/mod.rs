@@ -14,7 +14,7 @@ use bevy_editor_pls_core::{
 };
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
-use crate::cameras::{CameraWindow, EditorCamKind};
+use crate::cameras::ActiveEditorCamera;
 use crate::debug_settings::DebugSettingsWindow;
 
 #[derive(Component)]
@@ -61,14 +61,7 @@ fn handle_events(
     mut select_mesh_events: EventReader<EditorHierarchyEvent>,
     // mut editor_events: EventReader<EditorEvent>,
     // mut raycast_state: ResMut<EditorRayCastState>,
-    _editor_camera_2d_panzoom: Query<
-        (&GlobalTransform, &Camera),
-        With<super::cameras::EditorCamera2dPanZoom>,
-    >,
-    editor_camera_3d_free: Query<
-        &picking::EditorRayCastSource,
-        With<super::cameras::EditorCamera3dFree>,
-    >,
+    editor_camera: Query<Option<&picking::EditorRayCastSource>, With<ActiveEditorCamera>>,
     non_editor_camera: Query<&picking::EditorRayCastSource, Without<super::cameras::EditorCamera>>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
@@ -92,34 +85,24 @@ fn handle_events(
     for event in select_mesh_events.iter() {
         #[allow(irrefutable_let_patterns)]
         if let EditorHierarchyEvent::SelectMesh = event {
-            let editor_camera = editor.window_state::<CameraWindow>().unwrap().editor_cam();
-
-            let picked_entity = match (editor_state.active, editor_camera) {
-                (false, _) => {
-                    let source = match non_editor_camera.get_single() {
-                        Ok(source) => Some(source),
-                        Err(QuerySingleError::NoEntities(_)) => {
-                            error!("No cameras with `EditorRayCastSource` found, can't click to inspect when the editor is inactive!");
-                            continue;
-                        }
-                        Err(QuerySingleError::MultipleEntities(_)) => {
-                            error!("Multiple cameras with `EditorRayCastSource` found!");
-                            continue;
-                        }
-                    };
-                    source
-                        .and_then(|source| source.intersect_top())
-                        .map(|(entity, _)| entity)
-                }
-                (true, EditorCamKind::D2PanZoom) => {
-                    // TODO: pick sprites
-                    // let (cam_transform, cam) = editor_camera_2d_panzoom.single();
-                    continue;
-                }
-                (true, EditorCamKind::D3Free) => {
-                    let source = editor_camera_3d_free.single();
-                    source.intersect_top().map(|(entity, _)| entity)
-                }
+            let picked_entity = if editor_state.active {
+                let source = editor_camera.single();
+                source.and_then(|source| source.intersect_top().map(|(entity, _)| entity))
+            } else {
+                let source = match non_editor_camera.get_single() {
+                    Ok(source) => Some(source),
+                    Err(QuerySingleError::NoEntities(_)) => {
+                        error!("No cameras with `EditorRayCastSource` found, can't click to inspect when the editor is inactive!");
+                        continue;
+                    }
+                    Err(QuerySingleError::MultipleEntities(_)) => {
+                        error!("Multiple cameras with `EditorRayCastSource` found!");
+                        continue;
+                    }
+                };
+                source
+                    .and_then(|source| source.intersect_top())
+                    .map(|(entity, _)| entity)
             };
 
             let state = editor.window_state_mut::<HierarchyWindow>().unwrap();

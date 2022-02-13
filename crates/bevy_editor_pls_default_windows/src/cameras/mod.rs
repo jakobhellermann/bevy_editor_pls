@@ -32,11 +32,11 @@ pub struct ActiveEditorCamera;
 
 // Marker component for the 3d free camera
 #[derive(Component)]
-pub struct EditorCamera3dFree;
+struct EditorCamera3dFree;
 
 // Marker component for the 2d pan+zoom camera
 #[derive(Component)]
-pub struct EditorCamera2dPanZoom;
+struct EditorCamera2dPanZoom;
 
 pub struct CameraWindow;
 
