@@ -384,18 +384,24 @@ impl<'a> Hierarchy<'a> {
     }
 }
 
-fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut String, renaming: &mut bool, world: &mut World) {
+fn rename_entity_ui(
+    ui: &mut egui::Ui,
+    entity: Entity,
+    current_rename: &mut String,
+    renaming: &mut bool,
+    world: &mut World,
+) {
     use egui::widgets::text_edit::{CCursorRange, TextEdit, TextEditOutput};
     use epaint::text::cursor::CCursor;
 
     let id = egui::Id::new(entity);
 
     let edit = TextEdit::singleline(current_rename).id(id);
-    let TextEditOutput { 
-        response, 
-        galley: _, 
-        state: mut edit_state, 
-        cursor_range: _ 
+    let TextEditOutput {
+        response,
+        galley: _,
+        state: mut edit_state,
+        cursor_range: _,
     } = edit.show(ui);
 
     // Runs once to end renaming
@@ -403,14 +409,12 @@ fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut Stri
         *renaming = false;
 
         match world.get_entity_mut(entity) {
-            Some(mut ent_mut) => {
-                match ent_mut.get_mut::<Name>() {
-                    Some(mut name) => {
-                        name.set(current_rename.clone());
-                    },
-                    None => {
-                        ent_mut.insert(Name::new(current_rename.clone()));
-                    }
+            Some(mut ent_mut) => match ent_mut.get_mut::<Name>() {
+                Some(mut name) => {
+                    name.set(current_rename.clone());
+                }
+                None => {
+                    ent_mut.insert(Name::new(current_rename.clone()));
                 }
             },
             None => {
@@ -423,12 +427,10 @@ fn rename_entity_ui(ui: &mut egui::Ui, entity: Entity, current_rename: &mut Stri
     if !response.has_focus() {
         response.request_focus();
 
-        edit_state.set_ccursor_range(Some(
-            CCursorRange::two(
-                CCursor::new(0), 
-                CCursor::new(current_rename.len())
-            )
-        ));
+        edit_state.set_ccursor_range(Some(CCursorRange::two(
+            CCursor::new(0),
+            CCursor::new(current_rename.len()),
+        )));
     }
 
     TextEdit::store_state(ui.ctx(), id, edit_state);
