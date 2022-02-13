@@ -391,8 +391,8 @@ fn rename_entity_ui(
     renaming: &mut bool,
     world: &mut World,
 ) {
+    use egui::epaint::text::cursor::CCursor;
     use egui::widgets::text_edit::{CCursorRange, TextEdit, TextEditOutput};
-    use epaint::text::cursor::CCursor;
 
     let id = egui::Id::new(entity);
 
