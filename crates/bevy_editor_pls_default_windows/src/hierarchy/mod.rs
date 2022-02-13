@@ -334,6 +334,11 @@ impl<'a> Hierarchy<'a> {
                 despawn = true;
             }
 
+            if ui.button("Rename").clicked() {
+                self.state.rename_info = (entity.to_bits(), true, entity_name);
+                ui.close_menu();
+            }
+
             if let Some(add_state) = self.add_state {
                 ui.menu_button("Add", |ui| {
                     if let Some(add_item) = add_ui(ui, add_state) {
@@ -341,11 +346,6 @@ impl<'a> Hierarchy<'a> {
                         ui.close_menu();
                     }
                 });
-            }
-
-            if ui.button("Rename").clicked() {
-                self.state.rename_info = (entity.to_bits(), true, entity_name);
-                ui.close_menu();
             }
         });
 
