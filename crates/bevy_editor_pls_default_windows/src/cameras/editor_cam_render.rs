@@ -16,7 +16,9 @@ use bevy::{
 };
 use bevy_editor_pls_core::{Editor, EditorState};
 
-use super::{CameraWindow, EditorCamKind, EditorCamera2dPanZoom, EditorCamera3dFree};
+use super::{
+    CameraWindow, EditorCamKind, EditorCamera2dPanZoom, EditorCamera3dFree, EditorCamera3dPanOrbit,
+};
 
 pub fn setup(app: &mut App) {
     let render_app = app.sub_app_mut(RenderApp);
@@ -50,9 +52,6 @@ pub fn setup(app: &mut App) {
         .unwrap();
 }
 
-pub const EDITOR_CAMERA_3D_FLYCAM: &'static str = "editor_camera_3d_flycam";
-pub const EDITOR_CAMERA_2D_PAN_ZOOM: &'static str = "editor_camera_2d_pan_zoom";
-
 fn extract_editor_cameras(
     editor: Res<Editor>,
     editor_state: Res<EditorState>,
@@ -61,6 +60,10 @@ fn extract_editor_cameras(
     query_3d_free: Query<
         (Entity, &Camera, &GlobalTransform, &VisibleEntities),
         With<EditorCamera3dFree>,
+    >,
+    query_3d_panorbit: Query<
+        (Entity, &Camera, &GlobalTransform, &VisibleEntities),
+        With<EditorCamera3dPanOrbit>,
     >,
     query_2d_panzoom: Query<
         (Entity, &Camera, &GlobalTransform, &VisibleEntities),
@@ -74,8 +77,9 @@ fn extract_editor_cameras(
     }
 
     let (entity, camera, transform, visible_entities) = match camera_window_state.editor_cam {
-        EditorCamKind::D3Free => query_3d_free.single(),
         EditorCamKind::D2PanZoom => query_2d_panzoom.single(),
+        EditorCamKind::D3Free => query_3d_free.single(),
+        EditorCamKind::D3PanOrbit => query_3d_panorbit.single(),
     };
 
     let window = match windows.get(camera.window) {
@@ -106,7 +110,7 @@ fn extract_editor_cameras(
         EditorCamKind::D2PanZoom => {
             commands.insert_bundle((RenderPhase::<Transparent2d>::default(), ActiveCamera2d));
         }
-        EditorCamKind::D3Free => {
+        EditorCamKind::D3Free | EditorCamKind::D3PanOrbit => {
             commands.insert_bundle((
                 RenderPhase::<Opaque3d>::default(),
                 RenderPhase::<AlphaMask3d>::default(),

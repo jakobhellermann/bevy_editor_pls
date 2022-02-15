@@ -58,9 +58,13 @@ The default controls are:
 - `E` to toggle the editor
 - `Ctrl+Enter` to pause/unpause time
 - `Click` (or `Ctrl+Click` when not in editor) to select mesh
-- `WASD + Ctrl/Shift` + `Shift` for a speed boost for the free 3d camera
 - `Click + Drag` for the pan/zoom 2d camera
 - Double click on the menu bar to go fullscreen
+
+Cameras:
+- `2d (Pan/Zoom)`: any mouse button to pan, scroll to zoom
+- `3d (Free)`: `WASD + Ctrl/Shift` + `Shift` for a speed boost for the free 3d camera
+- `3d (Pan/Orbit)`: `Right click` to rotate around focus, `Middle mouse button` to pan
 
 <details>
 <summary>Changing the default controls</summary>
