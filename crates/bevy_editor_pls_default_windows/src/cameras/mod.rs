@@ -68,7 +68,7 @@ impl EditorCamKind {
 
 impl Default for EditorCamKind {
     fn default() -> Self {
-        EditorCamKind::D3Free
+        EditorCamKind::D3PanOrbit
     }
 }
 
@@ -349,16 +349,16 @@ fn initial_camera_setup(
                 *has_decided_initial_cam = true;
             }
             (false, true) => {
-                camera_state.editor_cam = EditorCamKind::D3Free;
+                camera_state.editor_cam = EditorCamKind::D3PanOrbit;
                 commands
-                    .entity(cameras.q1().single().0)
+                    .entity(cameras.q2().single().0)
                     .insert(ActiveEditorCamera);
                 *has_decided_initial_cam = true;
             }
             (true, true) => {
-                camera_state.editor_cam = EditorCamKind::D3Free;
+                camera_state.editor_cam = EditorCamKind::D3PanOrbit;
                 commands
-                    .entity(cameras.q1().single().0)
+                    .entity(cameras.q2().single().0)
                     .insert(ActiveEditorCamera);
                 *has_decided_initial_cam = true;
             }
