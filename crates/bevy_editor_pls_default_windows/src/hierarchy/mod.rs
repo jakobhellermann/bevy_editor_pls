@@ -29,7 +29,7 @@ impl EditorWindow for HierarchyWindow {
         let (hierarchy_state, add_state) = cx.state_mut_pair::<HierarchyWindow, AddWindow>();
         let hierarchy_state = hierarchy_state.unwrap();
 
-        ScrollArea::new([false, true])
+        ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 Hierarchy {
