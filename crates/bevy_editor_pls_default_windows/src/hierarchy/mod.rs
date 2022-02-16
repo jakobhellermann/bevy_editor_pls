@@ -6,7 +6,7 @@ use bevy::render::{RenderApp, RenderStage};
 use bevy::utils::HashSet;
 use bevy::{ecs::system::QuerySingleError, prelude::*};
 use bevy_editor_pls_core::EditorState;
-use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText};
+use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText, ScrollArea};
 
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
@@ -29,12 +29,16 @@ impl EditorWindow for HierarchyWindow {
         let (hierarchy_state, add_state) = cx.state_mut_pair::<HierarchyWindow, AddWindow>();
         let hierarchy_state = hierarchy_state.unwrap();
 
-        Hierarchy {
-            world,
-            state: hierarchy_state,
-            add_state: add_state.as_deref(),
-        }
-        .show(ui);
+        ScrollArea::vertical()
+            .auto_shrink([false, false])
+            .show(ui, |ui| {
+                Hierarchy {
+                    world,
+                    state: hierarchy_state,
+                    add_state: add_state.as_deref(),
+                }
+                .show(ui);
+            });
     }
 
     fn app_setup(app: &mut bevy::prelude::App) {
