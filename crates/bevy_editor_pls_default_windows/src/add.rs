@@ -185,6 +185,8 @@ impl Default for AddWindowState {
                     .insert_bundle(OrthographicCameraBundle::new_3d());
             }),
         );
+        state.add("3D", AddItem::bundle::<PointLightBundle>());
+        state.add("3D", AddItem::bundle::<DirectionalLightBundle>());
         state.add("3D", AddItem::bundle_named::<PbrBundle>("PbrBundle".into()));
         state.add(
             "3D",
