@@ -41,9 +41,14 @@ pub enum EditorEvent {
 pub struct EditorState {
     pub active: bool,
     pointer_used: bool,
-    editor_interaction_active: bool,
+    active_editor_interaction: Option<ActiveEditorInteraction>,
     pub listening_for_text: bool,
     pub viewport: egui::Rect,
+}
+
+enum ActiveEditorInteraction {
+    Viewport,
+    Editor,
 }
 
 impl EditorState {
@@ -52,7 +57,19 @@ impl EditorState {
     }
 
     pub fn pointer_used(&self) -> bool {
-        self.pointer_used || self.editor_interaction_active
+        self.pointer_used
+            || matches!(
+                self.active_editor_interaction,
+                Some(ActiveEditorInteraction::Editor)
+            )
+    }
+
+    pub fn viewport_interaction_active(&self) -> bool {
+        !self.pointer_used
+            || matches!(
+                self.active_editor_interaction,
+                Some(ActiveEditorInteraction::Viewport)
+            )
     }
 }
 
@@ -61,7 +78,7 @@ impl Default for EditorState {
         Self {
             active: false,
             pointer_used: false,
-            editor_interaction_active: false,
+            active_editor_interaction: None,
             listening_for_text: false,
             viewport: egui::Rect::NOTHING,
         }
@@ -336,12 +353,16 @@ impl Editor {
         editor_state.listening_for_text = ctx.wants_keyboard_input();
         editor_state.pointer_used |= ctx.is_using_pointer();
 
-        if ctx.input().pointer.press_start_time().is_some() {
-            if editor_state.pointer_used {
-                editor_state.editor_interaction_active = true;
+        let is_pressed = ctx.input().pointer.press_start_time().is_some();
+        match (&editor_state.active_editor_interaction, is_pressed) {
+            (_, false) => editor_state.active_editor_interaction = None,
+            (None, true) => {
+                editor_state.active_editor_interaction = Some(match editor_state.pointer_used {
+                    true => ActiveEditorInteraction::Editor,
+                    false => ActiveEditorInteraction::Viewport,
+                });
             }
-        } else {
-            editor_state.editor_interaction_active = false;
+            (Some(_), true) => {}
         }
     }
 

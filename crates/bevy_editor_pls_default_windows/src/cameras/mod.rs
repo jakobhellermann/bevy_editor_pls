@@ -271,13 +271,13 @@ fn set_editor_cam_active(
         && !editor_state.listening_for_text;
     editor_cam_3d_free.enable_look = matches!(editor_cam, EditorCamKind::D3Free)
         && editor_state.active
-        && !editor_state.pointer_used();
+        && editor_state.viewport_interaction_active();
     editor_cam_3d_panorbit.enabled = matches!(editor_cam, EditorCamKind::D3PanOrbit)
         && editor_state.active
-        && !editor_state.pointer_used();
+        && editor_state.viewport_interaction_active();
     editor_cam_2d_panzoom.enabled = matches!(editor_cam, EditorCamKind::D2PanZoom)
         && editor_state.active
-        && !editor_state.pointer_used();
+        && editor_state.viewport_interaction_active();
 }
 
 fn toggle_editor_cam(
