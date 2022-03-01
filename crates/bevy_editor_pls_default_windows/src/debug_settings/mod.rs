@@ -4,7 +4,7 @@ pub mod fake_time;
 use bevy::{
     pbr::wireframe::WireframeConfig,
     prelude::*,
-    render::{options::WgpuOptions, render_resource::WgpuFeatures},
+    render::{render_resource::WgpuFeatures, options::WgpuSettings},
 };
 use bevy_editor_pls_core::editor_window::EditorWindow;
 use bevy_inspector_egui::{
@@ -94,7 +94,7 @@ fn debug_ui_options(world: &mut World, state: &mut DebugSettingsWindowState, ui:
         ui.end_row();
 
         let wireframe_enabled = world
-            .get_resource::<WgpuOptions>()
+            .get_resource::<WgpuSettings>()
             .map_or(false, |options| {
                 options.features.contains(WgpuFeatures::POLYGON_MODE_LINE)
             });
