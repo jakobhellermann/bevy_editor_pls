@@ -3,6 +3,7 @@ use bevy::{
     prelude::*,
     render::{
         camera::ExtractedCamera,
+        render_asset::RenderAssets,
         render_graph::{self, RenderGraph, SlotValue},
         render_phase::RenderPhase,
         render_resource::{
@@ -57,6 +58,7 @@ fn extract_editor_cameras(
     editor_state: Res<EditorState>,
     mut commands: Commands,
     windows: Res<Windows>,
+    images: Res<Assets<Image>>,
     query_3d_free: Query<
         (Entity, &Camera, &GlobalTransform, &VisibleEntities),
         With<EditorCamera3dFree>,
@@ -82,22 +84,23 @@ fn extract_editor_cameras(
         EditorCamKind::D3PanOrbit => query_3d_panorbit.single(),
     };
 
-    let window = match windows.get(camera.window) {
-        Some(window) => window,
+    let view_size = match camera.target.get_physical_size(&windows, &images) {
+        Some(size) => size,
         _ => return,
     };
 
     let mut commands = commands.get_or_spawn(entity);
     commands.insert_bundle((
         ExtractedCamera {
-            window_id: camera.window,
+            target: camera.target.clone(),
+            physical_size: camera.target.get_physical_size(&windows, &images),
             name: camera.name.clone(),
         },
         ExtractedView {
             projection: camera.projection_matrix,
             transform: *transform,
-            width: window.physical_width().max(1),
-            height: window.physical_height().max(1),
+            width: view_size.x.max(1),
+            height: view_size.y.max(1),
             near: camera.near,
             far: camera.far,
             #[cfg(feature = "viewport")]
@@ -124,17 +127,18 @@ fn extract_editor_cameras(
 fn prepare_editor_view_targets(
     mut commands: Commands,
     windows: Res<ExtractedWindows>,
+    images: Res<RenderAssets<Image>>,
     msaa: Res<Msaa>,
     render_device: Res<RenderDevice>,
     mut texture_cache: ResMut<TextureCache>,
     cameras: Query<(Entity, &ExtractedCamera), Or<(With<ActiveCamera2d>, With<ActiveCamera3d>)>>,
 ) {
     for (entity, camera) in cameras.iter() {
-        let window = match windows.get(&camera.window_id) {
-            Some(window) => window,
+        let size = match camera.physical_size {
+            Some(size) => size,
             None => continue,
         };
-        let swap_chain_texture = match &window.swap_chain_texture {
+        let swap_chain_texture = match camera.target.get_texture_view(&windows, &images) {
             Some(texture) => texture,
             _ => continue,
         };
@@ -144,8 +148,8 @@ fn prepare_editor_view_targets(
                 TextureDescriptor {
                     label: Some("sampled_color_attachment_texture"),
                     size: Extent3d {
-                        width: window.physical_width,
-                        height: window.physical_height,
+                        width: size.x,
+                        height: size.y,
                         depth_or_array_layers: 1,
                     },
                     mip_level_count: 1,
