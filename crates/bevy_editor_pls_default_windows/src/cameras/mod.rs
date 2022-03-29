@@ -146,16 +146,18 @@ impl EditorWindow for CameraWindow {
 fn set_active_editor_camera_marker(world: &mut World, editor_cam: EditorCamKind) {
     let mut previously_active = world.query_filtered::<Entity, With<ActiveEditorCamera>>();
     let mut previously_active_iter = previously_active.iter(world);
-    let previously_active = previously_active_iter
-        .next()
-        .expect("there should be a camera with the `ActiveEditorCamera` component");
+    let previously_active = previously_active_iter.next();
+
     assert!(
         previously_active_iter.next().is_none(),
         "there should be only one `ActiveEditorCamera`"
     );
-    world
-        .entity_mut(previously_active)
-        .remove::<ActiveEditorCamera>();
+
+    if let Some(previously_active) = previously_active {
+        world
+            .entity_mut(previously_active)
+            .remove::<ActiveEditorCamera>();
+    }
 
     let entity = match editor_cam {
         EditorCamKind::D2PanZoom => {

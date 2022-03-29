@@ -90,8 +90,9 @@ fn handle_events(
         #[allow(irrefutable_let_patterns)]
         if let EditorHierarchyEvent::SelectMesh = event {
             let picked_entity = if editor_state.active {
-                let source = editor_camera.single();
-                source.and_then(|source| source.intersect_top().map(|(entity, _)| entity))
+                editor_camera.get_single().ok().and_then(|source| {
+                    source.and_then(|source| source.intersect_top().map(|(entity, _)| entity))
+                })
             } else {
                 let source = match non_editor_camera.get_single() {
                     Ok(source) => Some(source),
