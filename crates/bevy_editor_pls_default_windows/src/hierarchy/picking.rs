@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::render::render_resource::PrimitiveTopology;
 use bevy_mod_raycast::{
     DebugCursorMesh, DefaultRaycastingPlugin as RaycastingPlugin, RayCastMethod, RaycastSystem,
 };
@@ -37,16 +38,20 @@ fn update_raycast_with_cursor(
 
 fn auto_add_editor_picking_set(
     mut commands: Commands,
-    meshes: Query<
-        Entity,
+    meshes: Res<Assets<Mesh>>,
+    meshes_query: Query<
+        (Entity, &Handle<Mesh>),
         (
-            With<Handle<Mesh>>,
             Without<EditorRayCastMesh>,
             Without<DebugCursorMesh<EditorPickingSet>>,
         ),
     >,
 ) {
-    for entity in meshes.iter() {
-        commands.entity(entity).insert(EditorRayCastMesh::default());
+    for (entity, handle) in meshes_query.iter() {
+        if let Some(mesh) = meshes.get(handle) {
+            if matches!(mesh.primitive_topology(), PrimitiveTopology::TriangleList) {
+                commands.entity(entity).insert(EditorRayCastMesh::default());
+            }
+        }
     }
 }
