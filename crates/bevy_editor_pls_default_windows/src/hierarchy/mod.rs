@@ -391,9 +391,8 @@ fn rename_entity_ui(
     let edit = TextEdit::singleline(current_rename).id(id);
     let TextEditOutput {
         response,
-        galley: _,
         state: mut edit_state,
-        cursor_range: _,
+        ..
     } = edit.show(ui);
 
     // Runs once to end renaming

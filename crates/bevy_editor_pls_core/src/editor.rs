@@ -280,7 +280,7 @@ impl Editor {
     fn editor_ui(
         &mut self,
         world: &mut World,
-        ctx: &egui::CtxRef,
+        ctx: &egui::Context,
         editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
         editor_events: &mut Events<EditorEvent>,
@@ -332,7 +332,7 @@ impl Editor {
                 editor_state.pointer_used |= pointer_in_response(&res, ctx);
 
                 egui::TopBottomPanel::top("viewport_top_panel")
-                    .frame(egui::Frame::none().margin(ui.spacing().window_padding))
+                    .frame(egui::Frame::none().margin(ui.spacing().window_margin))
                     .show(ctx, |ui| {
                         ui.horizontal(|ui| {
                             ui.style_mut().spacing.button_padding = egui::vec2(2.0, 0.0);
@@ -369,7 +369,7 @@ impl Editor {
     fn editor_menu_bar(
         &mut self,
         world: &mut World,
-        ctx: &egui::CtxRef,
+        ctx: &egui::Context,
         editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
         editor_events: &mut Events<EditorEvent>,
@@ -520,7 +520,7 @@ impl Editor {
     fn editor_floating_windows(
         &mut self,
         world: &mut World,
-        ctx: &egui::CtxRef,
+        ctx: &egui::Context,
         internal_state: &mut EditorInternalState,
     ) {
         let mut close_floating_windows = Vec::new();
@@ -565,7 +565,7 @@ impl Editor {
         &mut self,
         editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
-        ctx: &egui::CtxRef,
+        ctx: &egui::Context,
     ) -> Option<()> {
         if !ctx.input().pointer.any_released() {
             return None;
@@ -647,7 +647,7 @@ fn play_pause_button(active: bool, ui: &mut egui::Ui) -> egui::Response {
     ui.add(egui::Button::new(icon).frame(false))
 }
 
-fn pointer_in_response(response: &egui::Response, ctx: &egui::CtxRef) -> bool {
+fn pointer_in_response(response: &egui::Response, ctx: &egui::Context) -> bool {
     let interact_pos = match ctx.input().pointer.interact_pos() {
         Some(pos) => pos,
         None => return false,
