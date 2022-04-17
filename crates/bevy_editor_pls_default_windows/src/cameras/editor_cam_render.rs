@@ -94,7 +94,6 @@ fn extract_editor_cameras(
         ExtractedCamera {
             target: camera.target.clone(),
             physical_size: camera.target.get_physical_size(&windows, &images),
-            name: camera.name.clone(),
         },
         ExtractedView {
             projection: camera.projection_matrix,

@@ -4,7 +4,7 @@ pub mod fake_time;
 use bevy::{
     pbr::wireframe::WireframeConfig,
     prelude::*,
-    render::{render_resource::WgpuFeatures, options::WgpuSettings},
+    render::{render_resource::WgpuFeatures, settings::WgpuSettings},
 };
 use bevy_editor_pls_core::editor_window::EditorWindow;
 use bevy_inspector_egui::{

@@ -207,7 +207,7 @@ impl Default for AddWindowState {
             }),
         );
 
-        state.add("UI", AddItem::bundle::<UiCameraBundle>());
+        state.add("UI", AddItem::bundle::<UiCameraBundle<CameraUi>>());
         state.add("UI", AddItem::bundle::<NodeBundle>());
         state.add("UI", AddItem::bundle::<TextBundle>());
         state.add("UI", AddItem::bundle::<ImageBundle>());
