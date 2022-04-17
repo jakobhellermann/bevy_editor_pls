@@ -2,12 +2,12 @@
 members = ["crates/*"]
 resolver = "2"
 
-[patch.crates-io]
+# [patch.crates-io]
 # bevy = { git = "https://github.com/jakobhellermann/bevy", branch = "camera-viewport" }
-bevy = { git = "https://github.com//bevyengine/bevy" }
+# bevy = { git = "https://github.com//bevyengine/bevy" }
 
-[patch."https://github.com/bevyengine/bevy"]
-bevy = { git = "https://github.com//bevyengine/bevy" }
+# [patch."https://github.com/bevyengine/bevy"]
+# bevy = { git = "https://github.com//bevyengine/bevy" }
 
 [profile.dev.package."*"]
 opt-level = 2

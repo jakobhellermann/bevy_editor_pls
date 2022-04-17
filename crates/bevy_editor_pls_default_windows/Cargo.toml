@@ -8,11 +8,11 @@ license = "MIT OR Apache-2.0"
 viewport = []
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy", default-features = false }
+bevy = { version = "0.7", default-features = false }
 bevy_editor_pls_core = { path = "../bevy_editor_pls_core" }
-bevy-inspector-egui = { git = "https://github.com/jakobhellermann/bevy-inspector-egui", branch = "bevy-main" }
-bevy_mod_raycast = { git = "https://github.com/aevyrie/bevy_mod_raycast" }
+bevy-inspector-egui = "0.10"
+bevy_mod_raycast = { git = "https://github.com/obsgolem/bevy_mod_raycast", branch = "release" }
 indexmap = "1.7"
 pretty-type-name = "1.0"
-bevy_mod_debugdump = { git = "https://github.com/jakobhellermann/bevy_mod_debugdump", branch = "bevy-main" }
+bevy_mod_debugdump = "0.4"
 opener = "0.5.0"
