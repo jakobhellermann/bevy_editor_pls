@@ -332,7 +332,7 @@ impl Editor {
                 editor_state.pointer_used |= pointer_in_response(&res, ctx);
 
                 egui::TopBottomPanel::top("viewport_top_panel")
-                    .frame(egui::Frame::none().margin(ui.spacing().window_margin))
+                    .frame(egui::Frame::none().inner_margin(ui.spacing().window_margin))
                     .show(ctx, |ui| {
                         ui.horizontal(|ui| {
                             ui.style_mut().spacing.button_padding = egui::vec2(2.0, 0.0);
