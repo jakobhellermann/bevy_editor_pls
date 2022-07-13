@@ -330,7 +330,7 @@ fn toggle_editor_cam(
 
 fn focus_selected(
     mut editor_events: EventReader<EditorEvent>,
-    mut query: Query<(&mut Transform, Option<&mut PanOrbitCamera>), With<ActiveEditorCamera>>,
+    mut active_cam: Query<(&mut Transform, Option<&mut PanOrbitCamera>), With<ActiveEditorCamera>>,
     selected_query: Query<(Entity, &Transform, Option<&Aabb>), Without<ActiveEditorCamera>>,
     editor: Res<Editor>,
 ) {
@@ -343,41 +343,40 @@ fn focus_selected(
                 return;
             }
 
-            // TODO: merge translation and bounds
-            let average_translation: Vec3 = hierarchy
+            let (bounds_min, bounds_max) = hierarchy
                 .selected
                 .iter()
-                .filter_map(|e| {
+                .filter_map(|selected_e| {
                     selected_query
                         .iter()
-                        .find(|(s_e, _, _)| e == *s_e)
-                        .map_or(None, |(_, tf, _)| Some(tf.translation))
-                })
-                .fold(Vec3::ZERO, |acc, x| acc + x)
-                / hierarchy.selected.len() as f32;
-
-            let total_bounds = hierarchy
-                .selected
-                .iter()
-                .filter_map(|e| {
-                    selected_query.iter().find(|(s_e, _, _)| e == *s_e).map_or(
-                        None,
-                        |(_, _, bounds)| {
-                            bounds.map_or(Some((Vec3::ZERO, Vec3::ZERO)), |bounds| {
-                                Some((Vec3::from(bounds.min()), Vec3::from(bounds.max())))
+                        .find(|(query_e, _, _)| selected_e == *query_e)
+                        .map(|(_, tf, bounds)| {
+                            bounds.map_or((tf.translation, tf.translation), |bounds| {
+                                let apply_tf = |v| Vec3::from(v) * tf.scale + tf.translation;
+                                (apply_tf(bounds.min()), apply_tf(bounds.max()))
                             })
-                        },
-                    )
+                        })
                 })
-                .fold((Vec3::ZERO, Vec3::ZERO), |acc, x| {
-                    (acc.0.min(x.0), acc.1.max(x.1))
-                });
+                .fold(
+                    (Vec3::splat(f32::MAX), Vec3::splat(f32::MIN)),
+                    |(acc_min, acc_max), (min, max)| (acc_min.min(min), acc_max.max(max)),
+                );
 
-            let center_bounds = (total_bounds.0 + total_bounds.1) * 0.5;
-            let focus_loc = average_translation + center_bounds;
-            let distance_to_cam = (total_bounds.1 - center_bounds).max_element() * 2.0 + 2.0;
+            const NO_BOUNDS_DISTANCE: f32 = 5.0;
 
-            let (mut camera_tf, pan_orbit_cam) = query.single_mut();
+            let bounds_size = bounds_max - bounds_min;
+            let focus_loc = bounds_min + bounds_size * 0.5;
+            let distance_to_cam = if bounds_size.max_element() > f32::EPSILON {
+                f32::sqrt(
+                    bounds_size.x * bounds_size.x
+                        + bounds_size.y * bounds_size.y
+                        + bounds_size.z * bounds_size.z,
+                )
+            } else {
+                NO_BOUNDS_DISTANCE
+            };
+
+            let (mut camera_tf, pan_orbit_cam) = active_cam.single_mut();
             camera_tf.translation =
                 focus_loc + camera_tf.rotation.mul_vec3(Vec3::Z) * distance_to_cam;
 
