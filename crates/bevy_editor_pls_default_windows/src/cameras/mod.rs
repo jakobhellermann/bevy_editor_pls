@@ -330,9 +330,20 @@ fn toggle_editor_cam(
 
 fn focus_selected(
     mut editor_events: EventReader<EditorEvent>,
-    mut active_cam: Query<(&mut Transform, Option<&mut PanOrbitCamera>), With<ActiveEditorCamera>>,
-    selected_query: Query<(Entity, &Transform, Option<&Aabb>), Without<ActiveEditorCamera>>,
+    mut active_cam: Query<
+        (
+            &mut Transform,
+            Option<&mut PanOrbitCamera>,
+            Option<&mut OrthographicProjection>,
+        ),
+        With<ActiveEditorCamera>,
+    >,
+    selected_query: Query<
+        (Entity, &Transform, Option<&Aabb>, Option<&Sprite>),
+        Without<ActiveEditorCamera>,
+    >,
     editor: Res<Editor>,
+    windows: Res<Windows>,
 ) {
     for event in editor_events.iter() {
         if let EditorEvent::FocusSelected = *event {
@@ -349,11 +360,22 @@ fn focus_selected(
                 .filter_map(|selected_e| {
                     selected_query
                         .iter()
-                        .find(|(query_e, _, _)| selected_e == *query_e)
-                        .map(|(_, tf, bounds)| {
-                            bounds.map_or((tf.translation, tf.translation), |bounds| {
-                                let apply_tf = |v| Vec3::from(v) * tf.scale + tf.translation;
-                                (apply_tf(bounds.min()), apply_tf(bounds.max()))
+                        .find(|(query_e, _, _, _)| selected_e == *query_e)
+                        .map(|(_, tf, bounds, sprite)| {
+                            let apply_tf = |v: Vec3| v * tf.scale + tf.translation;
+
+                            let default_value = (tf.translation, tf.translation);
+                            let sprite_size = sprite
+                                .map(|s| s.custom_size.unwrap_or(Vec2::ONE))
+                                .map_or(default_value, |sprite_size| {
+                                    (
+                                        apply_tf((sprite_size * -0.5, 0.0).into()),
+                                        apply_tf((sprite_size * 0.5, 0.0).into()),
+                                    )
+                                });
+
+                            bounds.map_or(sprite_size, |bounds| {
+                                (apply_tf(bounds.min().into()), apply_tf(bounds.max().into()))
                             })
                         })
                 })
@@ -376,9 +398,19 @@ fn focus_selected(
                 NO_BOUNDS_DISTANCE
             };
 
-            let (mut camera_tf, pan_orbit_cam) = active_cam.single_mut();
-            camera_tf.translation =
-                focus_loc + camera_tf.rotation.mul_vec3(Vec3::Z) * distance_to_cam;
+            let (mut camera_tf, pan_orbit_cam, ortho) = active_cam.single_mut();
+
+            if let Some(mut ortho) = ortho {
+                camera_tf.translation.x = focus_loc.x;
+                camera_tf.translation.y = focus_loc.y;
+
+                if let Some(w) = windows.get_primary() {
+                    ortho.scale = distance_to_cam / w.width().min(w.height()).max(1.0);
+                }
+            } else {
+                camera_tf.translation =
+                    focus_loc + camera_tf.rotation.mul_vec3(Vec3::Z) * distance_to_cam;
+            }
 
             if let Some(mut pan_orbit_cam) = pan_orbit_cam {
                 pan_orbit_cam.focus = focus_loc;
