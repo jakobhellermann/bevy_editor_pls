@@ -15,7 +15,7 @@ use bevy_editor_pls_core::{
 };
 use bevy_inspector_egui::egui;
 
-use crate::hierarchy::HideInEditor;
+use crate::hierarchy::{HideInEditor, HierarchyWindow};
 
 // Present on all editor cameras
 #[derive(Component)]
@@ -124,6 +124,7 @@ impl EditorWindow for CameraWindow {
                     .before(camera_2d_panzoom::CameraSystem::Movement),
             )
             .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
+            .add_system_to_stage(CoreStage::PreUpdate, focus_selected)
             .add_system(initial_camera_setup)
             .add_startup_system_to_stage(StartupStage::PreStartup, spawn_editor_cameras);
 
@@ -320,6 +321,37 @@ fn toggle_editor_cam(
                     commands.entity(prev_active).insert(Camera2d);
                 }
             }
+        }
+    }
+}
+
+fn focus_selected(
+    mut editor_events: EventReader<EditorEvent>,
+    mut query: Query<&mut Transform, With<ActiveEditorCamera>>,
+    selected_query: Query<(Entity, &Transform), Without<ActiveEditorCamera>>,
+    editor: Res<Editor>,
+) {
+    for event in editor_events.iter() {
+        if let EditorEvent::FocusSelected = *event {
+            let hierarchy = editor.window_state::<HierarchyWindow>().unwrap();
+
+            if hierarchy.selected.is_empty() {
+                return;
+            }
+
+            let desired_translation: Vec3 = hierarchy
+                .selected
+                .iter()
+                .filter_map(|e| {
+                    selected_query
+                        .iter()
+                        .find(|(s_e, _)| e == *s_e)
+                        .map_or(None, |(_, tf)| Some(tf.translation))
+                })
+                .fold(Vec3::ZERO.clone(), |acc, x| acc + x)
+                / hierarchy.selected.len() as f32;
+
+            query.single_mut().translation = desired_translation;
         }
     }
 }
