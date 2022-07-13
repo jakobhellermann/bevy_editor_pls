@@ -212,7 +212,6 @@ pub fn editor_controls_system(
         &editor_state,
     ) {
         editor_events.send(EditorEvent::FocusSelected);
-        println!("Focus selected");
     }
 }
 
