@@ -36,6 +36,7 @@ impl Plugin for EditorPlugin {
 #[non_exhaustive]
 pub enum EditorEvent {
     Toggle { now_active: bool },
+    FocusSelected,
 }
 
 pub struct EditorState {

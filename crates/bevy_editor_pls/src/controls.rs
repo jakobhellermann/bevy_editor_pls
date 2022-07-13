@@ -123,6 +123,7 @@ pub enum Action {
     PlayPauseEditor,
     SelectMesh,
     PauseUnpauseTime,
+    FocusSelected,
 }
 
 impl std::fmt::Display for Action {
@@ -131,6 +132,7 @@ impl std::fmt::Display for Action {
             Action::PlayPauseEditor => write!(f, "Play/Pause editor"),
             Action::SelectMesh => write!(f, "Select mesh to inspect"),
             Action::PauseUnpauseTime => write!(f, "Pause/Unpause time"),
+            Action::FocusSelected => write!(f, "Focus Selected Entity"),
         }
     }
 }
@@ -202,6 +204,16 @@ pub fn editor_controls_system(
             default_window.pause_time = !default_window.pause_time;
         }
     }
+
+    if controls.just_pressed(
+        Action::FocusSelected,
+        &keyboard_input,
+        &mouse_input,
+        &editor_state,
+    ) {
+        editor_events.send(EditorEvent::FocusSelected);
+        println!("Focus selected");
+    }
 }
 
 impl EditorControls {
@@ -248,6 +260,14 @@ impl EditorControls {
             Binding {
                 input: UserInput::Single(Button::Keyboard(KeyCode::E)),
                 conditions: vec![BindingCondition::ListeningForText(false)],
+            },
+        );
+
+        controls.insert(
+            Action::FocusSelected,
+            Binding {
+                input: UserInput::Single(Button::Keyboard(KeyCode::F)),
+                conditions: vec![BindingCondition::EditorActive(true)],
             },
         );
 
@@ -320,6 +340,7 @@ impl EditorWindow for ControlsWindow {
             Action::PlayPauseEditor,
             Action::PauseUnpauseTime,
             Action::SelectMesh,
+            Action::FocusSelected,
         ] {
             ui.label(egui::RichText::new(action.to_string()).strong());
             let bindings = controls.get(action);
