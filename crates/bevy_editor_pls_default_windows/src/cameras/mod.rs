@@ -17,6 +17,8 @@ use bevy_inspector_egui::egui;
 
 use crate::hierarchy::{HideInEditor, HierarchyWindow};
 
+use self::camera_3d_panorbit::PanOrbitCamera;
+
 // Present on all editor cameras
 #[derive(Component)]
 pub struct EditorCamera;
@@ -327,7 +329,7 @@ fn toggle_editor_cam(
 
 fn focus_selected(
     mut editor_events: EventReader<EditorEvent>,
-    mut query: Query<&mut Transform, With<ActiveEditorCamera>>,
+    mut query: Query<(&mut Transform, Option<&mut PanOrbitCamera>), With<ActiveEditorCamera>>,
     selected_query: Query<(Entity, &Transform), Without<ActiveEditorCamera>>,
     editor: Res<Editor>,
 ) {
@@ -351,9 +353,16 @@ fn focus_selected(
                 .fold(Vec3::ZERO, |acc, x| acc + x)
                 / hierarchy.selected.len() as f32;
 
-            let mut camera_tf = query.single_mut();
+            let distance_to_cam = 10.0;
+
+            let (mut camera_tf, pan_orbit_cam) = query.single_mut();
             camera_tf.translation =
-                average_translation + camera_tf.rotation.mul_vec3(Vec3::Z) * 10.0;
+                average_translation + camera_tf.rotation.mul_vec3(Vec3::Z) * distance_to_cam;
+
+            if let Some(mut pan_orbit_cam) = pan_orbit_cam {
+                pan_orbit_cam.focus = average_translation;
+                pan_orbit_cam.radius = distance_to_cam;
+            }
         }
     }
 }
