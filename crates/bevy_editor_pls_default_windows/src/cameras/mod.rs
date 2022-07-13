@@ -339,7 +339,7 @@ fn focus_selected(
                 return;
             }
 
-            let desired_translation: Vec3 = hierarchy
+            let average_translation: Vec3 = hierarchy
                 .selected
                 .iter()
                 .filter_map(|e| {
@@ -348,10 +348,12 @@ fn focus_selected(
                         .find(|(s_e, _)| e == *s_e)
                         .map_or(None, |(_, tf)| Some(tf.translation))
                 })
-                .fold(Vec3::ZERO.clone(), |acc, x| acc + x)
+                .fold(Vec3::ZERO, |acc, x| acc + x)
                 / hierarchy.selected.len() as f32;
 
-            query.single_mut().translation = desired_translation;
+            let mut camera_tf = query.single_mut();
+            camera_tf.translation =
+                average_translation + camera_tf.rotation.mul_vec3(Vec3::Z) * 10.0;
         }
     }
 }
