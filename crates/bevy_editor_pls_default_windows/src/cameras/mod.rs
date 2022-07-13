@@ -8,6 +8,7 @@ use std::marker::PhantomData;
 use bevy::{
     prelude::*,
     render::camera::{ActiveCamera, Camera2d, Camera3d},
+    render::primitives::Aabb,
 };
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
@@ -330,7 +331,7 @@ fn toggle_editor_cam(
 fn focus_selected(
     mut editor_events: EventReader<EditorEvent>,
     mut query: Query<(&mut Transform, Option<&mut PanOrbitCamera>), With<ActiveEditorCamera>>,
-    selected_query: Query<(Entity, &Transform), Without<ActiveEditorCamera>>,
+    selected_query: Query<(Entity, &Transform, Option<&Aabb>), Without<ActiveEditorCamera>>,
     editor: Res<Editor>,
 ) {
     for event in editor_events.iter() {
@@ -338,31 +339,54 @@ fn focus_selected(
             let hierarchy = editor.window_state::<HierarchyWindow>().unwrap();
 
             if hierarchy.selected.is_empty() {
+                info!("Coudldn't focus on selection because selection is empty");
                 return;
             }
 
+            // TODO: merge translation and bounds
             let average_translation: Vec3 = hierarchy
                 .selected
                 .iter()
                 .filter_map(|e| {
                     selected_query
                         .iter()
-                        .find(|(s_e, _)| e == *s_e)
-                        .map_or(None, |(_, tf)| Some(tf.translation))
+                        .find(|(s_e, _, _)| e == *s_e)
+                        .map_or(None, |(_, tf, _)| Some(tf.translation))
                 })
                 .fold(Vec3::ZERO, |acc, x| acc + x)
                 / hierarchy.selected.len() as f32;
 
-            let distance_to_cam = 10.0;
+            let total_bounds = hierarchy
+                .selected
+                .iter()
+                .filter_map(|e| {
+                    selected_query.iter().find(|(s_e, _, _)| e == *s_e).map_or(
+                        None,
+                        |(_, _, bounds)| {
+                            bounds.map_or(Some((Vec3::ZERO, Vec3::ZERO)), |bounds| {
+                                Some((Vec3::from(bounds.min()), Vec3::from(bounds.max())))
+                            })
+                        },
+                    )
+                })
+                .fold((Vec3::ZERO, Vec3::ZERO), |acc, x| {
+                    (acc.0.min(x.0), acc.1.max(x.1))
+                });
+
+            let center_bounds = (total_bounds.0 + total_bounds.1) * 0.5;
+            let focus_loc = average_translation + center_bounds;
+            let distance_to_cam = (total_bounds.1 - center_bounds).max_element() * 2.0 + 2.0;
 
             let (mut camera_tf, pan_orbit_cam) = query.single_mut();
             camera_tf.translation =
-                average_translation + camera_tf.rotation.mul_vec3(Vec3::Z) * distance_to_cam;
+                focus_loc + camera_tf.rotation.mul_vec3(Vec3::Z) * distance_to_cam;
 
             if let Some(mut pan_orbit_cam) = pan_orbit_cam {
-                pan_orbit_cam.focus = average_translation;
+                pan_orbit_cam.focus = focus_loc;
                 pan_orbit_cam.radius = distance_to_cam;
             }
+
+            info!("Focused on {} entities", hierarchy.selected.len());
         }
     }
 }
