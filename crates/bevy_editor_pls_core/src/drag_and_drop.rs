@@ -30,7 +30,7 @@ pub fn translate_ui_to_cursor(ui: &mut egui::Ui, id: egui::Id, body: impl FnOnce
     let layer_id = egui::LayerId::new(egui::Order::Tooltip, id);
     let response = ui.with_layer_id(layer_id, body).response;
 
-    if let Some(pointer_pos) = ui.input().pointer.interact_pos() {
+    if let Some(pointer_pos) = ui.ctx().pointer_interact_pos() {
         let delta = pointer_pos - response.rect.center();
         ui.ctx().translate_layer(layer_id, delta);
     }
