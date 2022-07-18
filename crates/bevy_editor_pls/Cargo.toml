@@ -19,4 +19,5 @@ bevy_editor_pls_default_windows = { path = "../bevy_editor_pls_default_windows",
 bevy = { version = "0.7", default-features = false, features = [
     "bevy_winit",
     "x11",
+    "png",
 ] }
