@@ -412,11 +412,8 @@ fn focus_selected(
             }
 
             let len = hierarchy.selected.len();
-            info!(
-                "Focused on {} {}",
-                len,
-                if len == 1 { "entity" } else { "entities" }
-            );
+            let noun = if len == 1 { "entity" } else { "entities" };
+            info!("Focused on {} {}", len, noun);
         }
     }
 }
