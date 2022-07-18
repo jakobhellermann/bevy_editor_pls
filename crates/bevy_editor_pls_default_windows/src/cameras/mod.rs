@@ -361,21 +361,19 @@ fn focus_selected(
                     selected_query
                         .iter()
                         .find(|(query_e, _, _, _)| selected_e == *query_e)
-                        .map(|(_, tf, bounds, sprite)| {
-                            let apply_tf = |v: Vec3| v * tf.scale + tf.translation;
-
+                        .map(|(_, &tf, bounds, sprite)| {
                             let default_value = (tf.translation, tf.translation);
                             let sprite_size = sprite
                                 .map(|s| s.custom_size.unwrap_or(Vec2::ONE))
                                 .map_or(default_value, |sprite_size| {
                                     (
-                                        apply_tf((sprite_size * -0.5, 0.0).into()),
-                                        apply_tf((sprite_size * 0.5, 0.0).into()),
+                                        tf * Vec3::from((sprite_size * -0.5, 0.0)),
+                                        tf * Vec3::from((sprite_size * 0.5, 0.0)),
                                     )
                                 });
 
                             bounds.map_or(sprite_size, |bounds| {
-                                (apply_tf(bounds.min().into()), apply_tf(bounds.max().into()))
+                                (tf * Vec3::from(bounds.min()), tf * Vec3::from(bounds.max()))
                             })
                         })
                 })
@@ -414,7 +412,11 @@ fn focus_selected(
             }
 
             let len = hierarchy.selected.len();
-            info!("Focused on {} {}", len, if len == 1 { "entity" } else { "entities" } );
+            info!(
+                "Focused on {} {}",
+                len,
+                if len == 1 { "entity" } else { "entities" }
+            );
         }
     }
 }
