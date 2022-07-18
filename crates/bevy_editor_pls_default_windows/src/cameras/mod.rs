@@ -389,11 +389,7 @@ fn focus_selected(
             let bounds_size = bounds_max - bounds_min;
             let focus_loc = bounds_min + bounds_size * 0.5;
             let distance_to_cam = if bounds_size.max_element() > f32::EPSILON {
-                f32::sqrt(
-                    bounds_size.x * bounds_size.x
-                        + bounds_size.y * bounds_size.y
-                        + bounds_size.z * bounds_size.z,
-                )
+                bounds_size.length()
             } else {
                 NO_BOUNDS_DISTANCE
             };
