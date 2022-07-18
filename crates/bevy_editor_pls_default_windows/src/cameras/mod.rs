@@ -417,7 +417,8 @@ fn focus_selected(
                 pan_orbit_cam.radius = distance_to_cam;
             }
 
-            info!("Focused on {} entities", hierarchy.selected.len());
+            let len = hierarchy.selected.len();
+            info!("Focused on {} {}", len, if len == 1 { "entity" } else { "entities" } );
         }
     }
 }
