@@ -339,7 +339,7 @@ fn focus_selected(
         With<ActiveEditorCamera>,
     >,
     selected_query: Query<
-        (Entity, &Transform, Option<&Aabb>, Option<&Sprite>),
+        (Entity, &GlobalTransform, Option<&Aabb>, Option<&Sprite>),
         Without<ActiveEditorCamera>,
     >,
     editor: Res<Editor>,
