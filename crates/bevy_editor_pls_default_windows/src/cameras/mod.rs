@@ -339,7 +339,7 @@ fn focus_selected(
         With<ActiveEditorCamera>,
     >,
     selected_query: Query<
-        (Entity, &GlobalTransform, Option<&Aabb>, Option<&Sprite>),
+        (&GlobalTransform, Option<&Aabb>, Option<&Sprite>),
         Without<ActiveEditorCamera>,
     >,
     editor: Res<Editor>,
@@ -363,7 +363,7 @@ fn focus_selected(
             .filter_map(|selected_e| {
                 selected_query
                     .get(selected_e)
-                    .map(|(_, &tf, bounds, sprite)| {
+                    .map(|(&tf, bounds, sprite)| {
                         let default_value = (tf.translation, tf.translation);
                         let sprite_size = sprite
                             .map(|s| s.custom_size.unwrap_or(Vec2::ONE))
