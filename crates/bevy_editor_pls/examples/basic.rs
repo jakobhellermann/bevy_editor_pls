@@ -2,12 +2,18 @@ use bevy::{
     asset::diagnostic::AssetCountDiagnosticsPlugin,
     diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     prelude::*,
+    render::{render_resource::WgpuFeatures, settings::WgpuSettings},
 };
 use bevy_editor_pls::prelude::*;
 use bevy_editor_pls_default_windows::hierarchy::picking::EditorRayCastSource;
 
 fn main() {
+    // enable wireframe rendering
+    let mut wgpu_settings = WgpuSettings::default();
+    wgpu_settings.features |= WgpuFeatures::POLYGON_MODE_LINE;
+
     App::new()
+        .insert_resource(wgpu_settings)
         .add_plugins(DefaultPlugins)
         .add_plugin(EditorPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin)
