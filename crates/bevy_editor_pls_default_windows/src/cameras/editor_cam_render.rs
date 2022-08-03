@@ -1,5 +1,5 @@
 use bevy::{
-    core_pipeline::{self, AlphaMask3d, Opaque3d, Transparent2d, Transparent3d},
+    core_pipeline,
     prelude::*,
     render::{
         camera::ExtractedCamera,
@@ -15,6 +15,10 @@ use bevy::{
         RenderApp, RenderStage,
     },
 };
+use bevy::core_pipeline::{core_2d, core_3d};
+use bevy::core_pipeline::core_2d::Transparent2d;
+use bevy::core_pipeline::core_3d::{AlphaMask3d, Opaque3d, Transparent3d};
+use bevy::ui::node::UI_PASS_DRIVER;
 use bevy_editor_pls_core::{Editor, EditorState};
 
 use super::{
@@ -39,17 +43,17 @@ pub fn setup(app: &mut App) {
     let cam2d_id = render_graph.add_node("cam2d_driver_node", cam2d_driver_node);
 
     render_graph
-        .add_node_edge(core_pipeline::node::CLEAR_PASS_DRIVER, cam3d_id)
+        .add_node_edge(UI_PASS_DRIVER, cam3d_id)
         .unwrap();
     render_graph
-        .add_node_edge(cam3d_id, core_pipeline::node::MAIN_PASS_DRIVER)
+        .add_node_edge(cam3d_id, core_3d::graph::node::MAIN_PASS)
         .unwrap();
 
     render_graph
-        .add_node_edge(core_pipeline::node::CLEAR_PASS_DRIVER, cam2d_id)
+        .add_node_edge(UI_PASS_DRIVER, cam2d_id)
         .unwrap();
     render_graph
-        .add_node_edge(cam2d_id, core_pipeline::node::MAIN_PASS_DRIVER)
+        .add_node_edge(cam2d_id, core_2d::graph::node::MAIN_PASS)
         .unwrap();
 }
 
@@ -84,8 +88,10 @@ fn extract_editor_cameras(
         EditorCamKind::D3PanOrbit => query_3d_panorbit.single(),
     };
 
-    let view_size = match camera.target.get_physical_size(&windows, &images) {
-        Some(size) => size,
+    let camera: &Camera = camera; // TODO: Delete
+
+    let view_size = match camera.target.get_render_target_info(&windows, &images) {
+        Some(info) => info.physical_size,
         _ => return,
     };
 
@@ -93,17 +99,17 @@ fn extract_editor_cameras(
     commands.insert_bundle((
         ExtractedCamera {
             target: camera.target.clone(),
-            physical_size: camera.target.get_physical_size(&windows, &images),
+            physical_viewport_size: camera.physical_viewport_size(),
+            physical_target_size: camera.physical_target_size(),
+            viewport: camera.viewport.clone(),
+            render_graph: Default::default(),
+            priority: 0
         },
         ExtractedView {
-            projection: camera.projection_matrix,
+            projection: camera.projection_matrix(),
             transform: *transform,
             width: view_size.x.max(1),
             height: view_size.y.max(1),
-            near: camera.near,
-            far: camera.far,
-            #[cfg(feature = "viewport")]
-            viewport: camera.viewport.clone(),
         },
         visible_entities.clone(),
     ));
@@ -133,7 +139,8 @@ fn prepare_editor_view_targets(
     cameras: Query<(Entity, &ExtractedCamera), Or<(With<ActiveCamera2d>, With<ActiveCamera3d>)>>,
 ) {
     for (entity, camera) in cameras.iter() {
-        let size = match camera.physical_size {
+        let camera: &ExtractedCamera = camera;
+        let size = match camera.physical_target_size {
             Some(size) => size,
             None => continue,
         };
@@ -195,7 +202,7 @@ impl render_graph::Node for Cam3DDriverNode {
     ) -> Result<(), render_graph::NodeRunError> {
         for entity in self.query.iter_manual(world) {
             graph.run_sub_graph(
-                core_pipeline::draw_3d_graph::NAME,
+                core_pipeline::core_3d::graph::NAME,
                 vec![SlotValue::Entity(entity)],
             )?;
         }
@@ -230,7 +237,7 @@ impl render_graph::Node for Cam2DDriverNode {
     ) -> Result<(), render_graph::NodeRunError> {
         for entity in self.query.iter_manual(world) {
             graph.run_sub_graph(
-                core_pipeline::draw_2d_graph::NAME,
+                core_2d::graph::NAME,
                 vec![SlotValue::Entity(entity)],
             )?;
         }

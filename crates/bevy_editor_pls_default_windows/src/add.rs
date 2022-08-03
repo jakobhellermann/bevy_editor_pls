@@ -5,6 +5,7 @@ use bevy::{
     prelude::*,
     render::view::RenderLayers,
 };
+use bevy::render::camera::ScalingMode;
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui;
 use indexmap::IndexMap;
@@ -163,7 +164,7 @@ impl Default for AddWindowState {
             AddItem::new("Orthographic Camera".into(), |world, entity| {
                 world
                     .entity_mut(entity)
-                    .insert_bundle(OrthographicCameraBundle::new_2d());
+                    .insert_bundle(Camera3dBundle::default());
             }),
         );
         state.add("2D", AddItem::bundle::<SpriteBundle>());
@@ -174,7 +175,7 @@ impl Default for AddWindowState {
             AddItem::new("Perspective Camera".into(), |world, entity| {
                 world
                     .entity_mut(entity)
-                    .insert_bundle(PerspectiveCameraBundle::new_3d());
+                    .insert_bundle(Camera3dBundle::default());
             }),
         );
         state.add(
@@ -182,7 +183,14 @@ impl Default for AddWindowState {
             AddItem::new("Orthographic Camera".into(), |world, entity| {
                 world
                     .entity_mut(entity)
-                    .insert_bundle(OrthographicCameraBundle::new_3d());
+                    .insert_bundle(Camera3dBundle {
+                        projection: OrthographicProjection {
+                            scale: 3.0,
+                            scaling_mode: ScalingMode::FixedVertical(1.0),
+                            ..default()
+                        }.into(),
+                        ..default()
+                    });
             }),
         );
         state.add("3D", AddItem::bundle::<PointLightBundle>());
@@ -207,7 +215,6 @@ impl Default for AddWindowState {
             }),
         );
 
-        state.add("UI", AddItem::bundle::<UiCameraBundle<CameraUi>>());
         state.add("UI", AddItem::bundle::<NodeBundle>());
         state.add("UI", AddItem::bundle::<TextBundle>());
         state.add("UI", AddItem::bundle::<ImageBundle>());
