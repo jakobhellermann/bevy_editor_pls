@@ -1,4 +1,5 @@
-use bevy::{core::CoreSystem, input::InputSystem, prelude::*};
+use bevy::{input::InputSystem, prelude::*};
+use bevy::time::TimeSystem;
 use bevy_editor_pls_core::Editor;
 use bevy_inspector_egui::bevy_egui;
 
@@ -9,7 +10,7 @@ pub fn setup(app: &mut App) {
         .init_resource::<StashedTime>()
         .add_system_to_stage(
             CoreStage::First,
-            pause_time.exclusive_system().after(CoreSystem::Time),
+            pause_time.exclusive_system().after(TimeSystem),
         );
 
     use_editor_time_for_egui(app);

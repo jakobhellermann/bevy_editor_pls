@@ -18,7 +18,7 @@ pub fn setup(app: &mut App) {
             SystemSet::new()
                 .with_system(update_raycast_with_cursor)
                 .with_system(auto_add_editor_picking_set)
-                .after(RaycastSystem::BuildRays),
+                .after(RaycastSystem::<EditorPickingSet>::BuildRays),
         );
 }
 

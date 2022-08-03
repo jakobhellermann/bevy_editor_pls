@@ -3,13 +3,11 @@ pub mod camera_3d_free;
 pub mod camera_3d_panorbit;
 mod editor_cam_render;
 
-use std::marker::PhantomData;
-
 use bevy::{
     prelude::*,
-    render::camera::{ActiveCamera, Camera2d, Camera3d},
     render::primitives::Aabb,
 };
+use bevy::utils::HashSet;
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor, EditorEvent, EditorState,
@@ -90,7 +88,7 @@ impl EditorWindow for CameraWindow {
 
     const NAME: &'static str = "Cameras";
 
-    fn ui(world: &mut World, _cx: EditorWindowContext, ui: &mut bevy_inspector_egui::egui::Ui) {
+    fn ui(world: &mut World, _cx: EditorWindowContext, ui: &mut egui::Ui) {
         cameras_ui(ui, world);
     }
 
@@ -114,8 +112,7 @@ impl EditorWindow for CameraWindow {
     }
 
     fn app_setup(app: &mut App) {
-        app.init_resource::<PreviouslyActiveCamera<Camera3d>>()
-            .init_resource::<PreviouslyActiveCamera<Camera2d>>();
+        app.init_resource::<PreviouslyActiveCameras>();
 
         app.add_plugin(camera_2d_panzoom::PanCamPlugin)
             .add_plugin(camera_3d_free::FlycamPlugin)
@@ -176,19 +173,17 @@ fn set_active_editor_camera_marker(world: &mut World, editor_cam: EditorCamKind)
 
 fn cameras_ui(ui: &mut egui::Ui, world: &mut World) {
     // let cameras = active_cameras.all_sorted();
+    let mut query: QueryState<&Camera> = world.query();
+    // for camera in query.iter(world) {
+    //
+    // }
 
-    let cam_2d = world.resource::<ActiveCamera<Camera2d>>();
-    let cam_3d = world.resource::<ActiveCamera<Camera3d>>();
-    let prev_cam_2d = world.resource::<PreviouslyActiveCamera<Camera2d>>();
-    let prev_cam_3d = world.resource::<PreviouslyActiveCamera<Camera3d>>();
+    let prev_cams = world.resource::<PreviouslyActiveCameras>();
 
     ui.label("Cameras");
-    for (cam, curr_active, prev_active) in [
-        ("Camera2d", cam_2d.get(), prev_cam_2d.0),
-        ("Camera3d", cam_3d.get(), prev_cam_3d.0),
-    ] {
+    for cam in prev_cams.0.iter() {
         ui.horizontal(|ui| {
-            let active = curr_active.or(prev_active);
+            // let active = curr_active.or(prev_active);
 
             /*let text = egui::RichText::new("👁").heading();
             let show_hide_button = egui::Button::new(text).frame(false);
@@ -196,27 +191,12 @@ fn cameras_ui(ui: &mut egui::Ui, world: &mut World) {
                 toggle_cam_visibility = Some((camera.to_string(), active));
             }*/
 
-            if active.is_none() {
-                ui.set_enabled(false);
-            }
+            // if active.is_none() {
+            //     ui.set_enabled(false);
+            // }
 
-            ui.label(format!("{}: {:?}", cam, active));
+            ui.label(format!("{}: {:?}", "Camera", cam));
         });
-    }
-}
-
-fn map_ortho_cam_bundle<A: Component, B: Component>(
-    bundle: OrthographicCameraBundle<A>,
-    marker: B,
-) -> OrthographicCameraBundle<B> {
-    OrthographicCameraBundle {
-        camera: bundle.camera,
-        orthographic_projection: bundle.orthographic_projection,
-        visible_entities: bundle.visible_entities,
-        frustum: bundle.frustum,
-        transform: bundle.transform,
-        global_transform: bundle.global_transform,
-        marker,
     }
 }
 
@@ -227,11 +207,12 @@ fn spawn_editor_cameras(mut commands: Commands) {
     struct Ec3d;
 
     commands
-        .spawn_bundle(PerspectiveCameraBundle::<Ec3d> {
+        .spawn_bundle(Camera3dBundle {
             camera: Camera::default(),
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
-            ..PerspectiveCameraBundle::new()
+            ..Camera3dBundle::default()
         })
+        .insert(Ec3d)
         .insert(camera_3d_free::FlycamControls::default())
         .insert(crate::hierarchy::picking::EditorRayCastSource::new())
         .insert(EditorCamera)
@@ -240,12 +221,13 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(Name::new("Editor Camera 3D Free"));
 
     commands
-        .spawn_bundle(PerspectiveCameraBundle::<Ec3d> {
+        .spawn_bundle(Camera3dBundle {
             camera: Camera::default(),
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
-            ..PerspectiveCameraBundle::new()
+            ..Camera3dBundle::default()
         })
-        .insert(camera_3d_panorbit::PanOrbitCamera::default())
+        .insert(Ec3d)
+        .insert(PanOrbitCamera::default())
         .insert(crate::hierarchy::picking::EditorRayCastSource::new())
         .insert(EditorCamera)
         .insert(EditorCamera3dPanOrbit)
@@ -253,10 +235,8 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(Name::new("Editor Camera 3D Pan/Orbit"));
 
     commands
-        .spawn_bundle(map_ortho_cam_bundle(
-            OrthographicCameraBundle::new_2d(),
-            Ec2d,
-        ))
+        .spawn_bundle(Camera2dBundle::default())
+        .insert(Ec2d)
         .insert(camera_2d_panzoom::PanCamControls::default())
         .insert(EditorCamera)
         .insert(EditorCamera2dPanZoom)
@@ -292,37 +272,51 @@ fn set_editor_cam_active(
 }
 
 #[derive(Component, Default)]
-struct PreviouslyActiveCamera<T>(Option<Entity>, PhantomData<T>);
+struct PreviouslyActiveCameras(HashSet<Entity>);
 
 fn toggle_editor_cam(
-    mut commands: Commands,
     mut editor_events: EventReader<EditorEvent>,
-    mut active_cam_3d: ResMut<ActiveCamera<Camera3d>>,
-    mut active_cam_2d: ResMut<ActiveCamera<Camera2d>>,
-    mut prev_active_cam_3d: ResMut<PreviouslyActiveCamera<Camera3d>>,
-    mut prev_active_cam_2d: ResMut<PreviouslyActiveCamera<Camera2d>>,
+    mut prev_active_cams: ResMut<PreviouslyActiveCameras>,
+    mut cam_query: Query<(Entity, &mut Camera)>,
 ) {
     for event in editor_events.iter() {
         if let EditorEvent::Toggle { now_active } = *event {
             if now_active {
-                prev_active_cam_3d.0 = active_cam_3d.get();
-                prev_active_cam_2d.0 = active_cam_2d.get();
+                // Add all currently active cameras
+                for (e, mut cam) in cam_query.iter_mut().filter(|(_e, c)| c.is_active) {
+                    prev_active_cams.0.insert(e);
+                    cam.is_active = false;
+                }
 
-                if let Some(cam) = prev_active_cam_3d.0 {
-                    commands.entity(cam).remove::<Camera3d>();
-                }
-                if let Some(cam) = prev_active_cam_2d.0 {
-                    commands.entity(cam).remove::<Camera2d>();
-                }
+                // if let Some(cam) = prev_active_cam_3d.0 {
+                //     if let Ok(camera) = cam_query.get_mut(cam) {
+                //         camera.is_active = false;
+                //     }
+                // }
+                // if let Some(cam) = prev_active_cam_2d.0 {
+                //     if let Ok(camera) = cam_query.get_mut(cam) {
+                //         camera.is_active = false;
+                //     }
+                // }
             } else {
-                if let Some(prev_active) = prev_active_cam_3d.0 {
-                    active_cam_3d.set(prev_active);
-                    commands.entity(prev_active).insert(Camera3d);
+                for cam in prev_active_cams.0.iter() {
+                    if let Ok((_e, mut camera)) = cam_query.get_mut(*cam) {
+                        camera.is_active = true;
+                    }
                 }
-                if let Some(prev_active) = prev_active_cam_2d.0 {
-                    active_cam_2d.set(prev_active);
-                    commands.entity(prev_active).insert(Camera2d);
-                }
+                prev_active_cams.0.clear();
+                // if let Some(prev_active) = prev_active_cam_3d.0 {
+                //     active_cam_3d.set(prev_active);
+                //     if let Ok(camera) = cam_query.get_mut(prev_active) {
+                //         camera.is_active = true;
+                //     }
+                // }
+                // if let Some(prev_active) = prev_active_cam_2d.0 {
+                //     active_cam_3d.set(prev_active);
+                //     if let Ok(camera) = cam_query.get_mut(prev_active) {
+                //         camera.is_active = true;
+                //     }
+                // }
             }
         }
     }
@@ -364,7 +358,7 @@ fn focus_selected(
                 selected_query
                     .get(selected_e)
                     .map(|(&tf, bounds, sprite)| {
-                        let default_value = (tf.translation, tf.translation);
+                        let default_value = (tf.translation(), tf.translation());
                         let sprite_size = sprite
                             .map(|s| s.custom_size.unwrap_or(Vec2::ONE))
                             .map_or(default_value, |sprite_size| {

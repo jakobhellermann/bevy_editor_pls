@@ -10,7 +10,7 @@ default = ["default_windows"]
 viewport = ["bevy_editor_pls_default_windows/viewport"]
 
 [dependencies]
-bevy = { version = "0.8", default-features = false }
+bevy = { version = "0.8", default-features = false, features = ["bevy_scene"] }
 egui = "0.18.1"
 bevy_editor_pls_core = { path = "../bevy_editor_pls_core" }
 bevy_editor_pls_default_windows = { path = "../bevy_editor_pls_default_windows", optional = true }
