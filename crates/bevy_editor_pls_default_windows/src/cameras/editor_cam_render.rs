@@ -18,6 +18,7 @@ use bevy::{
 use bevy::core_pipeline::{core_2d, core_3d};
 use bevy::core_pipeline::core_2d::Transparent2d;
 use bevy::core_pipeline::core_3d::{AlphaMask3d, Opaque3d, Transparent3d};
+use bevy::render::Extract;
 use bevy::ui::node::UI_PASS_DRIVER;
 use bevy_editor_pls_core::{Editor, EditorState};
 
@@ -42,39 +43,40 @@ pub fn setup(app: &mut App) {
     let cam3d_id = render_graph.add_node("cam3d_driver_node", cam3d_driver_node);
     let cam2d_id = render_graph.add_node("cam2d_driver_node", cam2d_driver_node);
 
-    render_graph
-        .add_node_edge(UI_PASS_DRIVER, cam3d_id)
-        .unwrap();
-    render_graph
-        .add_node_edge(cam3d_id, core_3d::graph::node::MAIN_PASS)
-        .unwrap();
+    // render_graph
+    //     .add_node_edge(UI_PASS_DRIVER, cam3d_id)
+    //     .unwrap();
+    // render_graph
+    //     .add_node_edge(cam3d_id, core_3d::graph::node::MAIN_PASS)
+    //     .unwrap();
 
-    render_graph
-        .add_node_edge(UI_PASS_DRIVER, cam2d_id)
-        .unwrap();
-    render_graph
-        .add_node_edge(cam2d_id, core_2d::graph::node::MAIN_PASS)
-        .unwrap();
+    // Clear pass removed TODO:
+    // render_graph
+    //     .add_node_edge(UI_PASS_DRIVER, cam2d_id)
+    //     .unwrap();
+    // render_graph
+    //     .add_node_edge(cam2d_id, core_2d::graph::node::MAIN_PASS)
+    //     .unwrap();
 }
 
 fn extract_editor_cameras(
-    editor: Res<Editor>,
-    editor_state: Res<EditorState>,
+    editor: Extract<Res<Editor>>,
+    editor_state: Extract<Res<EditorState>>,
     mut commands: Commands,
-    windows: Res<Windows>,
-    images: Res<Assets<Image>>,
-    query_3d_free: Query<
+    windows: Extract<Res<Windows>>,
+    images: Extract<Res<Assets<Image>>>,
+    query_3d_free: Extract<Query<
         (Entity, &Camera, &GlobalTransform, &VisibleEntities),
         With<EditorCamera3dFree>,
-    >,
-    query_3d_panorbit: Query<
+    >>,
+    query_3d_panorbit: Extract<Query<
         (Entity, &Camera, &GlobalTransform, &VisibleEntities),
         With<EditorCamera3dPanOrbit>,
-    >,
-    query_2d_panzoom: Query<
+    >>,
+    query_2d_panzoom: Extract<Query<
         (Entity, &Camera, &GlobalTransform, &VisibleEntities),
         With<EditorCamera2dPanZoom>,
-    >,
+    >>,
 ) {
     let camera_window_state = editor.window_state::<CameraWindow>().unwrap();
 

@@ -3,7 +3,7 @@ pub mod picking;
 use bevy::ecs::entity::Entities;
 use bevy::ecs::query::QuerySingleError;
 use bevy::pbr::wireframe::Wireframe;
-use bevy::render::{RenderApp, RenderStage};
+use bevy::render::{Extract, RenderApp, RenderStage};
 use bevy::utils::HashSet;
 use bevy::prelude::*;
 use bevy_editor_pls_core::EditorState;
@@ -134,7 +134,7 @@ fn handle_events(
     }
 }
 
-fn extract_wireframe_for_selected(editor: Res<Editor>, mut commands: Commands) {
+fn extract_wireframe_for_selected(editor: Extract<Res<Editor>>, mut commands: Commands) {
     let wireframe_for_selected = editor
         .window_state::<DebugSettingsWindow>()
         .map_or(false, |settings| settings.highlight_selected);
