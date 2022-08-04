@@ -312,7 +312,7 @@ impl<'a> Hierarchy<'a> {
             .show(ui, |ui| {
                 let children = self.world.get::<Children>(entity);
                 if let Some(children) = children {
-                    let children = children.clone();
+                    let children = children.to_vec();
                     ui.label("Children");
                     for &child in children.iter() {
                         self.entity_ui(child, ui, always_open);
@@ -349,7 +349,7 @@ impl<'a> Hierarchy<'a> {
 
         if despawn {
             for entity in self.state.selected.iter() {
-                if let Some(&parent) = self.world.get::<Parent>(entity) {
+                if let Some(parent) = self.world.get::<Parent>(entity) {
                     if let Some(mut children) = self.world.get_mut::<Children>(parent.get()) {
                         let new_children: Vec<_> = children
                             .iter()

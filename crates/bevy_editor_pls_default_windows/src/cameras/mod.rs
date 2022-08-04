@@ -173,7 +173,7 @@ fn set_active_editor_camera_marker(world: &mut World, editor_cam: EditorCamKind)
 
 fn cameras_ui(ui: &mut egui::Ui, world: &mut World) {
     // let cameras = active_cameras.all_sorted();
-    let mut query: QueryState<&Camera> = world.query();
+    // let mut query: QueryState<&Camera> = world.query();
     // for camera in query.iter(world) {
     //
     // }
