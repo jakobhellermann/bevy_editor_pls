@@ -206,6 +206,8 @@ fn spawn_editor_cameras(mut commands: Commands) {
     #[derive(Component, Default)]
     struct Ec3d;
 
+    info!("Spawning editor cameras");
+
     commands
         .spawn_bundle(Camera3dBundle {
             camera: Camera::default(),
