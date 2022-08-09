@@ -1,7 +1,7 @@
 use bevy::{
-    core::FixedTimestep,
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
+    time::FixedTimestep,
 };
 
 /// An implementation of the classic game "Breakout"
@@ -49,8 +49,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Add the game's entities to our world
 
     // cameras
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(Camera2dBundle::default());
+
     // paddle
     commands
         .spawn_bundle(SpriteBundle {
@@ -109,7 +109,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         style: Style {
             position_type: PositionType::Absolute,
-            position: Rect {
+            position: UiRect {
                 top: Val::Px(5.0),
                 left: Val::Px(5.0),
                 ..Default::default()

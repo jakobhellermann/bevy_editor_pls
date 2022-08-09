@@ -25,7 +25,7 @@ pub fn setup(app: &mut App) {
             Err(_label) => {
                 error!("No render app");
                 return;
-            },
+            }
         };
         let render_graph = render_app.world.get_resource::<RenderGraph>().unwrap();
 
