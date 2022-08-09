@@ -3,9 +3,9 @@ pub mod picking;
 use bevy::ecs::entity::Entities;
 use bevy::ecs::query::QuerySingleError;
 use bevy::pbr::wireframe::Wireframe;
+use bevy::prelude::*;
 use bevy::render::{Extract, RenderApp, RenderStage};
 use bevy::utils::HashSet;
-use bevy::prelude::*;
 use bevy_editor_pls_core::EditorState;
 use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText, ScrollArea};
 

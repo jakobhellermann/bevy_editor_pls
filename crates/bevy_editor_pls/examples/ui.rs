@@ -15,9 +15,6 @@ fn main() {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // ui camera
-    commands.spawn_bundle(UiCameraBundle::default());
-
     // root node
     commands
         .spawn_bundle(NodeBundle {
@@ -35,7 +32,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .spawn_bundle(NodeBundle {
                     style: Style {
                         size: Size::new(Val::Px(200.0), Val::Percent(100.0)),
-                        border: Rect::all(Val::Px(2.0)),
+                        border: UiRect::all(Val::Px(2.0)),
                         ..Default::default()
                     },
                     color: Color::rgb(0.65, 0.65, 0.65).into(),
@@ -57,17 +54,16 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                             // text
                             parent.spawn_bundle(TextBundle {
                                 style: Style {
-                                    margin: Rect::all(Val::Px(5.0)),
+                                    margin: UiRect::all(Val::Px(5.0)),
                                     ..Default::default()
                                 },
-                                text: Text::with_section(
+                                text: Text::from_section(
                                     "Text Example",
                                     TextStyle {
                                         font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                                         font_size: 30.0,
                                         color: Color::WHITE,
                                     },
-                                    Default::default(),
                                 ),
                                 ..Default::default()
                             });
@@ -90,21 +86,20 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     parent.spawn_bundle(TextBundle {
                         style: Style {
                             size: Size::new(Val::Undefined, Val::Px(25.)),
-                            margin: Rect {
+                            margin: UiRect {
                                 left: Val::Auto,
                                 right: Val::Auto,
                                 ..Default::default()
                             },
                             ..Default::default()
                         },
-                        text: Text::with_section(
+                        text: Text::from_section(
                             "Scrolling list",
                             TextStyle {
                                 font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                                 font_size: 25.,
                                 color: Color::WHITE,
                             },
-                            Default::default(),
                         ),
                         ..Default::default()
                     });
@@ -142,14 +137,14 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                             style: Style {
                                                 flex_shrink: 0.,
                                                 size: Size::new(Val::Undefined, Val::Px(20.)),
-                                                margin: Rect {
+                                                margin: UiRect {
                                                     left: Val::Auto,
                                                     right: Val::Auto,
                                                     ..Default::default()
                                                 },
                                                 ..Default::default()
                                             },
-                                            text: Text::with_section(
+                                            text: Text::from_section(
                                                 format!("Item {}", i),
                                                 TextStyle {
                                                     font: asset_server
@@ -157,7 +152,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                                     font_size: 20.,
                                                     color: Color::WHITE,
                                                 },
-                                                Default::default(),
                                             ),
                                             ..Default::default()
                                         });
@@ -171,12 +165,12 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     style: Style {
                         size: Size::new(Val::Px(200.0), Val::Px(200.0)),
                         position_type: PositionType::Absolute,
-                        position: Rect {
+                        position: UiRect {
                             left: Val::Px(210.0),
                             bottom: Val::Px(10.0),
                             ..Default::default()
                         },
-                        border: Rect::all(Val::Px(20.0)),
+                        border: UiRect::all(Val::Px(20.0)),
                         ..Default::default()
                     },
                     color: Color::rgb(0.4, 0.4, 1.0).into(),
@@ -220,7 +214,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 style: Style {
                                     size: Size::new(Val::Px(100.0), Val::Px(100.0)),
                                     position_type: PositionType::Absolute,
-                                    position: Rect {
+                                    position: UiRect {
                                         left: Val::Px(20.0),
                                         bottom: Val::Px(20.0),
                                         ..Default::default()
@@ -234,7 +228,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 style: Style {
                                     size: Size::new(Val::Px(100.0), Val::Px(100.0)),
                                     position_type: PositionType::Absolute,
-                                    position: Rect {
+                                    position: UiRect {
                                         left: Val::Px(40.0),
                                         bottom: Val::Px(40.0),
                                         ..Default::default()
@@ -248,7 +242,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 style: Style {
                                     size: Size::new(Val::Px(100.0), Val::Px(100.0)),
                                     position_type: PositionType::Absolute,
-                                    position: Rect {
+                                    position: UiRect {
                                         left: Val::Px(60.0),
                                         bottom: Val::Px(60.0),
                                         ..Default::default()
@@ -263,7 +257,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 style: Style {
                                     size: Size::new(Val::Px(100.0), Val::Px(100.0)),
                                     position_type: PositionType::Absolute,
-                                    position: Rect {
+                                    position: UiRect {
                                         left: Val::Px(80.0),
                                         bottom: Val::Px(80.0),
                                         ..Default::default()
@@ -276,18 +270,17 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                         });
                 });
             // bevy logo (flex center)
-            parent
-                .spawn_bundle(NodeBundle {
-                    style: Style {
-                        size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                        position_type: PositionType::Absolute,
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::FlexEnd,
-                        ..Default::default()
-                    },
-                    color: Color::NONE.into(),
+            parent.spawn_bundle(NodeBundle {
+                style: Style {
+                    size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                    position_type: PositionType::Absolute,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::FlexEnd,
                     ..Default::default()
-                });
+                },
+                color: Color::NONE.into(),
+                ..Default::default()
+            });
         });
 }
 

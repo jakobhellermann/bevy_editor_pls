@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 
+use bevy::render::camera::ScalingMode;
 use bevy::{
     pbr::{wireframe::Wireframe, NotShadowCaster, NotShadowReceiver},
     prelude::*,
     render::view::RenderLayers,
 };
-use bevy::render::camera::ScalingMode;
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui;
 use indexmap::IndexMap;
@@ -181,16 +181,15 @@ impl Default for AddWindowState {
         state.add(
             "3D",
             AddItem::new("Orthographic Camera".into(), |world, entity| {
-                world
-                    .entity_mut(entity)
-                    .insert_bundle(Camera3dBundle {
-                        projection: OrthographicProjection {
-                            scale: 3.0,
-                            scaling_mode: ScalingMode::FixedVertical(1.0),
-                            ..default()
-                        }.into(),
+                world.entity_mut(entity).insert_bundle(Camera3dBundle {
+                    projection: OrthographicProjection {
+                        scale: 3.0,
+                        scaling_mode: ScalingMode::FixedVertical(1.0),
                         ..default()
-                    });
+                    }
+                    .into(),
+                    ..default()
+                });
             }),
         );
         state.add("3D", AddItem::bundle::<PointLightBundle>());

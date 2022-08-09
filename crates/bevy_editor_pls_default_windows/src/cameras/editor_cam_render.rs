@@ -1,3 +1,8 @@
+use bevy::core_pipeline::core_2d::Transparent2d;
+use bevy::core_pipeline::core_3d::{AlphaMask3d, Opaque3d, Transparent3d};
+use bevy::core_pipeline::{core_2d, core_3d};
+use bevy::render::Extract;
+use bevy::ui::node::UI_PASS_DRIVER;
 use bevy::{
     core_pipeline,
     prelude::*,
@@ -15,11 +20,6 @@ use bevy::{
         RenderApp, RenderStage,
     },
 };
-use bevy::core_pipeline::{core_2d, core_3d};
-use bevy::core_pipeline::core_2d::Transparent2d;
-use bevy::core_pipeline::core_3d::{AlphaMask3d, Opaque3d, Transparent3d};
-use bevy::render::Extract;
-use bevy::ui::node::UI_PASS_DRIVER;
 use bevy_editor_pls_core::{Editor, EditorState};
 
 use super::{
@@ -65,18 +65,15 @@ fn extract_editor_cameras(
     mut commands: Commands,
     windows: Extract<Res<Windows>>,
     images: Extract<Res<Assets<Image>>>,
-    query_3d_free: Extract<Query<
-        (Entity, &Camera, &GlobalTransform, &VisibleEntities),
-        With<EditorCamera3dFree>,
-    >>,
-    query_3d_panorbit: Extract<Query<
-        (Entity, &Camera, &GlobalTransform, &VisibleEntities),
-        With<EditorCamera3dPanOrbit>,
-    >>,
-    query_2d_panzoom: Extract<Query<
-        (Entity, &Camera, &GlobalTransform, &VisibleEntities),
-        With<EditorCamera2dPanZoom>,
-    >>,
+    query_3d_free: Extract<
+        Query<(Entity, &Camera, &GlobalTransform, &VisibleEntities), With<EditorCamera3dFree>>,
+    >,
+    query_3d_panorbit: Extract<
+        Query<(Entity, &Camera, &GlobalTransform, &VisibleEntities), With<EditorCamera3dPanOrbit>>,
+    >,
+    query_2d_panzoom: Extract<
+        Query<(Entity, &Camera, &GlobalTransform, &VisibleEntities), With<EditorCamera2dPanZoom>>,
+    >,
 ) {
     let camera_window_state = editor.window_state::<CameraWindow>().unwrap();
 
@@ -105,7 +102,7 @@ fn extract_editor_cameras(
             physical_target_size: camera.physical_target_size(),
             viewport: camera.viewport.clone(),
             render_graph: Default::default(),
-            priority: 0
+            priority: 0,
         },
         ExtractedView {
             projection: camera.projection_matrix(),
@@ -238,10 +235,7 @@ impl render_graph::Node for Cam2DDriverNode {
         world: &World,
     ) -> Result<(), render_graph::NodeRunError> {
         for entity in self.query.iter_manual(world) {
-            graph.run_sub_graph(
-                core_2d::graph::NAME,
-                vec![SlotValue::Entity(entity)],
-            )?;
+            graph.run_sub_graph(core_2d::graph::NAME, vec![SlotValue::Entity(entity)])?;
         }
 
         Ok(())

@@ -3,11 +3,8 @@ pub mod camera_3d_free;
 pub mod camera_3d_panorbit;
 mod editor_cam_render;
 
-use bevy::{
-    prelude::*,
-    render::primitives::Aabb,
-};
 use bevy::utils::HashSet;
+use bevy::{prelude::*, render::primitives::Aabb};
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor, EditorEvent, EditorState,
