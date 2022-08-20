@@ -304,6 +304,8 @@ impl<'a> Hierarchy<'a> {
             return;
         }
 
+        #[allow(deprecated)]
+        // no idea how to do this with CollapsingState::show_header, TODO figure out
         let response = CollapsingHeader::new(text)
             .id_source(entity)
             .selectable(true)
