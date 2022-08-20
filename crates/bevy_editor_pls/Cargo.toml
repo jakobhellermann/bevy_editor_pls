@@ -14,10 +14,10 @@ default_windows = ["bevy_editor_pls_default_windows", "bevy/bevy_render", "bevy/
 default = ["default_windows"]
 
 [dependencies]
-bevy = { version = "0.8", default-features = false, features = ["bevy_scene"] }
+bevy = { version = "0.8", default-features = false }
 egui = "0.18.1"
-bevy_editor_pls_core = { path = "../bevy_editor_pls_core" }
-bevy_editor_pls_default_windows = { path = "../bevy_editor_pls_default_windows", optional = true }
+bevy_editor_pls_core = { version = "0.1", path = "../bevy_editor_pls_core" }
+bevy_editor_pls_default_windows = { version = "0.1", path = "../bevy_editor_pls_default_windows", optional = true }
 
 [dev-dependencies]
 bevy = { version = "0.8", default-features = false, features = [
