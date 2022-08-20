@@ -71,6 +71,7 @@ impl Default for EditorCamKind {
 pub struct CameraWindowState {
     // make sure to keep the `ActiveEditorCamera` marker component in sync with this field
     editor_cam: EditorCamKind,
+    pub show_ui: bool,
 }
 
 impl CameraWindowState {
@@ -105,6 +106,7 @@ impl EditorWindow for CameraWindow {
                 });
             }
         });
+        ui.checkbox(&mut state.show_ui, "UI");
     }
 
     fn app_setup(app: &mut App) {
@@ -201,7 +203,9 @@ fn spawn_editor_cameras(mut commands: Commands) {
 
     info!("Spawning editor cameras");
 
+    let show_ui_by_default = false;
     let editor_cam_priority = 100;
+
     commands
         .spawn_bundle(Camera3dBundle {
             camera: Camera {
@@ -211,6 +215,9 @@ fn spawn_editor_cameras(mut commands: Commands) {
             },
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Camera3dBundle::default()
+        })
+        .insert(UiCameraConfig {
+            show_ui: show_ui_by_default,
         })
         .insert(Ec3d)
         .insert(camera_3d_free::FlycamControls::default())
@@ -230,6 +237,9 @@ fn spawn_editor_cameras(mut commands: Commands) {
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Camera3dBundle::default()
         })
+        .insert(UiCameraConfig {
+            show_ui: show_ui_by_default,
+        })
         .insert(Ec3d)
         .insert(PanOrbitCamera::default())
         .insert(crate::hierarchy::picking::EditorRayCastSource::new())
@@ -246,6 +256,9 @@ fn spawn_editor_cameras(mut commands: Commands) {
                 ..default()
             },
             ..default()
+        })
+        .insert(UiCameraConfig {
+            show_ui: show_ui_by_default,
         })
         .insert(Ec2d)
         .insert(camera_2d_panzoom::PanCamControls::default())
@@ -264,8 +277,16 @@ fn set_editor_cam_active(
         Query<(&mut Camera, &mut camera_3d_panorbit::PanOrbitCamera)>,
         Query<(&mut Camera, &mut camera_2d_panzoom::PanCamControls)>,
     )>,
+
+    mut ui_camera_settings: Query<&mut UiCameraConfig, With<EditorCamera>>,
 ) {
-    let editor_cam = editor.window_state::<CameraWindow>().unwrap().editor_cam;
+    let camera_window_state = &editor.window_state::<CameraWindow>().unwrap();
+    let editor_cam = camera_window_state.editor_cam;
+
+    if editor_state.active {
+        ui_camera_settings
+            .for_each_mut(|mut settings| settings.show_ui = camera_window_state.show_ui);
+    }
 
     {
         let mut q = editor_cameras.p0();
