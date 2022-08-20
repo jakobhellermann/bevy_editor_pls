@@ -8,6 +8,7 @@ Adds debug tools to your bevy game, including
 - some builtin editor panels for diagnostics, debug settings
 - scene export
 
+**This is not, and isn't meant to be, comparable to the actual editor bevy will end up with. `bevy_editor_pls` attempts to get the low hanging fruits by adding editor UI to the game executable, without having all the complexity that comes with having a proper well-designed editor architecture.**
 
 ## How to use:
 
