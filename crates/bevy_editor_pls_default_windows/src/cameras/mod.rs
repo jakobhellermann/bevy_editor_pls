@@ -294,6 +294,7 @@ fn set_editor_cam_active(
         let active = matches!(editor_cam, EditorCamKind::D3Free) && editor_state.active;
         editor_cam_3d_free.0.is_active = active;
         editor_cam_3d_free.1.enable_movement = active && !editor_state.listening_for_text;
+        editor_cam_3d_free.1.enable_look = active && editor_state.viewport_interaction_active();
     }
     {
         let mut q = editor_cameras.p1();
