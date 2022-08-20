@@ -1,7 +1,6 @@
 pub mod camera_2d_panzoom;
 pub mod camera_3d_free;
 pub mod camera_3d_panorbit;
-mod editor_cam_render;
 
 use bevy::utils::HashSet;
 use bevy::{prelude::*, render::primitives::Aabb};
@@ -122,16 +121,13 @@ impl EditorWindow for CameraWindow {
             )
             .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
             .add_system_to_stage(CoreStage::PreUpdate, focus_selected)
-            .add_system(initial_camera_setup)
-            .add_startup_system_to_stage(StartupStage::PreStartup, spawn_editor_cameras);
+            .add_system(initial_camera_setup);
+        app.add_startup_system_to_stage(StartupStage::PreStartup, spawn_editor_cameras);
 
-        editor_cam_render::setup(app);
-
-        #[cfg(feature = "viewport")]
-        app.add_system_to_stage(
+        /*app.add_system_to_stage(
             CoreStage::PostUpdate,
-            set_main_pass_viewport.before(bevy::render::camera::UpdateCameraProjectionSystem),
-        );
+            set_main_pass_viewport.before(bevy::render::camera::CameraUpdateSystem),
+        );*/
     }
 }
 
@@ -205,9 +201,14 @@ fn spawn_editor_cameras(mut commands: Commands) {
 
     info!("Spawning editor cameras");
 
+    let editor_cam_priority = 100;
     commands
         .spawn_bundle(Camera3dBundle {
-            camera: Camera::default(),
+            camera: Camera {
+                priority: editor_cam_priority,
+                is_active: false,
+                ..default()
+            },
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Camera3dBundle::default()
         })
@@ -221,7 +222,11 @@ fn spawn_editor_cameras(mut commands: Commands) {
 
     commands
         .spawn_bundle(Camera3dBundle {
-            camera: Camera::default(),
+            camera: Camera {
+                priority: editor_cam_priority,
+                is_active: false,
+                ..default()
+            },
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Camera3dBundle::default()
         })
@@ -234,7 +239,14 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(Name::new("Editor Camera 3D Pan/Orbit"));
 
     commands
-        .spawn_bundle(Camera2dBundle::default())
+        .spawn_bundle(Camera2dBundle {
+            camera: Camera {
+                priority: editor_cam_priority,
+                is_active: false,
+                ..default()
+            },
+            ..default()
+        })
         .insert(Ec2d)
         .insert(camera_2d_panzoom::PanCamControls::default())
         .insert(EditorCamera)
@@ -246,28 +258,36 @@ fn spawn_editor_cameras(mut commands: Commands) {
 fn set_editor_cam_active(
     editor: Res<Editor>,
     editor_state: Res<EditorState>,
-    mut editor_cam_3d_free: Query<&mut camera_3d_free::FlycamControls>,
-    mut editor_cam_3d_panorbit: Query<&mut camera_3d_panorbit::PanOrbitCamera>,
-    mut editor_cam_2d_panzoom: Query<&mut camera_2d_panzoom::PanCamControls>,
+
+    mut editor_cameras: ParamSet<(
+        Query<(&mut Camera, &mut camera_3d_free::FlycamControls)>,
+        Query<(&mut Camera, &mut camera_3d_panorbit::PanOrbitCamera)>,
+        Query<(&mut Camera, &mut camera_2d_panzoom::PanCamControls)>,
+    )>,
 ) {
     let editor_cam = editor.window_state::<CameraWindow>().unwrap().editor_cam;
 
-    let mut editor_cam_3d_free = editor_cam_3d_free.single_mut();
-    let mut editor_cam_3d_panorbit = editor_cam_3d_panorbit.single_mut();
-    let mut editor_cam_2d_panzoom = editor_cam_2d_panzoom.single_mut();
-
-    editor_cam_3d_free.enable_movement = matches!(editor_cam, EditorCamKind::D3Free)
-        && editor_state.active
-        && !editor_state.listening_for_text;
-    editor_cam_3d_free.enable_look = matches!(editor_cam, EditorCamKind::D3Free)
-        && editor_state.active
-        && editor_state.viewport_interaction_active();
-    editor_cam_3d_panorbit.enabled = matches!(editor_cam, EditorCamKind::D3PanOrbit)
-        && editor_state.active
-        && editor_state.viewport_interaction_active();
-    editor_cam_2d_panzoom.enabled = matches!(editor_cam, EditorCamKind::D2PanZoom)
-        && editor_state.active
-        && editor_state.viewport_interaction_active();
+    {
+        let mut q = editor_cameras.p0();
+        let mut editor_cam_3d_free = q.single_mut();
+        let active = matches!(editor_cam, EditorCamKind::D3Free) && editor_state.active;
+        editor_cam_3d_free.0.is_active = active;
+        editor_cam_3d_free.1.enable_movement = active && !editor_state.listening_for_text;
+    }
+    {
+        let mut q = editor_cameras.p1();
+        let mut editor_cam_3d_panorbit = q.single_mut();
+        let active = matches!(editor_cam, EditorCamKind::D3PanOrbit) && editor_state.active;
+        editor_cam_3d_panorbit.0.is_active = active;
+        editor_cam_3d_panorbit.1.enabled = active && editor_state.viewport_interaction_active();
+    }
+    {
+        let mut q = editor_cameras.p2();
+        let mut editor_cam_2d_panzoom = q.single_mut();
+        let active = matches!(editor_cam, EditorCamKind::D2PanZoom) && editor_state.active;
+        editor_cam_2d_panzoom.0.is_active = active;
+        editor_cam_2d_panzoom.1.enabled = active && editor_state.viewport_interaction_active();
+    }
 }
 
 #[derive(Component, Default)]
@@ -286,17 +306,6 @@ fn toggle_editor_cam(
                     prev_active_cams.0.insert(e);
                     cam.is_active = false;
                 }
-
-                // if let Some(cam) = prev_active_cam_3d.0 {
-                //     if let Ok(camera) = cam_query.get_mut(cam) {
-                //         camera.is_active = false;
-                //     }
-                // }
-                // if let Some(cam) = prev_active_cam_2d.0 {
-                //     if let Ok(camera) = cam_query.get_mut(cam) {
-                //         camera.is_active = false;
-                //     }
-                // }
             } else {
                 for cam in prev_active_cams.0.iter() {
                     if let Ok((_e, mut camera)) = cam_query.get_mut(*cam) {
@@ -304,18 +313,6 @@ fn toggle_editor_cam(
                     }
                 }
                 prev_active_cams.0.clear();
-                // if let Some(prev_active) = prev_active_cam_3d.0 {
-                //     active_cam_3d.set(prev_active);
-                //     if let Ok(camera) = cam_query.get_mut(prev_active) {
-                //         camera.is_active = true;
-                //     }
-                // }
-                // if let Some(prev_active) = prev_active_cam_2d.0 {
-                //     active_cam_3d.set(prev_active);
-                //     if let Ok(camera) = cam_query.get_mut(prev_active) {
-                //         camera.is_active = true;
-                //     }
-                // }
             }
         }
     }
@@ -437,8 +434,8 @@ fn initial_camera_setup(
             ),
             With<EditorCamera3dPanOrbit>,
         >,
-        Query<&Transform, With<Camera2d>>,
-        Query<&Transform, With<Camera3d>>,
+        Query<&Transform, (With<Camera2d>, Without<EditorCamera>)>,
+        Query<&Transform, (With<Camera3d>, Without<EditorCamera>)>,
     )>,
 ) {
     let cam2d = cameras.p3().get_single().ok().cloned();
@@ -506,8 +503,7 @@ fn initial_camera_setup(
     }
 }
 
-#[cfg(feature = "viewport")]
-fn set_main_pass_viewport(
+/*fn set_main_pass_viewport(
     editor_state: Res<bevy_editor_pls_core::EditorState>,
     egui_settings: Res<bevy_inspector_egui::bevy_egui::EguiSettings>,
     windows: Res<Windows>,
@@ -524,13 +520,12 @@ fn set_main_pass_viewport(
 
     cameras.iter_mut().for_each(|mut cam| {
         cam.viewport = editor_state.active.then(|| bevy::render::camera::Viewport {
-            x: viewport_pos.x,
-            y: viewport_pos.y,
-            w: viewport_size.x.max(1.0),
-            h: viewport_size.y.max(1.0),
-            min_depth: 0.0,
-            max_depth: 1.0,
-            scaling_mode: bevy::render::camera::ViewportScalingMode::Pixels,
+            physical_position: UVec2::new(viewport_pos.x as u32, viewport_pos.y as u32),
+            physical_size: UVec2::new(
+                (viewport_size.x as u32).max(1),
+                (viewport_size.y as u32).max(1),
+            ),
+            depth: 0.0..1.0,
         });
     });
-}
+}*/
