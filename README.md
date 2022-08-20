@@ -115,6 +115,13 @@ fn set_cam3d_controls(
 ## Missing features
 
 - scene import
-- better editor camera controls (orbit camera, ...)
 - transform gizmos
 - visualization of invisible entities in editor (to see where the camera is for example)
+
+
+
+## Bevy support table
+
+| bevy | bevy\_editor\_pls |
+| ---- | ----------------- |
+| 0.8  | 0.1               |
