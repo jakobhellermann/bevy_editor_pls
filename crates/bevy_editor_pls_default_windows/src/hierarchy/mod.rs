@@ -325,8 +325,13 @@ impl<'a> Hierarchy<'a> {
             });
 
         let mut despawn = false;
+        let mut despawn_recursive = false;
         let header_response = response.header_response.context_menu(|ui| {
             if ui.button("Despawn").clicked() {
+                despawn_recursive = true;
+            }
+
+            if ui.button("Remove keeping children").clicked() {
                 despawn = true;
             }
 
@@ -346,9 +351,12 @@ impl<'a> Hierarchy<'a> {
         });
 
         if selected && ui.input().key_pressed(egui::Key::Delete) {
-            despawn = true;
+            despawn_recursive = true;
         }
 
+        if despawn_recursive {
+            despawn_with_children_recursive(self.world, entity);
+        }
         if despawn {
             for entity in self.state.selected.iter() {
                 if let Some(parent) = self.world.get::<Parent>(entity) {
