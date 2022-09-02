@@ -105,9 +105,9 @@ struct EditorWindowData {
 }
 
 pub(crate) struct EditorInternalState {
-    left_panel: Option<TypeId>,
-    right_panel: Option<TypeId>,
-    bottom_panel: Option<TypeId>,
+    pub(crate) left_panel: Option<TypeId>,
+    pub(crate) right_panel: Option<TypeId>,
+    pub(crate) bottom_panel: Option<TypeId>,
     pub(crate) floating_windows: Vec<FloatingWindow>,
     active_drag_window: Option<WindowPosition>,
     active_drop_location: Option<DropLocation>,
@@ -152,6 +152,17 @@ enum DropLocation {
 }
 
 impl EditorInternalState {
+    pub(crate) fn new<LFT: EditorWindow, BTTM: EditorWindow, RGHT: EditorWindow>() -> Self {
+        Self {
+            left_panel: Some(TypeId::of::<LFT>()),
+            right_panel: Some(TypeId::of::<RGHT>()),
+            bottom_panel: Some(TypeId::of::<BTTM>()),
+            floating_windows: Vec::new(),
+            next_floating_window_id: 0,
+            active_drag_window: None,
+            active_drop_location: None,
+        }
+    }
     pub(crate) fn next_floating_window_id(&mut self) -> u32 {
         let id = self.next_floating_window_id;
         self.next_floating_window_id += 1;
