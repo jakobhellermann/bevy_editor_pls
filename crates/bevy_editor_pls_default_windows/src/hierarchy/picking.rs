@@ -6,9 +6,9 @@ use bevy_mod_raycast::{
 
 pub struct EditorPickingSet;
 
-/// Prevent the entity from being added to the `EditorPickingSet` for entity selection.
+/// Prevents the entity from being selectable in the editor window.
 #[derive(Component)]
-pub struct IgnoreEditorRayCast;
+pub struct NoEditorPicking;
 
 pub type EditorRayCastSource = bevy_mod_raycast::RayCastSource<EditorPickingSet>;
 pub type EditorRayCastMesh = bevy_mod_raycast::RayCastMesh<EditorPickingSet>;
@@ -48,7 +48,7 @@ fn auto_add_editor_picking_set(
         (Entity, &Handle<Mesh>),
         (
             Without<EditorRayCastMesh>,
-            Without<IgnoreEditorRayCast>,
+            Without<NoEditorPicking>,
             Without<DebugCursorMesh<EditorPickingSet>>,
         ),
     >,
