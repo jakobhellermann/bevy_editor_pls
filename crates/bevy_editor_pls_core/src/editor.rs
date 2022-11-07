@@ -258,11 +258,12 @@ impl Editor {
             .get_resource_mut::<EguiContext>()
             .unwrap()
             .try_ctx_for_window_mut(WindowId::primary())
-            .cloned() {
-                ctx
-            } else {
-                return;
-            };
+            .cloned()
+        {
+            ctx
+        } else {
+            return;
+        };
 
         world.resource_scope(|world, mut editor: Mut<Editor>| {
             world.resource_scope(|world, mut editor_state: Mut<EditorState>| {

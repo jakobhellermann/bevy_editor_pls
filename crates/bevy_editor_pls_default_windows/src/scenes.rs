@@ -1,8 +1,11 @@
-use bevy::{prelude::*, scene::DynamicScene};
+use bevy::prelude::*;
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui::{self, RichText};
 
 const DEFAULT_FILENAME: &str = "scene.scn.ron";
+
+#[derive(Default, Component)]
+pub struct NotInScene;
 
 #[derive(Default)]
 pub struct SceneWindowState {
@@ -37,7 +40,9 @@ impl EditorWindow for SceneWindow {
                 } else {
                     &state.filename
                 };
-                state.scene_save_result = Some(save_world(world, filename));
+                let mut query = world.query_filtered::<Entity, Without<NotInScene>>();
+                let entitys = query.iter(world).collect();
+                state.scene_save_result = Some(save_world(world, filename, entitys));
             }
         });
 
@@ -54,12 +59,18 @@ impl EditorWindow for SceneWindow {
     }
 }
 
-fn save_world(world: &World, name: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+fn save_world(
+    world: &World,
+    name: &str,
+    entities: std::collections::HashSet<Entity>,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let type_registry = world.get_resource::<AppTypeRegistry>().unwrap();
-    let scene = DynamicScene::from_world(&world, type_registry);
+    let mut scene_builder =
+        DynamicSceneBuilder::from_world_with_type_registry(world, type_registry.clone());
+    scene_builder.extract_entities(entities.into_iter());
+    let scene = scene_builder.build();
 
     let ron = scene.serialize_ron(type_registry)?;
     std::fs::write(name, ron)?;
-
     Ok(())
 }
