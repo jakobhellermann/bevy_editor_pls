@@ -59,7 +59,11 @@ impl EditorWindow for SceneWindow {
     }
 }
 
-fn save_world(world: &World, name: &str, entitys: std::collections::HashSet<Entity>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+fn save_world(
+    world: &World,
+    name: &str,
+    entitys: std::collections::HashSet<Entity>,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let type_registry = world.get_resource::<TypeRegistry>().unwrap();
     let scene = from_world(&world, type_registry, entitys);
 
@@ -70,7 +74,11 @@ fn save_world(world: &World, name: &str, entitys: std::collections::HashSet<Enti
 }
 
 /// Create a new dynamic scene from a given world and etity set;
-fn from_world(world: &World, type_registry: &TypeRegistry, entitys: std::collections::HashSet<Entity>) -> DynamicScene {
+fn from_world(
+    world: &World,
+    type_registry: &TypeRegistry,
+    entitys: std::collections::HashSet<Entity>,
+) -> DynamicScene {
     use bevy::scene::DynamicEntity;
     let mut scene = DynamicScene::default();
     let type_registry = type_registry.read();
@@ -83,7 +91,9 @@ fn from_world(world: &World, type_registry: &TypeRegistry, entitys: std::collect
         // and insert it into the dynamic scene.
         // skip entitys not in the set
         for entity in archetype.entities() {
-            if !entitys.contains(entity) {continue;}
+            if !entitys.contains(entity) {
+                continue;
+            }
             entity_map.insert(entity, scene.entities.len());
             scene.entities.push(DynamicEntity {
                 entity: entity.id(),
@@ -100,11 +110,15 @@ fn from_world(world: &World, type_registry: &TypeRegistry, entitys: std::collect
                 .and_then(|registration| registration.data::<ReflectComponent>());
             if let Some(reflect_component) = reflect_component {
                 for entity in archetype.entities() {
-                    if !entitys.contains(entity) {continue;}
+                    if !entitys.contains(entity) {
+                        continue;
+                    }
                     if let Some(component) = reflect_component.reflect(world, *entity) {
-                        scene.entities[*entity_map.get(entity).expect("entity to have been added to map")]
-                            .components
-                            .push(component.clone_value());
+                        scene.entities[*entity_map
+                            .get(entity)
+                            .expect("entity to have been added to map")]
+                        .components
+                        .push(component.clone_value());
                     }
                 }
             }
