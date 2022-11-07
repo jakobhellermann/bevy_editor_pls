@@ -59,8 +59,11 @@ impl EditorWindow for SceneWindow {
     }
 }
 
-
-fn save_world(world: &World, name: &str, entities: std::collections::HashSet<Entity>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+fn save_world(
+    world: &World,
+    name: &str,
+    entities: std::collections::HashSet<Entity>,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let type_registry = world.get_resource::<AppTypeRegistry>().unwrap();
     let mut scene_builder = DynamicSceneBuilder::from_world(world);
     scene_builder.extract_entities(entities.into_iter());

@@ -137,7 +137,10 @@ impl Default for AddWindowState {
 
         state.add("", AddItem::bundle_named::<()>("Empty".into()));
 
-        state.add("NotInScene", AddItem::component::<crate::scenes::NotInScene>());
+        state.add(
+            "NotInScene",
+            AddItem::component::<crate::scenes::NotInScene>(),
+        );
 
         state.add("Core", AddItem::component::<Name>());
         state.add(
