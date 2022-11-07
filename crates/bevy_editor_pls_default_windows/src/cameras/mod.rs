@@ -1,6 +1,7 @@
 pub mod camera_2d_panzoom;
 pub mod camera_3d_free;
 pub mod camera_3d_panorbit;
+use crate::scenes::NotInScene;
 
 use bevy::utils::HashSet;
 use bevy::{prelude::*, render::primitives::Aabb};
@@ -225,7 +226,8 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(EditorCamera)
         .insert(EditorCamera3dFree)
         .insert(HideInEditor)
-        .insert(Name::new("Editor Camera 3D Free"));
+        .insert(Name::new("Editor Camera 3D Free"))
+        .insert(NotInScene);
 
     commands
         .spawn_bundle(Camera3dBundle {
@@ -246,7 +248,8 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(EditorCamera)
         .insert(EditorCamera3dPanOrbit)
         .insert(HideInEditor)
-        .insert(Name::new("Editor Camera 3D Pan/Orbit"));
+        .insert(Name::new("Editor Camera 3D Pan/Orbit"))
+        .insert(NotInScene);
 
     commands
         .spawn_bundle(Camera2dBundle {
@@ -265,7 +268,8 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(EditorCamera)
         .insert(EditorCamera2dPanZoom)
         .insert(HideInEditor)
-        .insert(Name::new("Editor Camera 2D Pan/Zoom"));
+        .insert(Name::new("Editor Camera 2D Pan/Zoom"))
+        .insert(NotInScene);
 }
 
 fn set_editor_cam_active(
