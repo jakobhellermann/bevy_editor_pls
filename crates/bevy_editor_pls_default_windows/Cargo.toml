@@ -1,6 +1,6 @@
 [package]
 name = "bevy_editor_pls_default_windows"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jakobhellermann/bevy_editor_pls"
@@ -10,7 +10,7 @@ description = "In-App editor tools for bevy apps"
 
 [dependencies]
 bevy = { version = "0.9", default-features = false, features = ["bevy_scene"] }
-bevy_editor_pls_core = { version = "0.1", path = "../bevy_editor_pls_core" }
+bevy_editor_pls_core = { version = "0.2", path = "../bevy_editor_pls_core" }
 bevy-inspector-egui = "0.14"
 bevy_mod_raycast = "0.7"
 indexmap = "1.7"

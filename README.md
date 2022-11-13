@@ -125,4 +125,5 @@ fn set_cam3d_controls(
 
 | bevy | bevy\_editor\_pls |
 | ---- | ----------------- |
+| 0.9  | 0.2               |
 | 0.8  | 0.1               |
