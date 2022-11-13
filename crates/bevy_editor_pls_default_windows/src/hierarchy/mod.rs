@@ -92,7 +92,9 @@ fn handle_events(
         if let EditorHierarchyEvent::SelectMesh = event {
             let picked_entity = if editor_state.active {
                 editor_camera.get_single().ok().and_then(|source| {
-                    source.and_then(|source| source.intersect_top().map(|(entity, _)| entity))
+                    source.and_then(|source| {
+                        source.get_nearest_intersection().map(|(entity, _)| entity)
+                    })
                 })
             } else {
                 let source = match non_editor_camera.get_single() {
@@ -107,7 +109,7 @@ fn handle_events(
                     }
                 };
                 source
-                    .and_then(|source| source.intersect_top())
+                    .and_then(|source| source.get_nearest_intersection())
                     .map(|(entity, _)| entity)
             };
 
@@ -359,7 +361,7 @@ impl<'a> Hierarchy<'a> {
         }
         if despawn {
             for entity in self.state.selected.iter() {
-                if let Some(parent) = self.world.get::<Parent>(entity) {
+                /*if let Some(parent) = self.world.get::<Parent>(entity) {
                     if let Some(mut children) = self.world.get_mut::<Children>(parent.get()) {
                         let new_children: Vec<_> = children
                             .iter()
@@ -368,7 +370,7 @@ impl<'a> Hierarchy<'a> {
                             .collect();
                         *children = Children::with(new_children.as_slice());
                     }
-                }
+                }*/
 
                 self.world.despawn(entity);
             }

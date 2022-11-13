@@ -8,10 +8,7 @@ use super::DebugSettingsWindow;
 pub fn setup(app: &mut App) {
     app.init_resource::<EditorTime>()
         .init_resource::<StashedTime>()
-        .add_system_to_stage(
-            CoreStage::First,
-            pause_time.exclusive_system().after(TimeSystem),
-        );
+        .add_system_to_stage(CoreStage::First, pause_time.after(TimeSystem));
 
     use_editor_time_for_egui(app);
 }
@@ -32,7 +29,7 @@ fn use_editor_time_for_egui(app: &mut App) {
     );
 }
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct EditorTime(pub Time);
 
 fn pause_time(
@@ -65,7 +62,7 @@ fn pause_time(
     *previously_paused_time = pause_time;
 }
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 struct StashedTime(Time);
 
 // time > stashed_time

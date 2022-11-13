@@ -3,7 +3,7 @@ use std::any::{Any, TypeId};
 use bevy::ecs::event::Events;
 use bevy::window::{WindowId, WindowMode};
 use bevy::{prelude::*, utils::HashMap};
-use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
+use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings, EguiSystem};
 use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
 use indexmap::IndexMap;
 
@@ -28,7 +28,7 @@ impl Plugin for EditorPlugin {
             .add_event::<EditorEvent>()
             .add_system_to_stage(
                 CoreStage::PostUpdate,
-                Editor::system.exclusive_system().at_start(), // before EguiSystem::ProcessOutput
+                Editor::system.before(EguiSystem::ProcessOutput),
             );
     }
 }
@@ -39,6 +39,7 @@ pub enum EditorEvent {
     FocusSelected,
 }
 
+#[derive(Resource)]
 pub struct EditorState {
     pub active: bool,
     pointer_used: bool,
@@ -86,7 +87,7 @@ impl Default for EditorState {
     }
 }
 
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct Editor {
     windows: IndexMap<TypeId, EditorWindowData>,
     window_states: HashMap<TypeId, EditorWindowState>,
@@ -104,6 +105,7 @@ struct EditorWindowData {
     default_size: (f32, f32),
 }
 
+#[derive(Resource)]
 pub(crate) struct EditorInternalState {
     left_panel: Option<TypeId>,
     right_panel: Option<TypeId>,
@@ -441,7 +443,7 @@ impl Editor {
                     }
                 });
 
-            ui.with_layout(egui::Layout::right_to_left(), |ui| {
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
                 let can_drag = internal_state.active_panel(panel).is_some();
 
                 let is_being_dragged = drag_and_drop::drag_source(ui, drag_id, can_drag, |ui| {

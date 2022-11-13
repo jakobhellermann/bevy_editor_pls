@@ -1,4 +1,4 @@
-use bevy::{input::mouse::MouseMotion, prelude::*};
+use bevy::{input::mouse::MouseMotion, prelude::*, window::CursorGrabMode};
 use bevy_editor_pls_core::EditorState;
 
 use crate::debug_settings::fake_time::EditorTime;
@@ -134,11 +134,11 @@ fn toggle_cursor(
     }
 
     if keyboard_input.just_pressed(KeyCode::LAlt) {
-        window.set_cursor_lock_mode(true);
+        window.set_cursor_grab_mode(CursorGrabMode::Confined);
         window.set_cursor_visibility(false);
     }
     if keyboard_input.just_released(KeyCode::LAlt) {
-        window.set_cursor_lock_mode(false);
+        window.set_cursor_grab_mode(CursorGrabMode::None);
         window.set_cursor_visibility(true);
     }
 }

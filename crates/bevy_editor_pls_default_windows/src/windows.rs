@@ -96,7 +96,7 @@ fn window_ui(windows: &mut Windows, ui: &mut egui::Ui) {
             ui.label("position");
             let mut position = window.position().unwrap_or_default();
             if position.ui(ui, NumberAttributes::min(IVec2::ZERO), &mut cx) {
-                window.set_position(position);
+                window.set_position(bevy::window::MonitorSelection::Current, position);
             }
             ui.end_row();
 
@@ -133,11 +133,12 @@ fn window_ui(windows: &mut Windows, ui: &mut egui::Ui) {
             }
             ui.end_row();
 
-            ui.label("cursor_locked");
-            let mut cursor_locked = window.cursor_locked();
+            // TODO: reenable
+            /*ui.label("cursor_locked");
+            let mut cursor_locked = window.cursor_grab_mode();
             if cursor_locked.ui(ui, Default::default(), &mut cx) {
-                window.set_cursor_lock_mode(cursor_locked);
-            }
+                window.set_cursor_grab_mode(cursor_locked);
+            }*/
             ui.end_row();
         });
     }

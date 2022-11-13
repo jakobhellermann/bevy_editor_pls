@@ -32,7 +32,7 @@ impl AddItem {
     pub fn bundle_named<T: FromWorld + Bundle>(name: Cow<'static, str>) -> Self {
         AddItem::new(name, |world, entity| {
             let bundle = T::from_world(world);
-            world.entity_mut(entity).insert_bundle(bundle);
+            world.entity_mut(entity).insert(bundle);
         })
     }
 
@@ -89,7 +89,7 @@ fn add_ui_button(world: &mut World, ui: &mut egui::Ui, mut cx: EditorWindowConte
 
     let response = ui.menu_button("Add", |ui| {
         add_ui(ui, state).map(|add_item| {
-            let entity = world.spawn().id();
+            let entity = world.spawn_empty().id();
             add_item.add_to_entity(world, entity);
             entity
         })
@@ -162,9 +162,7 @@ impl Default for AddWindowState {
         state.add(
             "2D",
             AddItem::new("Orthographic Camera".into(), |world, entity| {
-                world
-                    .entity_mut(entity)
-                    .insert_bundle(Camera3dBundle::default());
+                world.entity_mut(entity).insert(Camera3dBundle::default());
             }),
         );
         state.add("2D", AddItem::bundle::<SpriteBundle>());
@@ -173,15 +171,13 @@ impl Default for AddWindowState {
         state.add(
             "3D",
             AddItem::new("Perspective Camera".into(), |world, entity| {
-                world
-                    .entity_mut(entity)
-                    .insert_bundle(Camera3dBundle::default());
+                world.entity_mut(entity).insert(Camera3dBundle::default());
             }),
         );
         state.add(
             "3D",
             AddItem::new("Orthographic Camera".into(), |world, entity| {
-                world.entity_mut(entity).insert_bundle(Camera3dBundle {
+                world.entity_mut(entity).insert(Camera3dBundle {
                     projection: OrthographicProjection {
                         scale: 3.0,
                         scaling_mode: ScalingMode::FixedVertical(1.0),
@@ -206,7 +202,7 @@ impl Default for AddWindowState {
                     .unwrap();
                 let material = materials.add(StandardMaterial::default());
 
-                world.entity_mut(entity).insert_bundle(PbrBundle {
+                world.entity_mut(entity).insert(PbrBundle {
                     mesh,
                     material,
                     ..Default::default()

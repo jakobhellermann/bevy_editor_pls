@@ -207,7 +207,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
     let editor_cam_priority = 100;
 
     commands
-        .spawn_bundle(Camera3dBundle {
+        .spawn(Camera3dBundle {
             camera: Camera {
                 priority: editor_cam_priority,
                 is_active: false,
@@ -228,7 +228,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(Name::new("Editor Camera 3D Free"));
 
     commands
-        .spawn_bundle(Camera3dBundle {
+        .spawn(Camera3dBundle {
             camera: Camera {
                 priority: editor_cam_priority,
                 is_active: false,
@@ -249,7 +249,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .insert(Name::new("Editor Camera 3D Pan/Orbit"));
 
     commands
-        .spawn_bundle(Camera2dBundle {
+        .spawn(Camera2dBundle {
             camera: Camera {
                 priority: editor_cam_priority,
                 is_active: false,
@@ -312,7 +312,7 @@ fn set_editor_cam_active(
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Resource, Default)]
 struct PreviouslyActiveCameras(HashSet<Entity>);
 
 fn toggle_editor_cam(

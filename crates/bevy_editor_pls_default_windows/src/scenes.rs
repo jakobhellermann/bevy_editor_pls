@@ -1,4 +1,4 @@
-use bevy::{prelude::*, reflect::TypeRegistry, scene::DynamicScene};
+use bevy::{prelude::*, scene::DynamicScene};
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui::{self, RichText};
 
@@ -55,7 +55,7 @@ impl EditorWindow for SceneWindow {
 }
 
 fn save_world(world: &World, name: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let type_registry = world.get_resource::<TypeRegistry>().unwrap();
+    let type_registry = world.get_resource::<AppTypeRegistry>().unwrap();
     let scene = DynamicScene::from_world(&world, type_registry);
 
     let ron = scene.serialize_ron(type_registry)?;
