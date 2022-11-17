@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy_mod_raycast::{
-    DebugCursorMesh, DefaultRaycastingPlugin as RaycastingPlugin, RayCastMethod,
+    DebugCursorMesh, DefaultRaycastingPlugin as RaycastingPlugin, RaycastMethod,
 };
 
 pub struct EditorPickingSet;
@@ -10,8 +10,8 @@ pub struct EditorPickingSet;
 #[derive(Component)]
 pub struct NoEditorPicking;
 
-pub type EditorRayCastSource = bevy_mod_raycast::RayCastSource<EditorPickingSet>;
-pub type EditorRayCastMesh = bevy_mod_raycast::RayCastMesh<EditorPickingSet>;
+pub type EditorRayCastSource = bevy_mod_raycast::RaycastSource<EditorPickingSet>;
+pub type EditorRayCastMesh = bevy_mod_raycast::RaycastMesh<EditorPickingSet>;
 pub type EditorRayCastState = bevy_mod_raycast::DefaultPluginState<EditorPickingSet>;
 pub type EditorRayCastSystem = bevy_mod_raycast::RaycastSystem<EditorPickingSet>;
 
@@ -37,7 +37,7 @@ fn update_raycast_with_cursor(
     };
 
     for mut pick_source in query.iter_mut() {
-        pick_source.cast_method = RayCastMethod::Screenspace(cursor_position);
+        pick_source.cast_method = RaycastMethod::Screenspace(cursor_position);
     }
 }
 

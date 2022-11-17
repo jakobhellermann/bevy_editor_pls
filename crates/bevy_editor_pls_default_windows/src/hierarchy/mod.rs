@@ -92,7 +92,7 @@ fn handle_events(
         if let EditorHierarchyEvent::SelectMesh = event {
             let picked_entity = if editor_state.active {
                 editor_camera.get_single().ok().and_then(|source| {
-                    source.and_then(|source| source.intersect_top().map(|(entity, _)| entity))
+                    source.and_then(|source| source.get_nearest_intersection().map(|(e,_)| e))
                 })
             } else {
                 let source = match non_editor_camera.get_single() {
@@ -106,9 +106,7 @@ fn handle_events(
                         continue;
                     }
                 };
-                source
-                    .and_then(|source| source.intersect_top())
-                    .map(|(entity, _)| entity)
+                source.and_then(|source| source.get_nearest_intersection().map(|(e,_)| e))
             };
 
             let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
@@ -366,7 +364,7 @@ impl<'a> Hierarchy<'a> {
                             .copied()
                             .filter(|&child| child != entity)
                             .collect();
-                        *children = Children::with(new_children.as_slice());
+                        todo!("font 0.9 for *children = Children::from_entites(new_children.as_slice());");
                     }
                 }
 

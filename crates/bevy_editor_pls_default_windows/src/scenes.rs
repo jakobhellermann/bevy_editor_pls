@@ -1,4 +1,4 @@
-use bevy::{prelude::*, reflect::TypeRegistry, scene::DynamicScene};
+use bevy::prelude::*;
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui::{self, RichText};
 
@@ -64,65 +64,13 @@ fn save_world(
     name: &str,
     entitys: std::collections::HashSet<Entity>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let type_registry = world.get_resource::<TypeRegistry>().unwrap();
-    let scene = from_world(&world, type_registry, entitys);
+    let mut dynamic_scene = DynamicSceneBuilder::from_world(world);
+    dynamic_scene.extract_entities(entitys.iter().cloned());
+    let type_registry = world.resource::<AppTypeRegistry>();
+    let scene = dynamic_scene.build();
 
     let ron = scene.serialize_ron(type_registry)?;
     std::fs::write(name, ron)?;
 
     Ok(())
-}
-
-/// Create a new dynamic scene from a given world and etity set;
-fn from_world(
-    world: &World,
-    type_registry: &TypeRegistry,
-    entitys: std::collections::HashSet<Entity>,
-) -> DynamicScene {
-    use bevy::scene::DynamicEntity;
-    let mut scene = DynamicScene::default();
-    let type_registry = type_registry.read();
-
-    for archetype in world.archetypes().iter() {
-        // a map of an entity to its index in the dynamic scene;
-        // can't use simple offset like bevy's because it may skip an entity
-        let mut entity_map = std::collections::HashMap::new();
-        // Create a new dynamic entity for each entity of the given archetype
-        // and insert it into the dynamic scene.
-        // skip entitys not in the set
-        for entity in archetype.entities() {
-            if !entitys.contains(entity) {
-                continue;
-            }
-            entity_map.insert(entity, scene.entities.len());
-            scene.entities.push(DynamicEntity {
-                entity: entity.id(),
-                components: Vec::new(),
-            });
-        }
-
-        // Add each reflection-powered component to the entity it belongs to.
-        for component_id in archetype.components() {
-            let reflect_component = world
-                .components()
-                .get_info(component_id)
-                .and_then(|info| type_registry.get(info.type_id().unwrap()))
-                .and_then(|registration| registration.data::<ReflectComponent>());
-            if let Some(reflect_component) = reflect_component {
-                for entity in archetype.entities() {
-                    if !entitys.contains(entity) {
-                        continue;
-                    }
-                    if let Some(component) = reflect_component.reflect(world, *entity) {
-                        scene.entities[*entity_map
-                            .get(entity)
-                            .expect("entity to have been added to map")]
-                        .components
-                        .push(component.clone_value());
-                    }
-                }
-            }
-        }
-    }
-    scene
 }

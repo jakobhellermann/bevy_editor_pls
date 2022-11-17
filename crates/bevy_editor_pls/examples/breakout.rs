@@ -41,6 +41,7 @@ enum Collider {
     Paddle,
 }
 
+#[derive(Debug, Resource)]
 struct Scoreboard {
     score: usize,
 }
@@ -49,11 +50,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Add the game's entities to our world
 
     // cameras
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
 
     // paddle
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             transform: Transform {
                 translation: Vec3::new(0.0, -215.0, 0.0),
                 scale: Vec3::new(120.0, 30.0, 0.0),
@@ -69,7 +70,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Collider::Paddle);
     // ball
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             transform: Transform {
                 scale: Vec3::new(30.0, 30.0, 0.0),
                 translation: Vec3::new(0.0, -50.0, 1.0),
@@ -85,7 +86,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             velocity: 400.0 * Vec3::new(0.5, -0.5, 0.0).normalize(),
         });
     // scoreboard
-    commands.spawn_bundle(TextBundle {
+    commands.spawn(TextBundle {
         text: Text {
             sections: vec![
                 TextSection {
@@ -126,7 +127,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // left
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             transform: Transform {
                 translation: Vec3::new(-bounds.x / 2.0, 0.0, 0.0),
                 scale: Vec3::new(wall_thickness, bounds.y + wall_thickness, 1.0),
@@ -141,7 +142,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Collider::Solid);
     // right
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             transform: Transform {
                 translation: Vec3::new(bounds.x / 2.0, 0.0, 0.0),
                 scale: Vec3::new(wall_thickness, bounds.y + wall_thickness, 1.0),
@@ -156,7 +157,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Collider::Solid);
     // bottom
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             transform: Transform {
                 translation: Vec3::new(0.0, -bounds.y / 2.0, 0.0),
                 scale: Vec3::new(bounds.x + wall_thickness, wall_thickness, 1.0),
@@ -171,7 +172,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Collider::Solid);
     // top
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             transform: Transform {
                 translation: Vec3::new(0.0, bounds.y / 2.0, 0.0),
                 scale: Vec3::new(bounds.x + wall_thickness, wall_thickness, 1.0),
@@ -204,7 +205,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ) + bricks_offset;
             // brick
             commands
-                .spawn_bundle(SpriteBundle {
+                .spawn(SpriteBundle {
                     sprite: Sprite {
                         color: brick_color,
                         ..Default::default()

@@ -1,7 +1,7 @@
 use bevy::{
     math::{IVec2, Vec2},
-    prelude::World,
-    window::{PresentMode, WindowId, WindowMode, Windows},
+    prelude::{World, warn},
+    window::{PresentMode, WindowId, WindowMode, Windows, MonitorSelection, CursorGrabMode},
 };
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::{
@@ -96,7 +96,7 @@ fn window_ui(windows: &mut Windows, ui: &mut egui::Ui) {
             ui.label("position");
             let mut position = window.position().unwrap_or_default();
             if position.ui(ui, NumberAttributes::min(IVec2::ZERO), &mut cx) {
-                window.set_position(position);
+                window.set_position(MonitorSelection::Current,  position);
             }
             ui.end_row();
 
@@ -133,10 +133,15 @@ fn window_ui(windows: &mut Windows, ui: &mut egui::Ui) {
             }
             ui.end_row();
 
-            ui.label("cursor_locked");
-            let mut cursor_locked = window.cursor_locked();
+            ui.label("cursor_grabed");
+            warn!("This needs bevy_inspector to add ui for CursorGrabMode just checks if its CursorGrabMode::Locked");
+            let mut cursor_locked = window.cursor_grab_mode() == CursorGrabMode::Locked;
             if cursor_locked.ui(ui, Default::default(), &mut cx) {
-                window.set_cursor_lock_mode(cursor_locked);
+                if cursor_locked {
+                    window.set_cursor_grab_mode(CursorGrabMode::Locked);
+                } else {
+                    window.set_cursor_grab_mode(CursorGrabMode::None);
+                }
             }
             ui.end_row();
         });

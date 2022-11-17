@@ -8,6 +8,7 @@ use std::{
     process::{Command, Stdio},
 };
 
+#[derive(Resource)]
 pub struct DotGraphs {
     pub schedule_graph: String,
     pub render_schedule_graph: String,

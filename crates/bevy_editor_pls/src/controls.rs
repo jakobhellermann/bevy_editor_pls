@@ -137,7 +137,7 @@ impl std::fmt::Display for Action {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct EditorControls {
     pub actions: HashMap<Action, Vec<Binding>>,
 }

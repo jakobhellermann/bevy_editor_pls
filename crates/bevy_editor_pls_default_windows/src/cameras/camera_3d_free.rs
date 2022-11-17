@@ -134,11 +134,11 @@ fn toggle_cursor(
     }
 
     if keyboard_input.just_pressed(KeyCode::LAlt) {
-        window.set_cursor_lock_mode(true);
+        window.set_cursor_grab_mode(bevy::window::CursorGrabMode::Locked);
         window.set_cursor_visibility(false);
     }
     if keyboard_input.just_released(KeyCode::LAlt) {
-        window.set_cursor_lock_mode(false);
+        window.set_cursor_grab_mode(bevy::window::CursorGrabMode::None);
         window.set_cursor_visibility(true);
     }
 }

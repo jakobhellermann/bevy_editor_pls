@@ -10,7 +10,7 @@ pub fn setup(app: &mut App) {
         .init_resource::<StashedTime>()
         .add_system_to_stage(
             CoreStage::First,
-            pause_time.exclusive_system().after(TimeSystem),
+            pause_time.after(TimeSystem),
         );
 
     use_editor_time_for_egui(app);
@@ -32,7 +32,7 @@ fn use_editor_time_for_egui(app: &mut App) {
     );
 }
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 pub struct EditorTime(pub Time);
 
 fn pause_time(
@@ -65,7 +65,7 @@ fn pause_time(
     *previously_paused_time = pause_time;
 }
 
-#[derive(Default)]
+#[derive(Default, Resource)]
 struct StashedTime(Time);
 
 // time > stashed_time
