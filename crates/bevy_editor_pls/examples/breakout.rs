@@ -41,7 +41,7 @@ enum Collider {
     Paddle,
 }
 
-#[derive(Resource)]
+#[derive(Debug, Resource)]
 struct Scoreboard {
     score: usize,
 }
