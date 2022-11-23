@@ -28,7 +28,7 @@ impl Plugin for EditorPlugin {
             .add_event::<EditorEvent>()
             .add_system_to_stage(
                 CoreStage::PostUpdate,
-                Editor::system.before(EguiSystem::ProcessOutput),
+                Editor::system.at_start().label(EguiSystem::ProcessOutput),
             );
     }
 }
