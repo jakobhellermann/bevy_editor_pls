@@ -1,4 +1,4 @@
-use bevy::{prelude::*, scene::DynamicScene};
+use bevy::prelude::*;
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui::{self, RichText};
 
