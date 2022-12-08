@@ -50,7 +50,11 @@ fn camera_movement(
     mut query: Query<(&PanCamControls, &mut Transform, &OrthographicProjection)>,
     mut last_pos: Local<Option<Vec2>>,
 ) {
-    let window = windows.get_primary_mut().unwrap();
+    let window = if let Some(window) = windows.get_primary_mut() {
+        window
+    } else {
+        return;
+    };
 
     // Use position instead of MouseMotion, otherwise we don't get acceleration movement
     let current_pos = match window.cursor_position() {

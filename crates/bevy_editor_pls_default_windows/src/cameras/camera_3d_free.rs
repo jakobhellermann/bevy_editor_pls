@@ -127,7 +127,11 @@ fn toggle_cursor(
     mut windows: ResMut<Windows>,
     editor_state: Res<EditorState>,
 ) {
-    let window = windows.get_primary_mut().unwrap();
+    let window = if let Some(window) = windows.get_primary_mut() {
+        window
+    } else {
+        return;
+    };
 
     if !editor_state.active {
         return;
