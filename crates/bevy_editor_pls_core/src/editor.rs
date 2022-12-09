@@ -254,11 +254,16 @@ impl Editor {
             world.insert_resource(state);
         }
 
-        let ctx = world
+        let ctx = if let Some(ctx) = world
             .get_resource_mut::<EguiContext>()
             .unwrap()
-            .ctx_for_window_mut(WindowId::primary())
-            .clone();
+            .try_ctx_for_window_mut(WindowId::primary())
+            .cloned() {
+                ctx
+            } else {
+                return;
+            };
+
         world.resource_scope(|world, mut editor: Mut<Editor>| {
             world.resource_scope(|world, mut editor_state: Mut<EditorState>| {
                 world.resource_scope(
