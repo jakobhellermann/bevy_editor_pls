@@ -80,7 +80,6 @@ impl EditorWindowContext<'_> {
             .push(crate::editor::FloatingWindow {
                 window: window_id,
                 id: floating_window_id,
-                original_panel: None,
                 initial_position: None,
             });
     }

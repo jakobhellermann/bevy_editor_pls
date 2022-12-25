@@ -1,11 +1,12 @@
-mod drag_and_drop;
-mod editor;
+pub mod editor;
 pub mod editor_window;
 
 pub use editor::{Editor, EditorEvent, EditorPlugin, EditorState};
 
 use bevy::prelude::App;
 use editor_window::EditorWindow;
+
+pub use egui_dock;
 
 pub trait AddEditorWindow {
     fn add_editor_window<W: EditorWindow>(&mut self) -> &mut Self;

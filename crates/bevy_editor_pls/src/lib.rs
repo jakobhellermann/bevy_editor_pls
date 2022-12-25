@@ -4,6 +4,7 @@ pub mod controls;
 use bevy::prelude::Plugin;
 pub use bevy_editor_pls_core::*;
 
+use bevy_editor_pls_core::{editor::EditorInternalState, egui_dock::NodeIndex};
 pub use egui;
 
 #[cfg(feature = "default_windows")]
@@ -47,6 +48,14 @@ impl Plugin for EditorPlugin {
 
             app.insert_resource(controls::EditorControls::default_bindings())
                 .add_system(controls::editor_controls_system);
+
+            let mut internal_state = app.world.resource_mut::<EditorInternalState>();
+
+            let [game, _inspector] =
+                internal_state.split_right::<InspectorWindow>(NodeIndex::root(), 0.75);
+            let [game, _hierarchy] = internal_state.split_left::<HierarchyWindow>(game, 0.2);
+            let [_game, _bottom] = internal_state.split_below::<DebugSettingsWindow>(game, 0.8);
+            internal_state.push_to_focused_leaf::<DiagnosticsWindow>();
         }
     }
 }

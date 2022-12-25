@@ -5,9 +5,9 @@ use bevy::window::{WindowId, WindowMode};
 use bevy::{prelude::*, utils::HashMap};
 use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings, EguiSystem};
 use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
+use egui_dock::NodeIndex;
 use indexmap::IndexMap;
 
-use crate::drag_and_drop;
 use crate::editor_window::{EditorWindow, EditorWindowContext};
 
 pub struct EditorPlugin;
@@ -24,6 +24,7 @@ impl Plugin for EditorPlugin {
         }
 
         app.init_resource::<Editor>()
+            .init_resource::<EditorInternalState>()
             .init_resource::<EditorState>()
             .add_event::<EditorEvent>()
             .add_system_to_stage(
@@ -48,6 +49,7 @@ pub struct EditorState {
     pub viewport: egui::Rect,
 }
 
+#[derive(Debug)]
 enum ActiveEditorInteraction {
     Viewport,
     Editor,
@@ -106,51 +108,80 @@ struct EditorWindowData {
 }
 
 #[derive(Resource)]
-pub(crate) struct EditorInternalState {
-    left_panel: Option<TypeId>,
-    right_panel: Option<TypeId>,
-    bottom_panel: Option<TypeId>,
+pub struct EditorInternalState {
+    tree: egui_dock::Tree<TreeTab>,
     pub(crate) floating_windows: Vec<FloatingWindow>,
-    active_drag_window: Option<WindowPosition>,
-    active_drop_location: Option<DropLocation>,
 
     next_floating_window_id: u32,
 }
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
-pub(crate) enum EditorPanel {
-    Left,
-    Right,
-    Bottom,
+impl Default for EditorInternalState {
+    fn default() -> Self {
+        Self {
+            tree: egui_dock::Tree::new(vec![TreeTab::GameView]),
+            floating_windows: Default::default(),
+            next_floating_window_id: Default::default(),
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+enum TreeTab {
+    GameView,
+    CustomWindow(TypeId),
+}
+
+impl EditorInternalState {
+    pub fn push_to_focused_leaf<W: EditorWindow>(&mut self) {
+        self.tree
+            .push_to_focused_leaf(TreeTab::CustomWindow(TypeId::of::<W>()));
+    }
+
+    pub fn split<W: EditorWindow>(
+        &mut self,
+        parent: NodeIndex,
+        split: egui_dock::Split,
+        fraction: f32,
+    ) -> [NodeIndex; 2] {
+        let node = egui_dock::Node::leaf(TreeTab::CustomWindow(TypeId::of::<W>()));
+        self.tree.split(parent, split, fraction, node)
+    }
+
+    pub fn split_right<W: EditorWindow>(
+        &mut self,
+        parent: NodeIndex,
+        fraction: f32,
+    ) -> [NodeIndex; 2] {
+        self.split::<W>(parent, egui_dock::Split::Right, fraction)
+    }
+    pub fn split_left<W: EditorWindow>(
+        &mut self,
+        parent: NodeIndex,
+        fraction: f32,
+    ) -> [NodeIndex; 2] {
+        self.split::<W>(parent, egui_dock::Split::Left, fraction)
+    }
+    pub fn split_above<W: EditorWindow>(
+        &mut self,
+        parent: NodeIndex,
+        fraction: f32,
+    ) -> [NodeIndex; 2] {
+        self.split::<W>(parent, egui_dock::Split::Above, fraction)
+    }
+    pub fn split_below<W: EditorWindow>(
+        &mut self,
+        parent: NodeIndex,
+        fraction: f32,
+    ) -> [NodeIndex; 2] {
+        self.split::<W>(parent, egui_dock::Split::Below, fraction)
+    }
 }
 
 #[derive(Clone)]
 pub(crate) struct FloatingWindow {
     pub(crate) window: TypeId,
     pub(crate) id: u32,
-    pub(crate) original_panel: Option<EditorPanel>,
     pub(crate) initial_position: Option<egui::Pos2>,
-}
-
-#[derive(Debug)]
-enum WindowPosition {
-    Panel(EditorPanel),
-    #[allow(dead_code)]
-    FloatingWindow(u32),
-}
-impl WindowPosition {
-    fn panel(self) -> Option<EditorPanel> {
-        match self {
-            WindowPosition::Panel(panel) => Some(panel),
-            WindowPosition::FloatingWindow(_) => None,
-        }
-    }
-}
-
-#[derive(Debug)]
-enum DropLocation {
-    Panel(EditorPanel),
-    NewFloatingWindow,
 }
 
 impl EditorInternalState {
@@ -158,33 +189,6 @@ impl EditorInternalState {
         let id = self.next_floating_window_id;
         self.next_floating_window_id += 1;
         id
-    }
-
-    fn active_panel(&self, panel: EditorPanel) -> Option<TypeId> {
-        match panel {
-            EditorPanel::Left => self.left_panel.clone(),
-            EditorPanel::Right => self.right_panel.clone(),
-            EditorPanel::Bottom => self.bottom_panel.clone(),
-        }
-    }
-    fn active_panel_mut(&mut self, panel: EditorPanel) -> &mut Option<TypeId> {
-        match panel {
-            EditorPanel::Left => &mut self.left_panel,
-            EditorPanel::Right => &mut self.right_panel,
-            EditorPanel::Bottom => &mut self.bottom_panel,
-        }
-    }
-
-    fn set_window(&mut self, location: WindowPosition, window: TypeId) {
-        match location {
-            WindowPosition::Panel(panel) => *self.active_panel_mut(panel) = Some(window),
-            WindowPosition::FloatingWindow(id) => {
-                if let Some(floating_window) = self.floating_windows.iter_mut().find(|a| a.id == id)
-                {
-                    floating_window.window = window;
-                }
-            }
-        }
     }
 }
 
@@ -239,21 +243,6 @@ impl Editor {
 
 impl Editor {
     fn system(world: &mut World) {
-        if !world.contains_resource::<EditorInternalState>() {
-            let editor = world.get_resource::<Editor>().unwrap();
-            let mut windows = editor.windows.keys().copied();
-            let state = EditorInternalState {
-                left_panel: windows.next(),
-                right_panel: windows.next(),
-                bottom_panel: windows.next(),
-                floating_windows: Vec::new(),
-                next_floating_window_id: 0,
-                active_drag_window: None,
-                active_drop_location: None,
-            };
-            world.insert_resource(state);
-        }
-
         let ctx = if let Some(ctx) = world
             .get_resource_mut::<EguiContext>()
             .unwrap()
@@ -301,63 +290,27 @@ impl Editor {
             editor_state.pointer_used = ctx.is_pointer_over_area();
             return;
         }
-        let res = egui::SidePanel::left("left_panel")
-            .resizable(true)
-            .show(ctx, |ui| {
-                self.editor_window(world, internal_state, ui, EditorPanel::Left);
-            });
-        self.editor_window_context_menu(res.response, internal_state, EditorPanel::Left);
 
-        let res = egui::SidePanel::right("right_panel")
-            .resizable(true)
-            .show(ctx, |ui| {
-                self.editor_window(world, internal_state, ui, EditorPanel::Right);
-            });
-        self.editor_window_context_menu(res.response, internal_state, EditorPanel::Right);
+        let mut tree = std::mem::replace(
+            &mut internal_state.tree,
+            egui_dock::Tree::new(Vec::default()),
+        );
+        egui_dock::DockArea::new(&mut tree).show(
+            ctx,
+            &mut TabViewer {
+                editor: self,
+                internal_state,
+                world,
+                editor_state,
+            },
+        );
+        internal_state.tree = tree;
+
+        let pointer_pos = ctx.input().pointer.interact_pos();
+        editor_state.pointer_used =
+            pointer_pos.map_or(false, |pos| !editor_state.is_in_viewport(pos));
 
         self.editor_floating_windows(world, ctx, internal_state);
-
-        editor_state.pointer_used = ctx.is_pointer_over_area();
-
-        egui::CentralPanel::default()
-            .frame(egui::Frame::none())
-            .show(ctx, |ui| {
-                let res = egui::TopBottomPanel::bottom("bottom_panel")
-                    .resizable(true)
-                    .default_height(100.0)
-                    .frame(
-                        egui::Frame::none()
-                            .fill(ui.style().visuals.window_fill())
-                            .stroke(ui.style().visuals.window_stroke()),
-                    )
-                    .show_inside(ui, |ui| {
-                        self.editor_window(world, internal_state, ui, EditorPanel::Bottom);
-                    });
-                let res = self.editor_window_context_menu(
-                    res.response,
-                    internal_state,
-                    EditorPanel::Bottom,
-                );
-                editor_state.pointer_used |= pointer_in_response(&res, ctx);
-
-                egui::TopBottomPanel::top("viewport_top_panel")
-                    .frame(egui::Frame::none().inner_margin(ui.spacing().window_margin))
-                    .show(ctx, |ui| {
-                        ui.horizontal(|ui| {
-                            ui.style_mut().spacing.button_padding = egui::vec2(2.0, 0.0);
-                            let height = ui.spacing().interact_size.y;
-                            ui.set_min_size(egui::vec2(ui.available_width(), height));
-
-                            self.editor_viewport_ui(world, ui, internal_state);
-                        });
-                    });
-
-                let (viewport, _) =
-                    ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
-                editor_state.viewport = viewport;
-            });
-
-        self.handle_drag_and_drop(editor_state, internal_state, ctx);
 
         editor_state.listening_for_text = ctx.wants_keyboard_input();
         editor_state.pointer_used |= ctx.is_using_pointer();
@@ -420,68 +373,6 @@ impl Editor {
         });
     }
 
-    fn editor_window(
-        &mut self,
-        world: &mut World,
-        internal_state: &mut EditorInternalState,
-        ui: &mut egui::Ui,
-        panel: EditorPanel,
-    ) {
-        let id = egui::Id::new(panel);
-        let drag_id = id.with("drag");
-
-        let selected_text = internal_state
-            .active_panel(panel)
-            .clone()
-            .map_or_else(|| "Select a window", |id| self.windows[&id].name);
-
-        egui::menu::bar(ui, |ui| {
-            egui::ComboBox::from_id_source("panel select")
-                .selected_text(selected_text)
-                .show_ui(ui, |ui| {
-                    for (id, window) in &self.windows {
-                        if ui.selectable_label(false, window.name).clicked() {
-                            *internal_state.active_panel_mut(panel) = Some(*id);
-                        }
-                    }
-                    if ui.selectable_label(false, "None").clicked() {
-                        *internal_state.active_panel_mut(panel) = None;
-                    }
-                });
-
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                let can_drag = internal_state.active_panel(panel).is_some();
-
-                let is_being_dragged = drag_and_drop::drag_source(ui, drag_id, can_drag, |ui| {
-                    ui.add_enabled(can_drag, egui::Button::new("☰").frame(false));
-                });
-                if is_being_dragged {
-                    internal_state.active_drag_window = Some(WindowPosition::Panel(panel));
-                }
-            });
-        });
-
-        let some_window_is_being_dragged = internal_state.active_drag_window.is_some();
-        let drop_response = drag_and_drop::drop_target(ui, some_window_is_being_dragged, |ui| {
-            if let Some(selected) = internal_state.active_panel(panel) {
-                self.editor_window_inner(world, internal_state, selected, ui);
-            }
-
-            ui.allocate_space(ui.available_size());
-        })
-        .response;
-
-        if ui.memory().is_anything_being_dragged() && drop_response.hovered() {
-            internal_state.active_drop_location = Some(DropLocation::Panel(panel));
-        } else {
-            if let Some(DropLocation::Panel(drop_location)) = internal_state.active_drop_location {
-                if drop_location == panel {
-                    internal_state.active_drop_location = None;
-                }
-            }
-        }
-    }
-
     fn editor_window_inner(
         &mut self,
         world: &mut World,
@@ -499,31 +390,22 @@ impl Editor {
 
     fn editor_window_context_menu(
         &mut self,
-        response: egui::Response,
+        ui: &mut egui::Ui,
         internal_state: &mut EditorInternalState,
-        panel: EditorPanel,
-    ) -> egui::Response {
-        response.context_menu(|ui| {
-            let window_is_set = internal_state.active_panel_mut(panel).is_some();
-
-            if ui
-                .add_enabled(window_is_set, egui::Button::new("Pop out"))
-                .clicked()
-            {
-                let window = std::mem::take(internal_state.active_panel_mut(panel));
-                if let Some(window) = window {
-                    let id = internal_state.next_floating_window_id();
-                    internal_state.floating_windows.push(FloatingWindow {
-                        window,
-                        id,
-                        original_panel: Some(panel),
-                        initial_position: None,
-                    });
-                }
-
-                ui.close_menu();
+        tab: TreeTab,
+    ) {
+        if ui.button("Pop out").clicked() {
+            if let TreeTab::CustomWindow(window) = tab {
+                let id = internal_state.next_floating_window_id();
+                internal_state.floating_windows.push(FloatingWindow {
+                    window,
+                    id,
+                    initial_position: None,
+                });
             }
-        })
+
+            ui.close_menu();
+        }
     }
 
     fn editor_floating_windows(
@@ -560,76 +442,8 @@ impl Editor {
         }
 
         for &to_remove in close_floating_windows.iter().rev() {
-            let floating_window = internal_state.floating_windows.swap_remove(to_remove);
-
-            if let Some(original_panel) = floating_window.original_panel {
-                internal_state
-                    .active_panel_mut(original_panel)
-                    .get_or_insert(floating_window.window);
-            }
+            let _floating_window = internal_state.floating_windows.swap_remove(to_remove);
         }
-    }
-
-    fn handle_drag_and_drop(
-        &mut self,
-        editor_state: &mut EditorState,
-        internal_state: &mut EditorInternalState,
-        ctx: &egui::Context,
-    ) -> Option<()> {
-        if !ctx.input().pointer.any_released() {
-            return None;
-        }
-
-        let active_window = std::mem::take(&mut internal_state.active_drag_window)?;
-        let drop_location = match std::mem::take(&mut internal_state.active_drop_location) {
-            Some(drop_location) => drop_location,
-            None => {
-                let pos = ctx.input().pointer.interact_pos()?;
-                if editor_state.is_in_viewport(pos) {
-                    DropLocation::NewFloatingWindow
-                } else {
-                    return None;
-                }
-            }
-        };
-
-        let window_id = match active_window {
-            WindowPosition::Panel(panel) => {
-                let window_id = std::mem::take(internal_state.active_panel_mut(panel)).unwrap();
-                window_id
-            }
-            WindowPosition::FloatingWindow(id) => {
-                let index = internal_state
-                    .floating_windows
-                    .iter()
-                    .position(|floating_window| floating_window.id == id)
-                    .unwrap();
-                let floating_window = internal_state.floating_windows.swap_remove(index);
-                floating_window.window
-            }
-        };
-
-        match drop_location {
-            DropLocation::Panel(panel) => {
-                let previous_window = std::mem::take(internal_state.active_panel_mut(panel));
-                *internal_state.active_panel_mut(panel) = Some(window_id);
-
-                if let Some(previous_window) = previous_window {
-                    internal_state.set_window(active_window, previous_window);
-                }
-            }
-            DropLocation::NewFloatingWindow => {
-                let id = internal_state.next_floating_window_id();
-                internal_state.floating_windows.push(FloatingWindow {
-                    window: window_id,
-                    id,
-                    original_panel: active_window.panel(),
-                    initial_position: ctx.input().pointer.interact_pos(),
-                });
-            }
-        }
-
-        Some(())
     }
 
     fn editor_viewport_ui(
@@ -648,21 +462,64 @@ impl Editor {
     }
 }
 
+struct TabViewer<'a> {
+    editor: &'a mut Editor,
+    internal_state: &'a mut EditorInternalState,
+    editor_state: &'a mut EditorState,
+    world: &'a mut World,
+}
+impl egui_dock::TabViewer for TabViewer<'_> {
+    type Tab = TreeTab;
+
+    fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
+        match *tab {
+            TreeTab::GameView => {
+                // self.editor
+                // .editor_viewport_ui(self.world, ui, self.internal_state);
+
+                ui.horizontal(|ui| {
+                    ui.style_mut().spacing.button_padding = egui::vec2(2.0, 0.0);
+                    let height = ui.spacing().interact_size.y;
+                    ui.set_min_size(egui::vec2(ui.available_width(), height));
+
+                    self.editor
+                        .editor_viewport_ui(self.world, ui, self.internal_state);
+                });
+
+                let (viewport, _) =
+                    ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
+                self.editor_state.viewport = viewport;
+            }
+            TreeTab::CustomWindow(window_id) => {
+                self.editor
+                    .editor_window_inner(self.world, self.internal_state, window_id, ui);
+            }
+        }
+    }
+
+    fn context_menu(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
+        self.editor
+            .editor_window_context_menu(ui, self.internal_state, *tab);
+    }
+
+    fn title(&mut self, tab: &mut Self::Tab) -> egui::WidgetText {
+        match *tab {
+            TreeTab::GameView => "Viewport".into(),
+            TreeTab::CustomWindow(window_id) => {
+                self.editor.windows.get(&window_id).unwrap().name.into()
+            }
+        }
+    }
+
+    fn clear_background(&self, tab: &Self::Tab) -> bool {
+        !matches!(tab, TreeTab::GameView)
+    }
+}
+
 fn play_pause_button(active: bool, ui: &mut egui::Ui) -> egui::Response {
     let icon = match active {
         true => "▶",
         false => "⏸",
     };
     ui.add(egui::Button::new(icon).frame(false))
-}
-
-fn pointer_in_response(response: &egui::Response, ctx: &egui::Context) -> bool {
-    let interact_pos = match ctx.input().pointer.interact_pos() {
-        Some(pos) => pos,
-        None => return false,
-    };
-    response
-        .rect
-        .expand(-ctx.style().interaction.resize_grab_radius_side)
-        .contains(interact_pos)
 }
