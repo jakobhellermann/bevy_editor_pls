@@ -19,6 +19,10 @@ pub fn setup(app: &mut App) {
     let actual_runner = std::mem::replace(&mut app.runner, Box::new(|_| {}));
 
     app.set_runner(move |mut app| {
+        //  https://github.com/jakobhellermann/bevy_editor_pls/issues/54
+        //  This update call causes bevy to `exit(0)` on macOS. Disable it until
+        //  a fix is found.
+        #[cfg(not(target_os = "macos"))]
         app.update();
 
         let render_app = match app.get_sub_app(RenderApp) {
