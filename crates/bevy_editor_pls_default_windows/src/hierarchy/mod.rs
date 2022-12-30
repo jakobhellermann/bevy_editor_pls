@@ -4,10 +4,12 @@ use bevy::ecs::entity::Entities;
 use bevy::ecs::query::QuerySingleError;
 use bevy::pbr::wireframe::Wireframe;
 use bevy::prelude::*;
+use bevy::reflect::TypeRegistryInternal;
 use bevy::render::{Extract, RenderApp, RenderStage};
-use bevy::utils::HashSet;
 use bevy_editor_pls_core::EditorState;
-use bevy_inspector_egui::egui::{self, CollapsingHeader, RichText, ScrollArea};
+use bevy_inspector_egui::bevy_inspector::guess_entity_name;
+use bevy_inspector_egui::bevy_inspector::hierarchy::{SelectedEntities, SelectionMode};
+use bevy_inspector_egui::egui::{self, ScrollArea};
 
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
@@ -33,9 +35,12 @@ impl EditorWindow for HierarchyWindow {
         ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {
+                let type_registry = world.resource::<AppTypeRegistry>().clone();
+                let type_registry = type_registry.read();
                 Hierarchy {
                     world,
                     state: hierarchy_state,
+                    type_registry: &type_registry,
                     add_state: add_state.as_deref(),
                 }
                 .show(ui);
@@ -123,7 +128,7 @@ fn handle_events(
                 info!("Selecting mesh, found {:?}", entity);
                 state
                     .selected
-                    .select(mode, entity, || std::iter::once(entity));
+                    .select(mode, entity, |_, _| std::iter::once(entity));
             } else {
                 info!("Selecting mesh, found none");
 
@@ -150,259 +155,105 @@ fn extract_wireframe_for_selected(editor: Extract<Res<Editor>>, mut commands: Co
 }
 
 #[derive(Default)]
-pub struct SelectedEntities {
-    entities: Vec<Entity>,
-}
-
-pub enum SelectionMode {
-    Replace,
-    Add,
-    Extend,
-}
-
-impl SelectionMode {
-    pub fn from_ctrl_shift(ctrl: bool, shift: bool) -> SelectionMode {
-        match (ctrl, shift) {
-            (true, _) => SelectionMode::Add,
-            (false, true) => SelectionMode::Extend,
-            (false, false) => SelectionMode::Replace,
-        }
-    }
-}
-
-impl SelectedEntities {
-    pub fn select<I: IntoIterator<Item = Entity>>(
-        &mut self,
-        mode: SelectionMode,
-        entity: Entity,
-        extend_with: impl Fn() -> I,
-    ) {
-        match (self.len(), mode) {
-            (0, _) => {
-                self.insert(entity);
-            }
-            (_, SelectionMode::Replace) => {
-                self.insert_replace(entity);
-            }
-            (_, SelectionMode::Add) => {
-                self.toggle(entity);
-            }
-            (_, SelectionMode::Extend) => {
-                for entity in extend_with() {
-                    self.insert(entity);
-                }
-            }
-        }
-    }
-
-    pub fn contains(&self, entity: Entity) -> bool {
-        self.entities.contains(&entity)
-    }
-    pub fn insert(&mut self, entity: Entity) {
-        if !self.contains(entity) {
-            self.entities.push(entity);
-        }
-    }
-
-    pub fn insert_replace(&mut self, entity: Entity) {
-        self.entities.clear();
-        self.entities.push(entity);
-    }
-
-    pub fn toggle(&mut self, entity: Entity) {
-        if self.remove(entity).is_none() {
-            self.entities.push(entity);
-        }
-    }
-
-    pub fn remove(&mut self, entity: Entity) -> Option<Entity> {
-        if let Some(idx) = self.entities.iter().position(|&e| e == entity) {
-            Some(self.entities.remove(idx))
-        } else {
-            None
-        }
-    }
-    pub fn clear(&mut self) {
-        self.entities.clear();
-    }
-    pub fn retain(&mut self, f: impl Fn(Entity) -> bool) {
-        self.entities.retain(|entity| f(*entity));
-    }
-    pub fn len(&self) -> usize {
-        self.entities.len()
-    }
-    pub fn is_empty(&self) -> bool {
-        self.entities.len() == 0
-    }
-    pub fn iter(&self) -> impl Iterator<Item = Entity> + '_ {
-        self.entities.iter().copied()
-    }
-}
-
-#[derive(Default)]
 pub struct HierarchyState {
     pub selected: SelectedEntities,
-    pub rename_info: (u64, bool, String),
+    rename_info: Option<RenameInfo>,
+}
+
+pub struct RenameInfo {
+    entity: Entity,
+    renaming: bool,
+    current_rename: String,
 }
 
 struct Hierarchy<'a> {
     world: &'a mut World,
     state: &'a mut HierarchyState,
+    type_registry: &'a TypeRegistryInternal,
     add_state: Option<&'a AddWindowState>,
 }
 
 impl<'a> Hierarchy<'a> {
     fn show(&mut self, ui: &mut egui::Ui) {
-        let mut root_query = self
-            .world
-            .query_filtered::<Entity, (Without<Parent>, Without<HideInEditor>)>();
+        let mut despawn_recursive = None;
+        let mut despawn = None;
 
-        let always_open: HashSet<Entity> = self
-            .state
-            .selected
-            .iter()
-            .flat_map(|selected| {
-                std::iter::successors(Some(selected), |&entity| {
-                    self.world.get::<Parent>(entity).map(|parent| parent.get())
-                })
-                .skip(1)
-            })
-            .collect();
+        let HierarchyState {
+            selected,
+            rename_info,
+        } = self.state;
 
-        let mut entities: Vec<_> = root_query.iter(self.world).collect();
-        entities.sort();
-
-        for entity in entities {
-            self.entity_ui(entity, ui, &always_open);
-        }
-    }
-
-    fn entity_ui(&mut self, entity: Entity, ui: &mut egui::Ui, always_open: &HashSet<Entity>) {
-        let selected = self.state.selected.contains(entity);
-
-        let entity_name = bevy_inspector_egui::world_inspector::entity_name(self.world, entity);
-        let mut text = RichText::new(entity_name.clone());
-        if selected {
-            text = text.strong();
-        }
-
-        let has_children = self
-            .world
-            .get::<Children>(entity)
-            .map_or(false, |children| children.len() > 0);
-
-        let open = if !has_children {
-            Some(false)
-        } else if always_open.contains(&entity) {
-            Some(true)
-        } else {
-            None
-        };
-
-        let (renamed_entity_bits, renaming, current_rename) = &mut self.state.rename_info;
-        if *renaming && *renamed_entity_bits == entity.to_bits() {
-            rename_entity_ui(ui, entity, current_rename, renaming, self.world);
-
-            return;
-        }
-
-        #[allow(deprecated)]
-        // no idea how to do this with CollapsingState::show_header, TODO figure out
-        let response = CollapsingHeader::new(text)
-            .id_source(entity)
-            .selectable(true)
-            .selected(selected)
-            .open(open)
-            .show(ui, |ui| {
-                let children = self.world.get::<Children>(entity);
-                if let Some(children) = children {
-                    let children = children.to_vec();
-                    ui.label("Children");
-                    for &child in children.iter() {
-                        self.entity_ui(child, ui, always_open);
-                    }
-                } else {
-                    ui.label("No children");
+        bevy_inspector_egui::bevy_inspector::hierarchy::Hierarchy {
+            extra_state: rename_info,
+            world: self.world,
+            type_registry: self.type_registry,
+            selected,
+            context_menu: Some(&mut |ui, entity, world, rename_info| {
+                if ui.button("Despawn").clicked() {
+                    despawn_recursive = Some(entity);
                 }
-            });
 
-        let mut despawn = false;
-        let mut despawn_recursive = false;
-        let header_response = response.header_response.context_menu(|ui| {
-            if ui.button("Despawn").clicked() {
-                despawn_recursive = true;
-            }
+                if ui.button("Remove keeping children").clicked() {
+                    despawn = Some(entity);
+                }
 
-            if ui.button("Remove keeping children").clicked() {
-                despawn = true;
-            }
+                if ui.button("Rename").clicked() {
+                    let entity_name = guess_entity_name(world, self.type_registry, entity);
+                    *rename_info = Some(RenameInfo {
+                        entity,
+                        renaming: true,
+                        current_rename: entity_name,
+                    });
+                    ui.close_menu();
+                }
 
-            if ui.button("Rename").clicked() {
-                self.state.rename_info = (entity.to_bits(), true, entity_name);
-                ui.close_menu();
-            }
+                if let Some(add_state) = self.add_state {
+                    ui.menu_button("Add", |ui| {
+                        if let Some(add_item) = add_ui(ui, add_state) {
+                            add_item.add_to_entity(world, entity);
+                            ui.close_menu();
+                        }
+                    });
+                }
+            }),
+            shortcircuit_entity: Some(&mut |ui, entity, world, rename_info| {
+                if let Some(rename_info) = rename_info {
+                    if rename_info.renaming && rename_info.entity == entity {
+                        rename_entity_ui(ui, rename_info, world);
 
-            if let Some(add_state) = self.add_state {
-                ui.menu_button("Add", |ui| {
-                    if let Some(add_item) = add_ui(ui, add_state) {
-                        add_item.add_to_entity(self.world, entity);
-                        ui.close_menu();
+                        return true;
                     }
-                });
-            }
-        });
+                }
 
-        if selected && ui.input().key_pressed(egui::Key::Delete) {
-            despawn_recursive = true;
+                false
+            }),
+        }
+        .show::<Without<HideInEditor>>(ui);
+
+        if let Some(entity) = despawn_recursive {
+            bevy::hierarchy::despawn_with_children_recursive(self.world, entity);
+        }
+        if let Some(entity) = despawn {
+            self.world.entity_mut(entity).despawn();
+            self.state.selected.remove(entity);
         }
 
-        if despawn_recursive {
-            despawn_with_children_recursive(self.world, entity);
-        }
-        if despawn {
+        if ui.input().key_pressed(egui::Key::Delete) {
             for entity in self.state.selected.iter() {
-                /*if let Some(parent) = self.world.get::<Parent>(entity) {
-                    if let Some(mut children) = self.world.get_mut::<Children>(parent.get()) {
-                        let new_children: Vec<_> = children
-                            .iter()
-                            .copied()
-                            .filter(|&child| child != entity)
-                            .collect();
-                        *children = Children::with(new_children.as_slice());
-                    }
-                }*/
-
-                self.world.despawn(entity);
+                self.world.entity_mut(entity).despawn_recursive();
             }
             self.state.selected.clear();
-        }
-
-        if header_response.clicked() {
-            let selection_mode = SelectionMode::from_ctrl_shift(
-                ui.input().modifiers.ctrl,
-                ui.input().modifiers.shift,
-            );
-            let extend_with = || std::iter::once(entity); // TODO implement extending selection
-            self.state
-                .selected
-                .select(selection_mode, entity, extend_with);
         }
     }
 }
 
-fn rename_entity_ui(
-    ui: &mut egui::Ui,
-    entity: Entity,
-    current_rename: &mut String,
-    renaming: &mut bool,
-    world: &mut World,
-) {
+fn rename_entity_ui(ui: &mut egui::Ui, rename_info: &mut RenameInfo, world: &mut World) {
     use egui::epaint::text::cursor::CCursor;
     use egui::widgets::text_edit::{CCursorRange, TextEdit, TextEditOutput};
 
-    let id = egui::Id::new(entity);
+    let id = egui::Id::new(rename_info.entity);
 
-    let edit = TextEdit::singleline(current_rename).id(id);
+    let edit = TextEdit::singleline(&mut rename_info.current_rename).id(id);
     let TextEditOutput {
         response,
         state: mut edit_state,
@@ -411,15 +262,15 @@ fn rename_entity_ui(
 
     // Runs once to end renaming
     if response.lost_focus() {
-        *renaming = false;
+        rename_info.renaming = false;
 
-        match world.get_entity_mut(entity) {
+        match world.get_entity_mut(rename_info.entity) {
             Some(mut ent_mut) => match ent_mut.get_mut::<Name>() {
                 Some(mut name) => {
-                    name.set(current_rename.clone());
+                    name.set(rename_info.current_rename.clone());
                 }
                 None => {
-                    ent_mut.insert(Name::new(current_rename.clone()));
+                    ent_mut.insert(Name::new(rename_info.current_rename.clone()));
                 }
             },
             None => {
@@ -434,7 +285,7 @@ fn rename_entity_ui(
 
         edit_state.set_ccursor_range(Some(CCursorRange::two(
             CCursor::new(0),
-            CCursor::new(current_rename.len()),
+            CCursor::new(rename_info.current_rename.len()),
         )));
     }
 

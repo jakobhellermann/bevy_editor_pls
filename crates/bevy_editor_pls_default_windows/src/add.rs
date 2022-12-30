@@ -97,7 +97,7 @@ fn add_ui_button(world: &mut World, ui: &mut egui::Ui, mut cx: EditorWindowConte
 
     if let Some(Some(entity)) = response.inner {
         if let Some(hierarchy_state) = cx.state_mut::<HierarchyWindow>() {
-            hierarchy_state.selected.insert_replace(entity);
+            hierarchy_state.selected.select_replace(entity);
         }
     }
 }

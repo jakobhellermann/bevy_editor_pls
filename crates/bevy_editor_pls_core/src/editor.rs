@@ -3,8 +3,8 @@ use std::any::{Any, TypeId};
 use bevy::ecs::event::Events;
 use bevy::window::{WindowId, WindowMode};
 use bevy::{prelude::*, utils::HashMap};
-use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings, EguiSystem};
-use bevy_inspector_egui::{InspectableRegistry, WorldInspectorParams};
+use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSystem};
+use bevy_inspector_egui::DefaultInspectorConfigPlugin;
 use egui_dock::NodeIndex;
 use indexmap::IndexMap;
 
@@ -13,14 +13,11 @@ use crate::editor_window::{EditorWindow, EditorWindowContext};
 pub struct EditorPlugin;
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
-        if !app.world.contains_resource::<EguiSettings>() {
-            app.add_plugin(EguiPlugin);
+        if !app.is_plugin_added::<DefaultInspectorConfigPlugin>() {
+            app.add_plugin(DefaultInspectorConfigPlugin);
         }
-        if !app.world.contains_resource::<WorldInspectorParams>() {
-            app.world
-                .get_resource_or_insert_with(WorldInspectorParams::default);
-            app.world
-                .get_resource_or_insert_with(InspectableRegistry::default);
+        if !app.is_plugin_added::<EguiPlugin>() {
+            app.add_plugin(EguiPlugin);
         }
 
         app.init_resource::<Editor>()

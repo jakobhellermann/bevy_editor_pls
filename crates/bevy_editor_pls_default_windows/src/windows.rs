@@ -1,13 +1,14 @@
 use bevy::{
     math::{IVec2, Vec2},
-    prelude::World,
+    prelude::{AppTypeRegistry, World},
+    reflect::TypeRegistryInternal,
     window::{PresentMode, WindowId, WindowMode, Windows},
 };
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::{
     egui,
-    options::{NumberAttributes, Vec2dAttributes},
-    Inspectable,
+    inspector_options::std_options::NumberOptions,
+    reflect_inspector::{Context, InspectorUi},
 };
 
 pub struct WindowsWindow;
@@ -18,13 +19,18 @@ impl EditorWindow for WindowsWindow {
     const NAME: &'static str = "Windows";
 
     fn ui(world: &mut World, _: EditorWindowContext, ui: &mut egui::Ui) {
+        let type_registry = world.resource::<AppTypeRegistry>().clone();
+        let type_registry = type_registry.read();
+
         let mut windows = world.get_resource_mut::<Windows>().unwrap();
-        window_ui(&mut *windows, ui);
+        window_ui(&mut *windows, ui, &type_registry);
     }
 }
 
-fn window_ui(windows: &mut Windows, ui: &mut egui::Ui) {
-    let mut cx = bevy_inspector_egui::Context::new_shared(None);
+fn window_ui(windows: &mut Windows, ui: &mut egui::Ui, type_registry: &TypeRegistryInternal) {
+    let mut context = Context::default();
+    let mut env = InspectorUi::new_no_short_circuit(&type_registry, &mut context);
+    let id = egui::Id::null();
 
     for window in windows.iter_mut() {
         let name = match window.id() {
@@ -86,49 +92,59 @@ fn window_ui(windows: &mut Windows, ui: &mut egui::Ui) {
 
             ui.label("size");
             let mut size = Vec2::new(window.width(), window.height());
-            let mut size_attributes = Vec2dAttributes::positive();
+            let mut size_attributes = NumberOptions::at_least(Vec2::ONE);
             size_attributes.speed = 1.0;
-            if size.ui(ui, size_attributes, &mut cx) {
+            if env.ui_for_reflect_with_options(&mut size, ui, id, &size_attributes) {
                 window.set_resolution(size.x, size.y);
             }
             ui.end_row();
 
             ui.label("position");
             let mut position = window.position().unwrap_or_default();
-            if position.ui(ui, NumberAttributes::min(IVec2::ZERO), &mut cx) {
+            if env.ui_for_reflect_with_options(
+                &mut position,
+                ui,
+                id,
+                &NumberOptions::at_least(IVec2::ZERO),
+            ) {
                 window.set_position(bevy::window::MonitorSelection::Current, position);
             }
             ui.end_row();
 
             ui.label("scale_factor_override");
             let mut scale_factor_override = window.scale_factor();
-            let scale_factor_attrs = NumberAttributes {
+            let scale_factor_attrs = NumberOptions {
                 min: Some(0.01),
                 speed: 0.001,
                 ..Default::default()
             };
-            if scale_factor_override.ui(ui, scale_factor_attrs, &mut cx) {
+            if env.ui_for_reflect_with_options(
+                &mut scale_factor_override,
+                ui,
+                id,
+                &scale_factor_attrs,
+            ) {
                 window.set_scale_factor_override(Some(scale_factor_override));
             }
             ui.end_row();
 
             ui.label("title");
             let mut title = window.title().to_string();
-            if title.ui(ui, Default::default(), &mut cx) {
+            if env.ui_for_reflect(&mut title, ui) {
                 window.set_title(title);
             }
             ui.end_row();
 
             ui.label("resizable");
             let mut resizable = window.resizable();
-            if resizable.ui(ui, Default::default(), &mut cx) {
+            if env.ui_for_reflect(&mut resizable, ui) {
                 window.set_resizable(resizable);
             }
             ui.end_row();
 
             ui.label("cursor_visible");
             let mut cursor_visible = window.cursor_visible();
-            if cursor_visible.ui(ui, Default::default(), &mut cx) {
+            if env.ui_for_reflect(&mut cursor_visible, ui) {
                 window.set_cursor_visibility(cursor_visible);
             }
             ui.end_row();

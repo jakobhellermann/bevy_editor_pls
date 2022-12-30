@@ -4,12 +4,13 @@ pub mod fake_time;
 use bevy::{
     pbr::wireframe::WireframeConfig,
     prelude::*,
+    reflect::TypeRegistryInternal,
     render::{render_resource::WgpuFeatures, settings::WgpuSettings},
 };
 use bevy_editor_pls_core::editor_window::EditorWindow;
 use bevy_inspector_egui::{
     egui::{self, Grid},
-    Inspectable,
+    reflect_inspector::ui_for_value,
 };
 
 pub struct DebugSettingsWindowState {
@@ -48,8 +49,11 @@ impl EditorWindow for DebugSettingsWindow {
         mut cx: bevy_editor_pls_core::editor_window::EditorWindowContext,
         ui: &mut egui::Ui,
     ) {
+        let type_registry = world.resource::<AppTypeRegistry>().clone();
+        let type_registry = type_registry.read();
+
         let state = cx.state_mut::<DebugSettingsWindow>().unwrap();
-        debug_ui(world, state, ui);
+        debug_ui(world, state, ui, &type_registry);
     }
 
     fn app_setup(app: &mut App) {
@@ -58,12 +62,17 @@ impl EditorWindow for DebugSettingsWindow {
     }
 }
 
-fn debug_ui(world: &mut World, state: &mut DebugSettingsWindowState, ui: &mut egui::Ui) {
+fn debug_ui(
+    world: &mut World,
+    state: &mut DebugSettingsWindowState,
+    ui: &mut egui::Ui,
+    type_registry: &TypeRegistryInternal,
+) {
     let available_size = ui.available_size();
     let horizontal = available_size.x > available_size.y;
 
     horizontal_if(ui, horizontal, |ui| {
-        debug_ui_options(world, state, ui);
+        debug_ui_options(world, state, ui, type_registry);
 
         if !horizontal {
             ui.separator();
@@ -85,10 +94,13 @@ pub fn horizontal_if<R>(
     }
 }
 
-fn debug_ui_options(world: &mut World, state: &mut DebugSettingsWindowState, ui: &mut egui::Ui) {
+fn debug_ui_options(
+    world: &mut World,
+    state: &mut DebugSettingsWindowState,
+    ui: &mut egui::Ui,
+    type_registry: &TypeRegistryInternal,
+) {
     Grid::new("debug settings").show(ui, |ui| {
-        let mut inspect_cx = bevy_inspector_egui::Context::new_shared(None);
-
         ui.label("Pause time");
         ui.checkbox(&mut state.pause_time, "");
         ui.end_row();
@@ -106,7 +118,7 @@ fn debug_ui_options(world: &mut World, state: &mut DebugSettingsWindowState, ui:
         }
         ui.scope(|ui| {
             ui.set_enabled(wireframe_enabled);
-            if state.wireframes.ui(ui, Default::default(), &mut inspect_cx) {
+            if ui_for_value(&mut state.wireframes, ui, type_registry) {
                 world
                     .get_resource_or_insert_with(WireframeConfig::default)
                     .global = state.wireframes;
