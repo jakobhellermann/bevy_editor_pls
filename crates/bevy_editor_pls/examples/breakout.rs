@@ -21,27 +21,30 @@ fn main() {
                 .with_system(ball_movement_system),
         )
         .add_system(scoreboard_system)
+        .register_type::<Paddle>()
+        .register_type::<Ball>()
+        .register_type::<Collider>()
         .run();
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 struct Paddle {
     speed: f32,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 struct Ball {
     velocity: Vec3,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 enum Collider {
     Solid,
     Scorable,
     Paddle,
 }
 
-#[derive(Resource)]
+#[derive(Reflect, Resource)]
 struct Scoreboard {
     score: usize,
 }
