@@ -30,14 +30,16 @@ fn inspector(
     }
 
     egui::ScrollArea::vertical().show(ui, |ui| {
-        match inspected.len() {
-            1 => {
-                let entity = inspected.iter().next().unwrap();
+        match inspected.as_slice() {
+            &[entity] => {
                 bevy_inspector_egui::bevy_inspector::ui_for_entity(world, entity, ui, false);
-                add_ui(ui, entity, world, add_window_state);
+                add_ui(ui, &[entity], world, add_window_state);
             }
-            _ => {
-                ui.label("Inspector for multiple entities not yet implemented.");
+            entities => {
+                bevy_inspector_egui::bevy_inspector::ui_for_entities_shared_components(
+                    world, entities, ui,
+                );
+                add_ui(ui, entities, world, add_window_state);
             }
         };
     });
@@ -45,7 +47,7 @@ fn inspector(
 
 fn add_ui(
     ui: &mut egui::Ui,
-    entity: Entity,
+    entities: &[Entity],
     world: &mut World,
     add_window_state: Option<&AddWindowState>,
 ) {
@@ -54,7 +56,9 @@ fn add_ui(
         ui.with_layout(layout, |ui| {
             ui.menu_button("+", |ui| {
                 if let Some(add_item) = crate::add::add_ui(ui, add_window_state) {
-                    add_item.add_to_entity(world, entity);
+                    for entity in entities {
+                        add_item.add_to_entity(world, *entity);
+                    }
                 }
             });
         });
