@@ -1,5 +1,4 @@
 pub mod debugdump;
-pub mod fake_time;
 
 use bevy::{
     pbr::wireframe::WireframeConfig,
@@ -57,7 +56,6 @@ impl EditorWindow for DebugSettingsWindow {
     }
 
     fn app_setup(app: &mut App) {
-        fake_time::setup(app);
         debugdump::setup(app);
     }
 }
@@ -102,7 +100,14 @@ fn debug_ui_options(
 ) {
     Grid::new("debug settings").show(ui, |ui| {
         ui.label("Pause time");
-        ui.checkbox(&mut state.pause_time, "");
+        if ui.checkbox(&mut state.pause_time, "").changed() {
+            let mut time = world.resource_mut::<Time>();
+            if state.pause_time {
+                time.pause();
+            } else {
+                time.unpause();
+            }
+        }
         ui.end_row();
 
         let wireframe_enabled = world
