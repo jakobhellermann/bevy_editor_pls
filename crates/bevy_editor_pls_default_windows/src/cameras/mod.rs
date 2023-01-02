@@ -3,6 +3,7 @@ pub mod camera_3d_free;
 pub mod camera_3d_panorbit;
 use crate::scenes::NotInScene;
 
+use bevy::render::camera::RenderTarget;
 use bevy::utils::HashSet;
 use bevy::{prelude::*, render::primitives::Aabb};
 use bevy_editor_pls_core::{
@@ -331,7 +332,12 @@ fn toggle_editor_cam(
         if let EditorEvent::Toggle { now_active } = *event {
             if now_active {
                 // Add all currently active cameras
-                for (e, mut cam) in cam_query.iter_mut().filter(|(_e, c)| c.is_active) {
+                for (e, mut cam) in cam_query
+                    .iter_mut()
+                    //  Ignore non-Window render targets
+                    .filter(|(_e, c)| matches!(c.target, RenderTarget::Window(_)))
+                    .filter(|(_e, c)| c.is_active)
+                {
                     prev_active_cams.0.insert(e);
                     cam.is_active = false;
                 }
