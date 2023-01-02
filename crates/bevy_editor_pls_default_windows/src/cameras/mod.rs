@@ -233,7 +233,8 @@ fn spawn_editor_cameras(mut commands: Commands) {
     commands
         .spawn(Camera3dBundle {
             camera: Camera {
-                priority: editor_cam_priority,
+                //  Prevent multiple cameras from having the same priority.
+                priority: editor_cam_priority + 1,
                 is_active: false,
                 ..default()
             },
@@ -255,7 +256,8 @@ fn spawn_editor_cameras(mut commands: Commands) {
     commands
         .spawn(Camera2dBundle {
             camera: Camera {
-                priority: editor_cam_priority,
+                //  Prevent multiple cameras from having the same priority.
+                priority: editor_cam_priority + 2,
                 is_active: false,
                 ..default()
             },
