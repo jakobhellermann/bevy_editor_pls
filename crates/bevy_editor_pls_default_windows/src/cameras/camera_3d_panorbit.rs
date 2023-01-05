@@ -99,14 +99,14 @@ fn pan_orbit_camera(
         any = true;
         let window_size = get_primary_window_size(&windows);
         let delta_x = {
-            let delta = rotation_move.x / window_size.x * std::f32::consts::PI * 2.0;
+            let delta = rotation_move.x / 180.0;
             if pan_orbit.upside_down {
                 -delta
             } else {
                 delta
             }
         };
-        let delta_y = rotation_move.y / window_size.y * std::f32::consts::PI;
+        let delta_y = rotation_move.y / 180.0;
         let yaw = Quat::from_rotation_y(-delta_x);
         let pitch = Quat::from_rotation_x(-delta_y);
         transform.rotation = yaw * transform.rotation; // rotate around global y axis
@@ -127,7 +127,7 @@ fn pan_orbit_camera(
         pan_orbit.focus += translation;
     } else if scroll.abs() > 0.0 {
         any = true;
-        pan_orbit.radius -= scroll * pan_orbit.radius * 0.2;
+        pan_orbit.radius -= scroll * pan_orbit.radius * 0.01;
         // dont allow zoom to reach zero or you get stuck
         pan_orbit.radius = f32::max(pan_orbit.radius, 0.05);
     }
