@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 0.3
+- add `NotInScene` component to skip entity when saving to scene
+- update egui etc.
+- update to bevy-inspector-egui 0.16
+- use `Time` pausing instead of previous hack
+- add multiediting
+
+## Version 0.2
+- add right-click despawn options
+- fix 3d camera
+- allo marking entities as not pickable
+
 ## Version 0.1.1
 - add ability to toggle game UI in editor view
 
