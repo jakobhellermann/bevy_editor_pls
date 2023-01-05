@@ -113,11 +113,9 @@ fn window_ui(windows: &mut Windows, ui: &mut egui::Ui, type_registry: &TypeRegis
 
             ui.label("scale_factor_override");
             let mut scale_factor_override = window.scale_factor();
-            let scale_factor_attrs = NumberOptions {
-                min: Some(0.01),
-                speed: 0.001,
-                ..Default::default()
-            };
+            let mut scale_factor_attrs = NumberOptions::default();
+            scale_factor_attrs.min = Some(0.01);
+            scale_factor_attrs.speed = 0.001;
             if env.ui_for_reflect_with_options(
                 &mut scale_factor_override,
                 ui,

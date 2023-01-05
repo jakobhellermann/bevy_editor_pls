@@ -39,10 +39,7 @@ impl EditorWindow for RendererWindow {
                         &mut size,
                         ui,
                         egui::Id::null(),
-                        &NumberOptions {
-                            speed: 4.0,
-                            ..NumberOptions::at_least(1)
-                        },
+                        &NumberOptions::at_least(1).with_speed(4.0),
                     ) {
                         directional_light_shadow_map.size = size;
                     }

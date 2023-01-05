@@ -32,7 +32,7 @@ fn inspector(
     egui::ScrollArea::vertical().show(ui, |ui| {
         match inspected.as_slice() {
             &[entity] => {
-                bevy_inspector_egui::bevy_inspector::ui_for_entity(world, entity, ui, false);
+                bevy_inspector_egui::bevy_inspector::ui_for_entity(world, entity, ui);
                 add_ui(ui, &[entity], world, add_window_state);
             }
             entities => {

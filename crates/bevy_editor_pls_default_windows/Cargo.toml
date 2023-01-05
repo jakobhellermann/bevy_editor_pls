@@ -11,7 +11,7 @@ description = "In-App editor tools for bevy apps"
 [dependencies]
 bevy = { version = "0.9", default-features = false, features = ["bevy_scene", "bevy_text", "bevy_ui"] }
 bevy_editor_pls_core = { version = "0.2", path = "../bevy_editor_pls_core" }
-bevy-inspector-egui = "0.16.0-pre.2"
+bevy-inspector-egui = "0.16.0"
 bevy_mod_raycast = "0.7"
 indexmap = "1.7"
 pretty-type-name = "1.0"
