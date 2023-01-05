@@ -36,7 +36,7 @@ impl Default for FlycamControls {
         Self {
             yaw: Default::default(),
             pitch: Default::default(),
-            sensitivity: 6.0,
+            sensitivity: 1.0,
             enable_movement: false,
             enable_look: false,
             key_forward: KeyCode::W,
@@ -108,16 +108,12 @@ fn camera_look(
         return;
     }
 
-    flycam.yaw -= delta.x * flycam.sensitivity * time.raw_delta_seconds();
-    flycam.pitch -= delta.y * flycam.sensitivity * time.raw_delta_seconds();
+    flycam.yaw -= delta.x / 180.0 * flycam.sensitivity;
+    flycam.pitch -= delta.y / 180.0 * flycam.sensitivity;
 
-    flycam.pitch = flycam.pitch.clamp(-89.0, 89.9);
-    // println!("pitch: {}, yaw: {}", options.pitch, options.yaw);
+    flycam.pitch = flycam.pitch.clamp(-std::f32::consts::PI / 2.0, std::f32::consts::PI / 2.0);
 
-    let yaw_radians = flycam.yaw.to_radians();
-    let pitch_radians = flycam.pitch.to_radians();
-
-    transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw_radians, pitch_radians, 0.0);
+    transform.rotation = Quat::from_euler(EulerRot::YXZ, flycam.yaw, flycam.pitch, 0.0);
 }
 
 fn toggle_cursor(
