@@ -5,6 +5,7 @@ use bevy::prelude::Plugin;
 pub use bevy_editor_pls_core::*;
 
 use bevy_editor_pls_core::{editor::EditorInternalState, egui_dock::NodeIndex};
+use bevy_framepace::FramepacePlugin;
 pub use egui;
 
 #[cfg(feature = "default_windows")]
@@ -19,6 +20,10 @@ pub struct EditorPlugin;
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugin(bevy_editor_pls_core::EditorPlugin);
+
+        if !app.is_plugin_added::<FramepacePlugin>() {
+            app.add_plugin(FramepacePlugin);
+        }
 
         #[cfg(feature = "default_windows")]
         {
