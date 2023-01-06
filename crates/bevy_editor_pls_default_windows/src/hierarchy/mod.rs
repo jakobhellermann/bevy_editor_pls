@@ -1,7 +1,6 @@
 pub mod picking;
 
 use bevy::ecs::entity::Entities;
-use bevy::ecs::query::QuerySingleError;
 use bevy::pbr::wireframe::Wireframe;
 use bevy::prelude::*;
 use bevy::reflect::TypeRegistryInternal;
@@ -15,9 +14,10 @@ use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor,
 };
+use bevy_mod_picking::backends::egui::EguiPointer;
+use bevy_mod_picking::prelude::{IsPointerEvent, PointerClick};
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
-use crate::cameras::ActiveEditorCamera;
 use crate::debug_settings::DebugSettingsWindow;
 
 #[derive(Component)]
@@ -49,8 +49,7 @@ impl EditorWindow for HierarchyWindow {
 
     fn app_setup(app: &mut bevy::prelude::App) {
         picking::setup(app);
-        app.add_event::<EditorHierarchyEvent>()
-            .add_system_to_stage(CoreStage::PostUpdate, clear_removed_entites)
+        app.add_system_to_stage(CoreStage::PostUpdate, clear_removed_entites)
             .add_system(handle_events);
 
         app.sub_app_mut(RenderApp)
@@ -63,81 +62,32 @@ fn clear_removed_entites(mut editor: ResMut<Editor>, entities: &Entities) {
     state.selected.retain(|entity| entities.contains(entity));
 }
 
-pub enum EditorHierarchyEvent {
-    SelectMesh,
-}
-
 fn handle_events(
-    mut select_mesh_events: EventReader<EditorHierarchyEvent>,
-    // mut editor_events: EventReader<EditorEvent>,
-    // mut raycast_state: ResMut<EditorRayCastState>,
-    editor_camera: Query<Option<&picking::EditorRayCastSource>, With<ActiveEditorCamera>>,
-    non_editor_camera: Query<&picking::EditorRayCastSource, Without<super::cameras::EditorCamera>>,
+    mut click_events: EventReader<PointerClick>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
     input: Res<Input<KeyCode>>,
+    egui_entity: Query<&EguiPointer>,
 ) {
-    // TODO: reenable once bevy_mod_raycast has per-source configuration
-    /*for event in editor_events.iter() {
-        match *event {
-            EditorEvent::Toggle { now_active: false } => {
-                raycast_state.build_rays = false;
-                raycast_state.update_raycast = false;
-            }
-            EditorEvent::Toggle { now_active: true } => {
-                raycast_state.build_rays = true;
-                raycast_state.update_raycast = true;
-            }
-            _ => {}
+    for click in click_events.iter() {
+        if !editor_state.active {
+            return;
         }
-    }*/
+        if egui_entity.get(click.target()).is_ok() {
+            continue;
+        };
 
-    for event in select_mesh_events.iter() {
-        #[allow(irrefutable_let_patterns)]
-        if let EditorHierarchyEvent::SelectMesh = event {
-            let picked_entity = if editor_state.active {
-                editor_camera.get_single().ok().and_then(|source| {
-                    source.and_then(|source| {
-                        source.get_nearest_intersection().map(|(entity, _)| entity)
-                    })
-                })
-            } else {
-                let source = match non_editor_camera.get_single() {
-                    Ok(source) => Some(source),
-                    Err(QuerySingleError::NoEntities(_)) => {
-                        error!("No cameras with `EditorRayCastSource` found, can't click to inspect when the editor is inactive!");
-                        continue;
-                    }
-                    Err(QuerySingleError::MultipleEntities(_)) => {
-                        error!("Multiple cameras with `EditorRayCastSource` found!");
-                        continue;
-                    }
-                };
-                source
-                    .and_then(|source| source.get_nearest_intersection())
-                    .map(|(entity, _)| entity)
-            };
+        let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
 
-            let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
+        let ctrl = input.any_pressed([KeyCode::LControl, KeyCode::RControl]);
+        let shift = input.any_pressed([KeyCode::LShift, KeyCode::RShift]);
+        let mode = SelectionMode::from_ctrl_shift(ctrl, shift);
 
-            let ctrl = input.any_pressed([KeyCode::LControl, KeyCode::RControl]);
-            let shift = input.any_pressed([KeyCode::LShift, KeyCode::RShift]);
-            let mode = SelectionMode::from_ctrl_shift(ctrl, shift);
-
-            if let Some(entity) = picked_entity {
-                info!("Selecting mesh, found {:?}", entity);
-                state
-                    .selected
-                    .select(mode, entity, |_, _| std::iter::once(entity));
-            } else {
-                info!("Selecting mesh, found none");
-
-                match mode {
-                    SelectionMode::Replace | SelectionMode::Add => state.selected.clear(),
-                    SelectionMode::Extend => {}
-                }
-            }
-        }
+        let entity = click.target();
+        info!("Selecting mesh, found {:?}", entity);
+        state
+            .selected
+            .select(mode, entity, |_, _| std::iter::once(entity));
     }
 }
 

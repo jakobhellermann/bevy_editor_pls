@@ -10,6 +10,7 @@ use bevy_editor_pls_core::{
     Editor, EditorEvent, EditorState,
 };
 use bevy_inspector_egui::egui;
+use bevy_mod_picking::prelude::PickRaycastSource;
 
 use crate::hierarchy::{HideInEditor, HierarchyWindow};
 
@@ -222,7 +223,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
         })
         .insert(Ec3d)
         .insert(camera_3d_free::FlycamControls::default())
-        .insert(crate::hierarchy::picking::EditorRayCastSource::new())
+        .insert(PickRaycastSource)
         .insert(EditorCamera)
         .insert(EditorCamera3dFree)
         .insert(HideInEditor)
@@ -244,7 +245,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
         })
         .insert(Ec3d)
         .insert(PanOrbitCamera::default())
-        .insert(crate::hierarchy::picking::EditorRayCastSource::new())
+        .insert(PickRaycastSource)
         .insert(EditorCamera)
         .insert(EditorCamera3dPanOrbit)
         .insert(HideInEditor)

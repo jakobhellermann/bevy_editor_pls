@@ -1,6 +1,5 @@
 use bevy::{prelude::*, utils::HashMap};
 use bevy_editor_pls_core::{editor_window::EditorWindow, Editor, EditorEvent, EditorState};
-use bevy_editor_pls_default_windows::hierarchy::EditorHierarchyEvent;
 
 #[derive(Debug)]
 pub enum Button {
@@ -121,7 +120,6 @@ impl Binding {
 #[derive(PartialEq, Eq, Hash)]
 pub enum Action {
     PlayPauseEditor,
-    SelectMesh,
     PauseUnpauseTime,
     FocusSelected,
 }
@@ -130,7 +128,6 @@ impl std::fmt::Display for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Action::PlayPauseEditor => write!(f, "Play/Pause editor"),
-            Action::SelectMesh => write!(f, "Select mesh to inspect"),
             Action::PauseUnpauseTime => write!(f, "Pause/Unpause time"),
             Action::FocusSelected => write!(f, "Focus Selected Entity"),
         }
@@ -170,18 +167,8 @@ pub fn editor_controls_system(
     mouse_input: Res<Input<MouseButton>>,
     mut editor_state: ResMut<EditorState>,
     mut editor_events: EventWriter<EditorEvent>,
-    mut editor_hierarchy_event: EventWriter<EditorHierarchyEvent>,
     mut editor: ResMut<Editor>,
 ) {
-    if controls.just_pressed(
-        Action::SelectMesh,
-        &keyboard_input,
-        &mouse_input,
-        &editor_state,
-    ) {
-        editor_hierarchy_event.send(EditorHierarchyEvent::SelectMesh)
-    }
-
     if controls.just_pressed(
         Action::PlayPauseEditor,
         &keyboard_input,
@@ -234,26 +221,6 @@ impl EditorControls {
             },
         );
 
-        controls.insert(
-            Action::SelectMesh,
-            Binding {
-                input: UserInput::Single(Button::Mouse(MouseButton::Left)),
-                conditions: vec![
-                    BindingCondition::EditorActive(true),
-                    BindingCondition::InViewport(true),
-                ],
-            },
-        );
-        controls.insert(
-            Action::SelectMesh,
-            Binding {
-                input: UserInput::Chord(vec![
-                    Button::Keyboard(KeyCode::LControl),
-                    Button::Mouse(MouseButton::Left),
-                ]),
-                conditions: vec![BindingCondition::EditorActive(false)],
-            },
-        );
         controls.insert(
             Action::PlayPauseEditor,
             Binding {
@@ -338,7 +305,6 @@ impl EditorWindow for ControlsWindow {
         for action in &[
             Action::PlayPauseEditor,
             Action::PauseUnpauseTime,
-            Action::SelectMesh,
             Action::FocusSelected,
         ] {
             ui.label(egui::RichText::new(action.to_string()).strong());

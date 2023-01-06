@@ -5,7 +5,6 @@ use bevy::{
     render::{render_resource::WgpuFeatures, settings::WgpuSettings},
 };
 use bevy_editor_pls::prelude::*;
-use bevy_editor_pls_default_windows::hierarchy::picking::EditorRayCastSource;
 
 fn main() {
     // enable wireframe rendering
@@ -48,10 +47,8 @@ fn setup(
         ..Default::default()
     });
     // camera
-    commands
-        .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..Default::default()
-        })
-        .insert(EditorRayCastSource::new());
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    });
 }
