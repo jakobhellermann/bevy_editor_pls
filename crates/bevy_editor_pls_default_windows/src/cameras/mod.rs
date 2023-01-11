@@ -522,8 +522,8 @@ fn initial_camera_setup(
                 let (_, mut cam_transform, mut cam) = query.single_mut();
                 *cam_transform = cam3d_transform.clone();
                 let (yaw, pitch, _) = cam3d_transform.rotation.to_euler(EulerRot::YXZ);
-                cam.yaw = yaw.to_degrees();
-                cam.pitch = pitch.to_degrees();
+                cam.yaw = yaw;
+                cam.pitch = pitch;
             }
 
             {
