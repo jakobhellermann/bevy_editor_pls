@@ -11,6 +11,7 @@ categories = ["game-development", "gui", "visualization"]
 
 [features]
 default_windows = ["bevy_editor_pls_default_windows", "bevy/bevy_render", "bevy/bevy_pbr"]
+highlight_changes = ["bevy_editor_pls_default_windows/highlight_changes"]
 default = ["default_windows"]
 
 [dependencies]
