@@ -15,7 +15,7 @@ highlight_changes = ["bevy_editor_pls_default_windows/highlight_changes"]
 default = ["default_windows"]
 
 [dependencies]
-bevy = { version = "0.9", default-features = false }
+bevy = { version = "0.9", default-features = false, features = ["x11"] }
 egui = "0.20.0"
 bevy_editor_pls_core = { version = "0.2", path = "../bevy_editor_pls_core" }
 bevy_editor_pls_default_windows = { version = "0.2", path = "../bevy_editor_pls_default_windows", optional = true }
