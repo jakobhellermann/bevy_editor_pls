@@ -1,6 +1,8 @@
 #[cfg(feature = "default_windows")]
 pub mod controls;
 
+use std::any::TypeId;
+
 use bevy::prelude::Plugin;
 pub use bevy_editor_pls_core::*;
 
@@ -28,22 +30,26 @@ impl Plugin for EditorPlugin {
         #[cfg(feature = "default_windows")]
         {
             use bevy_editor_pls_default_windows::add::AddWindow;
+            use bevy_editor_pls_default_windows::assets::AssetsWindow;
             use bevy_editor_pls_default_windows::cameras::CameraWindow;
             use bevy_editor_pls_default_windows::debug_settings::DebugSettingsWindow;
             use bevy_editor_pls_default_windows::diagnostics::DiagnosticsWindow;
             use bevy_editor_pls_default_windows::hierarchy::HierarchyWindow;
             use bevy_editor_pls_default_windows::inspector::InspectorWindow;
             use bevy_editor_pls_default_windows::renderer::RendererWindow;
+            use bevy_editor_pls_default_windows::resources::ResourcesWindow;
             use bevy_editor_pls_default_windows::scenes::SceneWindow;
             use bevy_editor_pls_default_windows::windows::WindowsWindow;
 
             app.add_editor_window::<HierarchyWindow>();
+            app.add_editor_window::<AssetsWindow>();
             app.add_editor_window::<InspectorWindow>();
             app.add_editor_window::<DebugSettingsWindow>();
             app.add_editor_window::<AddWindow>();
             app.add_editor_window::<DiagnosticsWindow>();
             app.add_editor_window::<RendererWindow>();
             app.add_editor_window::<CameraWindow>();
+            app.add_editor_window::<ResourcesWindow>();
             app.add_editor_window::<SceneWindow>();
             app.add_editor_window::<WindowsWindow>();
 
@@ -59,8 +65,17 @@ impl Plugin for EditorPlugin {
             let [game, _inspector] =
                 internal_state.split_right::<InspectorWindow>(NodeIndex::root(), 0.75);
             let [game, _hierarchy] = internal_state.split_left::<HierarchyWindow>(game, 0.2);
-            let [_game, _bottom] = internal_state.split_below::<DebugSettingsWindow>(game, 0.8);
-            internal_state.push_to_focused_leaf::<DiagnosticsWindow>();
+            let [_game, _bottom] = internal_state.split_many(
+                game,
+                0.8,
+                egui_dock::Split::Below,
+                &[
+                    TypeId::of::<ResourcesWindow>(),
+                    TypeId::of::<AssetsWindow>(),
+                    TypeId::of::<DebugSettingsWindow>(),
+                    TypeId::of::<DiagnosticsWindow>(),
+                ],
+            );
         }
     }
 }

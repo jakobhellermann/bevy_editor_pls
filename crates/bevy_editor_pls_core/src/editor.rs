@@ -175,6 +175,18 @@ impl EditorInternalState {
     ) -> [NodeIndex; 2] {
         self.split::<W>(parent, egui_dock::Split::Below, fraction)
     }
+
+    pub fn split_many(
+        &mut self,
+        parent: NodeIndex,
+        fraction: f32,
+        split: egui_dock::Split,
+        windows: &[TypeId],
+    ) -> [NodeIndex; 2] {
+        let tabs = windows.iter().copied().map(TreeTab::CustomWindow).collect();
+        let node = egui_dock::Node::leaf_with(tabs);
+        self.tree.split(parent, split, fraction, node)
+    }
 }
 
 #[derive(Clone)]
