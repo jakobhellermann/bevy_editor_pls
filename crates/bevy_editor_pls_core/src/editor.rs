@@ -5,7 +5,7 @@ use bevy::window::{WindowId, WindowMode};
 use bevy::{prelude::*, utils::HashMap};
 use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSystem};
 use bevy_inspector_egui::DefaultInspectorConfigPlugin;
-use egui_dock::NodeIndex;
+use egui_dock::{NodeIndex, TabIndex};
 use indexmap::IndexMap;
 
 use crate::editor_window::{EditorWindow, EditorWindowContext};
@@ -132,6 +132,9 @@ impl EditorInternalState {
     pub fn push_to_focused_leaf<W: EditorWindow>(&mut self) {
         self.tree
             .push_to_focused_leaf(TreeTab::CustomWindow(TypeId::of::<W>()));
+        if let Some(focus) = self.tree.focused_leaf() {
+            self.tree.set_active_tab(focus, TabIndex(0));
+        };
     }
 
     pub fn split<W: EditorWindow>(
