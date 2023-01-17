@@ -14,7 +14,7 @@ use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor,
 };
-use bevy_mod_picking::backends::egui::EguiPointer;
+// use bevy_mod_picking::backends::egui::EguiPointer;
 use bevy_mod_picking::prelude::{IsPointerEvent, PointerClick};
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
@@ -67,15 +67,15 @@ fn handle_events(
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
     input: Res<Input<KeyCode>>,
-    egui_entity: Query<&EguiPointer>,
+    // egui_entity: Query<&EguiPointer>,
 ) {
     for click in click_events.iter() {
         if !editor_state.active {
             return;
         }
-        if egui_entity.get(click.target()).is_ok() {
-            continue;
-        };
+        // if egui_entity.get(click.target()).is_ok() {
+        //     continue;
+        // };
 
         let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
 
