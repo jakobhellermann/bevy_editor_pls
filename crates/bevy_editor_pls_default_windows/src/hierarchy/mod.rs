@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use bevy::reflect::TypeRegistryInternal;
 use bevy::render::{Extract, RenderApp, RenderStage};
 use bevy_editor_pls_core::EditorState;
+use bevy_inspector_egui::bevy_egui::EguiContext;
 use bevy_inspector_egui::bevy_inspector::guess_entity_name;
 use bevy_inspector_egui::bevy_inspector::hierarchy::{SelectedEntities, SelectionMode};
 use bevy_inspector_egui::egui::{self, ScrollArea};
@@ -14,7 +15,7 @@ use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor,
 };
-// use bevy_mod_picking::backends::egui::EguiPointer;
+use bevy_mod_picking::backends::egui::EguiPointer;
 use bevy_mod_picking::prelude::{IsPointerEvent, PointerClick};
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
@@ -67,15 +68,16 @@ fn handle_events(
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
     input: Res<Input<KeyCode>>,
-    // egui_entity: Query<&EguiPointer>,
+    egui_entity: Query<&EguiPointer>,
+    mut egui_ctx: ResMut<EguiContext>,
 ) {
     for click in click_events.iter() {
         if !editor_state.active {
             return;
         }
-        // if egui_entity.get(click.target()).is_ok() {
-        //     continue;
-        // };
+        if egui_entity.get(click.target()).is_ok() || egui_ctx.ctx_mut().wants_pointer_input() {
+            continue;
+        };
 
         let state = editor.window_state_mut::<HierarchyWindow>().unwrap();
 
