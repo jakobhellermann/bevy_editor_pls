@@ -10,10 +10,19 @@ description = "In-App editor tools for bevy apps"
 highlight_changes = ["bevy-inspector-egui/highlight_changes"]
 
 [dependencies]
-bevy = { version = "0.9", default-features = false, features = ["bevy_scene", "bevy_text", "bevy_ui"] }
+bevy = { version = "0.9", default-features = false, features = [
+    "bevy_scene",
+    "bevy_text",
+    "bevy_ui",
+] }
 bevy_editor_pls_core = { version = "0.2", path = "../bevy_editor_pls_core" }
 bevy-inspector-egui = { version = "0.17", default-features = false }
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "554649a951689dce66d0d759839b326874e8826f", default-features = false, features = ["backend_raycast", "backend_sprite"] }
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "554649a951689dce66d0d759839b326874e8826f", default-features = false, features = [
+    "backend_raycast",
+    "backend_egui",
+    "backend_sprite",
+    "backend_bevy_ui",
+] }
 indexmap = "1.7"
 pretty-type-name = "1.0"
 bevy_mod_debugdump = "0.6"
