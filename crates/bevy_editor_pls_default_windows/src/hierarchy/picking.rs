@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::render_resource::PrimitiveTopology};
 use bevy_mod_picking::prelude::{PickRaycastTarget, PickableBundle};
 
 pub struct EditorPickingSet;
@@ -14,18 +14,22 @@ pub fn setup(app: &mut App) {
 
 fn auto_add_editor_picking_set(
     mut commands: Commands,
+    meshes: Res<Assets<Mesh>>,
     meshes_query: Query<
-        Entity,
+        (Entity, &Handle<Mesh>),
         (
             Without<PickRaycastTarget>,
             Without<NoEditorPicking>,
-            With<Handle<Mesh>>,
         ),
     >,
 ) {
-    for entity in meshes_query.iter() {
-        commands
-            .entity(entity)
-            .insert((PickableBundle::default(), PickRaycastTarget::default()));
+    for (entity, handle) in meshes_query.iter() {
+        if let Some(mesh) = meshes.get(handle) {
+            if let PrimitiveTopology::TriangleList = mesh.primitive_topology() {
+                commands
+                    .entity(entity)
+                    .insert((PickableBundle::default(), PickRaycastTarget::default()));
+            }
+        }
     }
 }
