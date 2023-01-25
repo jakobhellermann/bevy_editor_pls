@@ -97,7 +97,6 @@ fn pan_orbit_camera(
     let mut any = false;
     if rotation_move.length_squared() > 0.0 {
         any = true;
-        let window_size = get_primary_window_size(&windows);
         let delta_x = {
             let delta = rotation_move.x / 180.0;
             if pan_orbit.upside_down {
@@ -127,7 +126,7 @@ fn pan_orbit_camera(
         pan_orbit.focus += translation;
     } else if scroll.abs() > 0.0 {
         any = true;
-        pan_orbit.radius -= scroll * pan_orbit.radius * 0.01;
+        pan_orbit.radius -= scroll * pan_orbit.radius * 0.1;
         // dont allow zoom to reach zero or you get stuck
         pan_orbit.radius = f32::max(pan_orbit.radius, 0.05);
     }
