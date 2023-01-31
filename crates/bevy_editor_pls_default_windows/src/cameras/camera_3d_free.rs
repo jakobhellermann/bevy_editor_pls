@@ -88,7 +88,6 @@ fn camera_movement(
 }
 
 fn camera_look(
-    time: Res<Time>,
     mouse_input: Res<Input<MouseButton>>,
     mut mouse_motion_event_reader: EventReader<MouseMotion>,
     mut query: Query<(&mut FlycamControls, &mut Transform)>,
@@ -111,7 +110,9 @@ fn camera_look(
     flycam.yaw -= delta.x / 180.0 * flycam.sensitivity;
     flycam.pitch -= delta.y / 180.0 * flycam.sensitivity;
 
-    flycam.pitch = flycam.pitch.clamp(-std::f32::consts::PI / 2.0, std::f32::consts::PI / 2.0);
+    flycam.pitch = flycam
+        .pitch
+        .clamp(-std::f32::consts::PI / 2.0, std::f32::consts::PI / 2.0);
 
     transform.rotation = Quat::from_euler(EulerRot::YXZ, flycam.yaw, flycam.pitch, 0.0);
 }
