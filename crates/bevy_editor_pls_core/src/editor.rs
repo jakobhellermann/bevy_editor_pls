@@ -469,6 +469,7 @@ impl Editor {
                 window_states: &mut self.window_states,
                 internal_state,
             };
+
             (window.viewport_toolbar_ui_fn)(world, cx, ui);
         }
     }
@@ -486,9 +487,7 @@ impl egui_dock::TabViewer for TabViewer<'_> {
     fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
         match *tab {
             TreeTab::GameView => {
-                // self.editor
-                // .editor_viewport_ui(self.world, ui, self.internal_state);
-
+                let viewport = ui.clip_rect();
                 ui.horizontal(|ui| {
                     ui.style_mut().spacing.button_padding = egui::vec2(2.0, 0.0);
                     let height = ui.spacing().interact_size.y;
@@ -498,8 +497,6 @@ impl egui_dock::TabViewer for TabViewer<'_> {
                         .editor_viewport_ui(self.world, ui, self.internal_state);
                 });
 
-                let (viewport, _) =
-                    ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
                 self.editor_state.viewport = viewport;
             }
             TreeTab::CustomWindow(window_id) => {

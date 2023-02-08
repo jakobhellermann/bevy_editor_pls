@@ -129,10 +129,10 @@ impl EditorWindow for CameraWindow {
             .add_system(initial_camera_setup);
         app.add_startup_system_to_stage(StartupStage::PreStartup, spawn_editor_cameras);
 
-        /*app.add_system_to_stage(
+        app.add_system_to_stage(
             CoreStage::PostUpdate,
             set_main_pass_viewport.before(bevy::render::camera::CameraUpdateSystem),
-        );*/
+        );
     }
 }
 
@@ -538,7 +538,7 @@ fn initial_camera_setup(
     }
 }
 
-/*fn set_main_pass_viewport(
+fn set_main_pass_viewport(
     editor_state: Res<bevy_editor_pls_core::EditorState>,
     egui_settings: Res<bevy_inspector_egui::bevy_egui::EguiSettings>,
     windows: Res<Windows>,
@@ -563,4 +563,4 @@ fn initial_camera_setup(
             depth: 0.0..1.0,
         });
     });
-}*/
+}
