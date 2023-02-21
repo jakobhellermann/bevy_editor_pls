@@ -17,7 +17,6 @@ use bevy_editor_pls_core::{
 };
 use bevy_mod_picking::backends::egui::EguiPointer;
 use bevy_mod_picking::prelude::{IsPointerEvent, PointerClick, PointerButton};
-use bevy_mod_picking::output::PointerDrag;
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
 use crate::debug_settings::DebugSettingsWindow;
@@ -66,7 +65,6 @@ fn clear_removed_entites(mut editor: ResMut<Editor>, entities: &Entities) {
 
 fn handle_events(
     mut click_events: EventReader<PointerClick>,
-    mut drag_events: EventReader<PointerDrag>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
     input: Res<Input<KeyCode>>,
