@@ -17,7 +17,7 @@ bevy = { version = "0.9", default-features = false, features = [
 ] }
 bevy_editor_pls_core = { version = "0.2", path = "../bevy_editor_pls_core" }
 bevy-inspector-egui = { version = "0.17", default-features = false }
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "73a71c24814bbe78fb564277c8246decbabe60df", default-features = false, features = [
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "7a9ffd020b530acef25c8cf8bc9475b7a13bd353", default-features = false, features = [
     "backend_raycast",
     "backend_egui",
     "backend_sprite",
