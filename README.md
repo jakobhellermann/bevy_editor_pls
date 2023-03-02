@@ -34,7 +34,6 @@ fn main() {
 ```rust
 use bevy_editor_pls::{egui, prelude::*};
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
-use bevy_editor_pls_default_windows::hierarchy::HierarchyWindow;
 
 fn main() {
     App::new()
@@ -45,12 +44,14 @@ fn main() {
 }
 
 pub struct MyEditorWindow;
+struct MyEditorWindowState {
+}
 impl EditorWindow for MyEditorWindow {
-    type State = ();
+    type State = MyEditorWindowState;
     const NAME: &'static str = "Another editor panel";
 
     fn ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
-        let currently_inspected = &cx.state::<HierarchyWindow>().unwrap().selected;
+        let currently_inspected = &cx.state::<MyEditorWindow>().unwrap().selected;
 
         ui.label("Anything can go here");
     }
