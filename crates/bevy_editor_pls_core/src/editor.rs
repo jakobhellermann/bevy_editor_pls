@@ -1,9 +1,9 @@
 use std::any::{Any, TypeId};
 
 use bevy::ecs::event::Events;
-use bevy::window::{WindowId, WindowMode};
+use bevy::window::{PrimaryWindow, WindowMode};
 use bevy::{prelude::*, utils::HashMap};
-use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSystem};
+use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSet};
 use bevy_inspector_egui::DefaultInspectorConfigPlugin;
 use egui_dock::{NodeIndex, TabIndex};
 use indexmap::IndexMap;
@@ -24,9 +24,10 @@ impl Plugin for EditorPlugin {
             .init_resource::<EditorInternalState>()
             .init_resource::<EditorState>()
             .add_event::<EditorEvent>()
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                Editor::system.at_start().label(EguiSystem::ProcessOutput),
+            .add_system(
+                Editor::system
+                    .in_base_set(CoreSet::PostUpdate)
+                    .after(EguiSet::ProcessOutput),
             );
     }
 }
@@ -255,16 +256,10 @@ impl Editor {
 
 impl Editor {
     fn system(world: &mut World) {
-        let ctx = if let Some(ctx) = world
-            .get_resource_mut::<EguiContext>()
-            .unwrap()
-            .try_ctx_for_window_mut(WindowId::primary())
-            .cloned()
-        {
-            ctx
-        } else {
+        let Ok(mut egui_context) = world.query_filtered::<&mut EguiContext, With<PrimaryWindow>>().get_single_mut(world) else {
             return;
         };
+        let egui_context = egui_context.get_mut().clone();
 
         world.resource_scope(|world, mut editor: Mut<Editor>| {
             world.resource_scope(|world, mut editor_state: Mut<EditorState>| {
@@ -274,7 +269,7 @@ impl Editor {
                             |world, mut editor_events: Mut<Events<EditorEvent>>| {
                                 editor.editor_ui(
                                     world,
-                                    &ctx,
+                                    &egui_context,
                                     &mut editor_state,
                                     &mut editor_internal_state,
                                     &mut editor_events,
@@ -318,7 +313,7 @@ impl Editor {
         );
         internal_state.tree = tree;
 
-        let pointer_pos = ctx.input().pointer.interact_pos();
+        let pointer_pos = ctx.input(|input| input.pointer.interact_pos());
         editor_state.pointer_used =
             pointer_pos.map_or(false, |pos| !editor_state.is_in_viewport(pos));
 
@@ -327,7 +322,7 @@ impl Editor {
         editor_state.listening_for_text = ctx.wants_keyboard_input();
         editor_state.pointer_used |= ctx.is_using_pointer();
 
-        let is_pressed = ctx.input().pointer.press_start_time().is_some();
+        let is_pressed = ctx.input(|input| input.pointer.press_start_time().is_some());
         match (&editor_state.active_editor_interaction, is_pressed) {
             (_, false) => editor_state.active_editor_interaction = None,
             (None, true) => {
@@ -371,15 +366,13 @@ impl Editor {
             .interact(egui::Sense::click());
 
             if bar_response.double_clicked() {
-                if let Some(window) = world
-                    .get_resource_mut::<Windows>()
-                    .unwrap()
-                    .get_primary_mut()
-                {
-                    match window.mode() {
-                        WindowMode::Windowed => window.set_mode(WindowMode::Fullscreen),
-                        _ => window.set_mode(WindowMode::Windowed),
-                    }
+                let mut window = world
+                    .query_filtered::<&mut Window, With<PrimaryWindow>>()
+                    .single_mut(world);
+
+                match window.mode {
+                    WindowMode::Windowed => window.mode = WindowMode::Fullscreen,
+                    _ => window.mode = WindowMode::Windowed,
                 }
             }
         });

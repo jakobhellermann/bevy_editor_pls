@@ -2,7 +2,7 @@ use bevy::{
     asset::diagnostic::AssetCountDiagnosticsPlugin,
     diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     prelude::*,
-    render::{render_resource::WgpuFeatures, settings::WgpuSettings},
+    render::{render_resource::WgpuFeatures, settings::WgpuSettings, RenderPlugin},
 };
 use bevy_editor_pls::prelude::*;
 
@@ -12,8 +12,7 @@ fn main() {
     wgpu_settings.features |= WgpuFeatures::POLYGON_MODE_LINE;
 
     App::new()
-        .insert_resource(wgpu_settings)
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(RenderPlugin { wgpu_settings }))
         .add_plugin(EditorPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(EntityCountDiagnosticsPlugin)
@@ -30,7 +29,7 @@ fn setup(
 ) {
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
+        mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..Default::default()
     });

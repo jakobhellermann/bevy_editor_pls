@@ -1,22 +1,20 @@
-pub mod picking;
+// pub mod picking;
 
 use bevy::ecs::entity::Entities;
 use bevy::pbr::wireframe::Wireframe;
 use bevy::prelude::*;
 use bevy::reflect::TypeRegistryInternal;
-use bevy::render::{Extract, RenderApp, RenderStage};
-use bevy_editor_pls_core::EditorState;
-use bevy_inspector_egui::bevy_egui::EguiContext;
+use bevy::render::{Extract, RenderApp};
 use bevy_inspector_egui::bevy_inspector::guess_entity_name;
-use bevy_inspector_egui::bevy_inspector::hierarchy::{SelectedEntities, SelectionMode};
+use bevy_inspector_egui::bevy_inspector::hierarchy::SelectedEntities;
 use bevy_inspector_egui::egui::{self, ScrollArea};
 
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor,
 };
-use bevy_mod_picking::backends::egui::EguiPointer;
-use bevy_mod_picking::prelude::{IsPointerEvent, PointerClick, PointerButton};
+// use bevy_mod_picking::backends::egui::EguiPointer;
+// use bevy_mod_picking::prelude::{IsPointerEvent, PointerClick, PointerButton};
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
 use crate::debug_settings::DebugSettingsWindow;
@@ -49,12 +47,12 @@ impl EditorWindow for HierarchyWindow {
     }
 
     fn app_setup(app: &mut bevy::prelude::App) {
-        picking::setup(app);
-        app.add_system_to_stage(CoreStage::PostUpdate, clear_removed_entites)
-            .add_system(handle_events);
+        // picking::setup(app);
+        app.add_system(clear_removed_entites.in_base_set(CoreSet::PostUpdate));
+        // .add_system(handle_events);
 
         app.sub_app_mut(RenderApp)
-            .add_system_to_stage(RenderStage::Extract, extract_wireframe_for_selected);
+            .add_system(extract_wireframe_for_selected.in_schedule(ExtractSchedule));
     }
 }
 
@@ -63,7 +61,7 @@ fn clear_removed_entites(mut editor: ResMut<Editor>, entities: &Entities) {
     state.selected.retain(|entity| entities.contains(entity));
 }
 
-fn handle_events(
+/*fn handle_events(
     mut click_events: EventReader<PointerClick>,
     mut editor: ResMut<Editor>,
     editor_state: Res<EditorState>,
@@ -96,7 +94,7 @@ fn handle_events(
             .selected
             .select(mode, entity, |_, _| std::iter::once(entity));
     }
-}
+}*/
 
 fn extract_wireframe_for_selected(editor: Extract<Res<Editor>>, mut commands: Commands) {
     let wireframe_for_selected = editor
@@ -155,7 +153,7 @@ impl<'a> Hierarchy<'a> {
                 }
 
                 if ui.button("Rename").clicked() {
-                    let entity_name = guess_entity_name(world, self.type_registry, entity);
+                    let entity_name = guess_entity_name(world, entity);
                     *rename_info = Some(RenameInfo {
                         entity,
                         renaming: true,
@@ -195,7 +193,7 @@ impl<'a> Hierarchy<'a> {
             self.state.selected.remove(entity);
         }
 
-        if ui.input().key_pressed(egui::Key::Delete) {
+        if ui.input(|input| input.key_pressed(egui::Key::Delete)) {
             for entity in self.state.selected.iter() {
                 self.world.entity_mut(entity).despawn_recursive();
             }

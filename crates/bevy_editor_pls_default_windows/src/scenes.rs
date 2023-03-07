@@ -32,7 +32,7 @@ impl EditorWindow for SceneWindow {
                 state.scene_save_result = None;
             }
 
-            let enter_pressed = ui.input().key_pressed(egui::Key::Enter);
+            let enter_pressed = ui.input(|input| input.key_pressed(egui::Key::Enter));
 
             if ui.button("Save").clicked() || enter_pressed {
                 let filename = if state.filename.is_empty() {

@@ -4,9 +4,10 @@ use bevy::{
     input::mouse::{MouseScrollUnit, MouseWheel},
     prelude::*,
     render::camera::OrthographicProjection,
+    window::PrimaryWindow,
 };
 
-#[derive(SystemLabel, PartialEq, Eq, Clone, Hash, Debug)]
+#[derive(SystemSet, PartialEq, Eq, Clone, Hash, Debug)]
 pub(crate) enum CameraSystem {
     Movement,
 }
@@ -16,8 +17,8 @@ pub(crate) struct PanCamPlugin;
 
 impl Plugin for PanCamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(camera_movement.label(CameraSystem::Movement))
-            .add_system(camera_zoom.label(CameraSystem::Movement));
+        app.add_system(camera_movement.in_set(CameraSystem::Movement))
+            .add_system(camera_zoom.in_set(CameraSystem::Movement));
     }
 }
 
@@ -45,16 +46,12 @@ fn camera_zoom(
 }
 
 fn camera_movement(
-    mut windows: ResMut<Windows>,
+    primary_window: Query<&Window, With<PrimaryWindow>>,
     mouse_buttons: Res<Input<MouseButton>>,
     mut query: Query<(&PanCamControls, &mut Transform, &OrthographicProjection)>,
     mut last_pos: Local<Option<Vec2>>,
 ) {
-    let window = if let Some(window) = windows.get_primary_mut() {
-        window
-    } else {
-        return;
-    };
+    let Ok(window) = primary_window.get_single() else { return };
 
     // Use position instead of MouseMotion, otherwise we don't get acceleration movement
     let current_pos = match window.cursor_position() {
@@ -74,8 +71,8 @@ fn camera_movement(
             .any(|btn| mouse_buttons.pressed(*btn))
         {
             let scaling = Vec2::new(
-                window.width() / (projection.right - projection.left),
-                window.height() / (projection.top - projection.bottom),
+                window.width() / projection.area.width(),
+                window.height() / projection.area.height(),
             ) * projection.scale;
 
             transform.translation -= (delta * scaling).extend(0.);

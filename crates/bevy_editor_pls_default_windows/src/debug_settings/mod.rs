@@ -4,7 +4,7 @@ use bevy::{
     pbr::wireframe::WireframeConfig,
     prelude::*,
     reflect::TypeRegistryInternal,
-    render::{render_resource::WgpuFeatures, settings::WgpuSettings},
+    render::{render_resource::WgpuFeatures, renderer::RenderAdapter},
 };
 use bevy_editor_pls_core::editor_window::EditorWindow;
 use bevy_inspector_egui::{
@@ -111,9 +111,12 @@ fn debug_ui_options(
         ui.end_row();
 
         let wireframe_enabled = world
-            .get_resource::<WgpuSettings>()
-            .map_or(false, |options| {
-                options.features.contains(WgpuFeatures::POLYGON_MODE_LINE)
+            .get_resource::<RenderAdapter>()
+            .map_or(false, |adapter| {
+                adapter
+                    .0
+                    .features()
+                    .contains(WgpuFeatures::POLYGON_MODE_LINE)
             });
 
         if wireframe_enabled {
@@ -161,18 +164,30 @@ fn debug_ui_debugdump(world: &mut World, state: &mut DebugSettingsWindowState, u
     };
 
     ui.vertical(|ui| {
-        if ui.button("Open schedule").clicked() {
+        if ui.button("Open main schedule").clicked() {
             let schedule_graph = world.get_resource::<debugdump::DotGraphs>().unwrap();
-            if let Err(e) = open_dot(&schedule_graph.schedule_graph, "schedule_graph") {
+            if let Err(e) = open_dot(&schedule_graph.main_schedule, "schedule_main") {
                 state.open_debugdump_status = Some(e);
             }
         }
-        if ui.button("Open render app schedule").clicked() {
+        if ui.button("Open fixed time schedule").clicked() {
+            let schedule_graph = world.get_resource::<debugdump::DotGraphs>().unwrap();
+            if let Err(e) = open_dot(&schedule_graph.fixed_update_schedule, "schedule_fixed") {
+                state.open_debugdump_status = Some(e);
+            }
+        }
+        if ui.button("Open render extract schedule").clicked() {
             let schedule_graph = world.get_resource::<debugdump::DotGraphs>().unwrap();
             if let Err(e) = open_dot(
-                &schedule_graph.render_schedule_graph,
-                "render_schedule_graph",
+                &schedule_graph.render_extract_schedule,
+                "schedule_render_extract",
             ) {
+                state.open_debugdump_status = Some(e);
+            }
+        }
+        if ui.button("Open render main schedule").clicked() {
+            let schedule_graph = world.get_resource::<debugdump::DotGraphs>().unwrap();
+            if let Err(e) = open_dot(&schedule_graph.render_main_schedule, "schedule_render_main") {
                 state.open_debugdump_status = Some(e);
             }
         }

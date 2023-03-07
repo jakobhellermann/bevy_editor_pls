@@ -5,13 +5,14 @@ use crate::scenes::NotInScene;
 
 use bevy::render::camera::RenderTarget;
 use bevy::utils::HashSet;
+use bevy::window::PrimaryWindow;
 use bevy::{prelude::*, render::primitives::Aabb};
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
     Editor, EditorEvent, EditorState,
 };
 use bevy_inspector_egui::egui;
-use bevy_mod_picking::prelude::PickRaycastSource;
+// use bevy_mod_picking::prelude::PickRaycastSource;
 
 use crate::hierarchy::{HideInEditor, HierarchyWindow};
 
@@ -124,10 +125,10 @@ impl EditorWindow for CameraWindow {
                     .before(camera_3d_free::CameraSystem::Movement)
                     .before(camera_2d_panzoom::CameraSystem::Movement),
             )
-            .add_system_to_stage(CoreStage::PreUpdate, toggle_editor_cam)
-            .add_system_to_stage(CoreStage::PreUpdate, focus_selected)
+            .add_system(toggle_editor_cam.in_base_set(CoreSet::PreUpdate))
+            .add_system(focus_selected.in_base_set(CoreSet::PreUpdate))
             .add_system(initial_camera_setup);
-        app.add_startup_system_to_stage(StartupStage::PreStartup, spawn_editor_cameras);
+        app.add_startup_system(spawn_editor_cameras.in_base_set(StartupSet::PreStartup));
 
         /*app.add_system_to_stage(
             CoreStage::PostUpdate,
@@ -212,7 +213,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
     commands
         .spawn(Camera3dBundle {
             camera: Camera {
-                priority: editor_cam_priority,
+                order: editor_cam_priority,
                 is_active: false,
                 ..default()
             },
@@ -224,7 +225,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
         })
         .insert(Ec3d)
         .insert(camera_3d_free::FlycamControls::default())
-        .insert(PickRaycastSource)
+        // .insert(PickRaycastSource)
         .insert(EditorCamera)
         .insert(EditorCamera3dFree)
         .insert(HideInEditor)
@@ -235,7 +236,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .spawn(Camera3dBundle {
             camera: Camera {
                 //  Prevent multiple cameras from having the same priority.
-                priority: editor_cam_priority + 1,
+                order: editor_cam_priority + 1,
                 is_active: false,
                 ..default()
             },
@@ -247,7 +248,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
         })
         .insert(Ec3d)
         .insert(PanOrbitCamera::default())
-        .insert(PickRaycastSource)
+        // .insert(PickRaycastSource)
         .insert(EditorCamera)
         .insert(EditorCamera3dPanOrbit)
         .insert(HideInEditor)
@@ -258,7 +259,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
         .spawn(Camera2dBundle {
             camera: Camera {
                 //  Prevent multiple cameras from having the same priority.
-                priority: editor_cam_priority + 2,
+                order: editor_cam_priority + 2,
                 is_active: false,
                 ..default()
             },
@@ -368,8 +369,10 @@ fn focus_selected(
         Without<ActiveEditorCamera>,
     >,
     editor: Res<Editor>,
-    windows: Res<Windows>,
+    primary_window: Query<&Window, With<PrimaryWindow>>,
 ) {
+    let Ok(window) = primary_window.get_single() else { return };
+
     for event in editor_events.iter() {
         match *event {
             EditorEvent::FocusSelected => (),
@@ -426,9 +429,7 @@ fn focus_selected(
             camera_tf.translation.x = focus_loc.x;
             camera_tf.translation.y = focus_loc.y;
 
-            if let Some(w) = windows.get_primary() {
-                ortho.scale = radius / w.width().min(w.height()).max(1.0);
-            }
+            ortho.scale = radius / window.width().min(window.height()).max(1.0);
         } else {
             camera_tf.translation = focus_loc + camera_tf.rotation.mul_vec3(Vec3::Z) * radius;
         }

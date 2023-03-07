@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*,
-    render::{render_graph::RenderGraph, RenderApp, RenderStage},
+    render::{render_graph::RenderGraph, RenderApp},
 };
 use bevy_mod_debugdump::{render_graph, schedule_graph};
 use std::{
@@ -10,55 +10,60 @@ use std::{
 
 #[derive(Resource)]
 pub struct DotGraphs {
-    pub schedule_graph: String,
-    pub render_schedule_graph: String,
+    pub main_schedule: String,
+    pub fixed_update_schedule: String,
+    pub render_main_schedule: String,
+    pub render_extract_schedule: String,
     pub render_graph: String,
 }
 
 pub fn setup(app: &mut App) {
-    let actual_runner = std::mem::replace(&mut app.runner, Box::new(|_| {}));
+    let render_app = match app.get_sub_app(RenderApp) {
+        Ok(render_app) => render_app,
+        Err(_label) => {
+            return;
+        }
+    };
+    let render_graph = render_app.world.get_resource::<RenderGraph>().unwrap();
 
-    app.set_runner(move |mut app| {
-        //  https://github.com/jakobhellermann/bevy_editor_pls/issues/54
-        //  This update call causes bevy to `exit(0)` on macOS. Disable it until
-        //  a fix is found.
-        #[cfg(not(target_os = "macos"))]
-        app.update();
+    let schedule_settings = schedule_graph::settings::Settings {
+        include_system: Some(Box::new(|system| {
+            !system.name().starts_with("bevy_editor_pls")
+        })),
+        ..Default::default()
+    };
+    let rendergraph_settings = render_graph::settings::Settings::default();
 
-        let render_app = match app.get_sub_app(RenderApp) {
-            Ok(render_app) => render_app,
-            Err(_label) => {
-                error!("No render app");
-                return;
-            }
-        };
-        let render_graph = render_app.world.get_resource::<RenderGraph>().unwrap();
+    let main_schedule = schedule_graph::schedule_graph_dot(
+        app.get_schedule(CoreSchedule::Main).unwrap(),
+        &app.world,
+        &schedule_settings,
+    );
+    let fixed_update_schedule = schedule_graph::schedule_graph_dot(
+        app.get_schedule(CoreSchedule::FixedUpdate).unwrap(),
+        &app.world,
+        &schedule_settings,
+    );
 
-        let schedule_style = schedule_graph::ScheduleGraphStyle {
-            system_filter: Some(Box::new(|system| {
-                !system.name.starts_with("bevy_editor_pls")
-            })),
-            ..Default::default()
-        };
-        let rendergraph_style = render_graph::RenderGraphStyle::default();
+    let render_main_schedule = schedule_graph::schedule_graph_dot(
+        render_app.get_schedule(CoreSchedule::Main).unwrap(),
+        &app.world,
+        &schedule_settings,
+    );
+    let render_extract_schedule = schedule_graph::schedule_graph_dot(
+        render_app.get_schedule(ExtractSchedule).unwrap(),
+        &app.world,
+        &schedule_settings,
+    );
 
-        let schedule_graph = schedule_graph::schedule_graph_dot_styled(&app, &schedule_style);
-        let render_graph =
-            render_graph::render_graph_dot_styled(&*render_graph, &rendergraph_style);
-        let render_schedule_graph = schedule_graph::schedule_graph_dot_sub_app_styled(
-            &app,
-            RenderApp,
-            &[&RenderStage::Extract],
-            &schedule_style,
-        );
+    let render_graph = render_graph::render_graph_dot(&*render_graph, &rendergraph_settings);
 
-        app.insert_resource(DotGraphs {
-            schedule_graph,
-            render_schedule_graph,
-            render_graph,
-        });
-
-        actual_runner(app);
+    app.insert_resource(DotGraphs {
+        main_schedule,
+        fixed_update_schedule,
+        render_main_schedule,
+        render_extract_schedule,
+        render_graph,
     });
 }
 

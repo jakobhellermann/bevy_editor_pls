@@ -4,12 +4,13 @@ use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
     render::camera::Projection,
+    window::PrimaryWindow,
 };
 
 pub struct PanOrbitCameraPlugin;
 impl Plugin for PanOrbitCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(pan_orbit_camera.label(CameraSystem::Movement));
+        app.add_system(pan_orbit_camera.in_set(CameraSystem::Movement));
     }
 }
 
@@ -42,20 +43,21 @@ impl Default for PanOrbitCamera {
     }
 }
 
-#[derive(SystemLabel, PartialEq, Eq, Clone, Hash, Debug)]
+#[derive(SystemSet, PartialEq, Eq, Clone, Hash, Debug)]
 pub(crate) enum CameraSystem {
     Movement,
 }
 
 /// Pan the camera with middle mouse click, zoom with scroll wheel, orbit with right mouse click.
 fn pan_orbit_camera(
-    windows: Res<Windows>,
-
+    primary_window: Query<&Window, With<PrimaryWindow>>,
     mut ev_motion: EventReader<MouseMotion>,
     mut ev_scroll: EventReader<MouseWheel>,
     input_mouse: Res<Input<MouseButton>>,
     mut query: Query<(&mut PanOrbitCamera, &mut Transform, &Projection)>,
 ) {
+    let Ok(window) = primary_window.get_single() else { return };
+
     // change input mapping for orbit and panning here
     let (mut pan_orbit, mut transform, projection) = query.single_mut();
 
@@ -113,7 +115,7 @@ fn pan_orbit_camera(
     } else if pan.length_squared() > 0.0 {
         any = true;
         // make panning distance independent of resolution and FOV,
-        let window_size = get_primary_window_size(&windows);
+        let window_size = get_primary_window_size(&window);
         if let Projection::Perspective(projection) = projection {
             pan *=
                 Vec2::new(projection.fov * projection.aspect_ratio, projection.fov) / window_size;
@@ -141,8 +143,7 @@ fn pan_orbit_camera(
     }
 }
 
-fn get_primary_window_size(windows: &Windows) -> Vec2 {
-    let window = windows.get_primary().unwrap();
+fn get_primary_window_size(window: &Window) -> Vec2 {
     let window = Vec2::new(window.width() as f32, window.height() as f32);
     window
 }

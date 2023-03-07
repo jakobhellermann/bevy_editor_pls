@@ -8,4 +8,3 @@ pub mod inspector;
 pub mod renderer;
 pub mod resources;
 pub mod scenes;
-pub mod windows;

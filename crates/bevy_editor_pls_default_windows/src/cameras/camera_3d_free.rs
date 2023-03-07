@@ -1,16 +1,20 @@
-use bevy::{input::mouse::MouseMotion, prelude::*, window::CursorGrabMode};
+use bevy::{
+    input::mouse::MouseMotion,
+    prelude::*,
+    window::{CursorGrabMode, PrimaryWindow},
+};
 use bevy_editor_pls_core::EditorState;
 
 pub(crate) struct FlycamPlugin;
 impl Plugin for FlycamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(camera_movement.label(CameraSystem::Movement))
+        app.add_system(camera_movement.in_set(CameraSystem::Movement))
             .add_system(camera_look)
             .add_system(toggle_cursor);
     }
 }
 
-#[derive(SystemLabel, PartialEq, Eq, Clone, Hash, Debug)]
+#[derive(SystemSet, PartialEq, Eq, Clone, Hash, Debug)]
 pub(crate) enum CameraSystem {
     Movement,
 }
@@ -119,25 +123,21 @@ fn camera_look(
 
 fn toggle_cursor(
     keyboard_input: Res<Input<KeyCode>>,
-    mut windows: ResMut<Windows>,
+    mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
     editor_state: Res<EditorState>,
 ) {
-    let window = if let Some(window) = windows.get_primary_mut() {
-        window
-    } else {
-        return;
-    };
+    let Ok(mut window) = primary_window.get_single_mut() else { return };
 
     if !editor_state.active {
         return;
     }
 
     if keyboard_input.just_pressed(KeyCode::LAlt) {
-        window.set_cursor_grab_mode(CursorGrabMode::Confined);
-        window.set_cursor_visibility(false);
+        window.cursor.grab_mode = CursorGrabMode::Confined;
+        window.cursor.visible = false;
     }
     if keyboard_input.just_released(KeyCode::LAlt) {
-        window.set_cursor_grab_mode(CursorGrabMode::None);
-        window.set_cursor_visibility(true);
+        window.cursor.grab_mode = CursorGrabMode::None;
+        window.cursor.visible = true;
     }
 }

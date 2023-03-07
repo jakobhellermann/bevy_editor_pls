@@ -1,6 +1,6 @@
 [package]
 name = "bevy_editor_pls_default_windows"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jakobhellermann/bevy_editor_pls"
@@ -10,20 +10,21 @@ description = "In-App editor tools for bevy apps"
 highlight_changes = ["bevy-inspector-egui/highlight_changes"]
 
 [dependencies]
-bevy = { version = "0.9", default-features = false, features = [
+bevy = { version = "0.10", default-features = false, features = [
     "bevy_scene",
     "bevy_text",
     "bevy_ui",
+    "bevy_sprite",
 ] }
-bevy_editor_pls_core = { version = "0.2", path = "../bevy_editor_pls_core" }
-bevy-inspector-egui = { version = "0.17", default-features = false }
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "7a9ffd020b530acef25c8cf8bc9475b7a13bd353", default-features = false, features = [
-    "backend_raycast",
-    "backend_egui",
-    "backend_sprite",
-    "backend_bevy_ui",
-] }
+bevy_editor_pls_core = { version = "0.3", path = "../bevy_editor_pls_core" }
+bevy-inspector-egui = { version = "0.18", default-features = false }
+# bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "7a9ffd020b530acef25c8cf8bc9475b7a13bd353", default-features = false, features = [
+#     "backend_raycast",
+#     "backend_egui",
+#     "backend_sprite",
+#     "backend_bevy_ui",
+# ] }
 indexmap = "1.7"
 pretty-type-name = "1.0"
-bevy_mod_debugdump = "0.6"
+bevy_mod_debugdump = "0.7"
 opener = "0.5.0"

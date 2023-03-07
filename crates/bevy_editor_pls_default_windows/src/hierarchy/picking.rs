@@ -17,10 +17,7 @@ fn auto_add_editor_picking_set(
     meshes: Res<Assets<Mesh>>,
     meshes_query: Query<
         (Entity, &Handle<Mesh>),
-        (
-            Without<PickRaycastTarget>,
-            Without<NoEditorPicking>,
-        ),
+        (Without<PickRaycastTarget>, Without<NoEditorPicking>),
     >,
 ) {
     for (entity, handle) in meshes_query.iter() {

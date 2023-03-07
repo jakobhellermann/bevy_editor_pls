@@ -3,6 +3,7 @@
 > :warning: **This is very much work in progress**: Take a look at the [missing features](#missing-features) to see if your use case isn't yet supported.
 
 Adds debug tools to your bevy game, including
+
 - hierarchy view and component inspector
 - separate editor camera
 - some builtin editor panels for diagnostics, debug settings
@@ -25,7 +26,6 @@ fn main() {
         .run();
 }
 ```
-
 
 ![editor preview](./docs/editor.png)
 
@@ -61,6 +61,7 @@ impl EditorWindow for MyEditorWindow {
 ### Controls
 
 The default controls are:
+
 - `E` to toggle the editor
 - `Ctrl+Enter` to pause/unpause time
 - `Click` (or `Ctrl+Click` when not in editor) to select mesh
@@ -68,6 +69,7 @@ The default controls are:
 - Double click on the menu bar to go fullscreen
 
 Cameras:
+
 - `2d (Pan/Zoom)`: any mouse button to pan, scroll to zoom
 - `3d (Free)`: `WASD + Ctrl/Shift` + `Shift` for a speed boost for the free 3d camera
 - `3d (Pan/Orbit)`: `Right click` to rotate around focus, `Middle mouse button` to pan
@@ -124,11 +126,10 @@ fn set_cam3d_controls(
 - transform gizmos
 - visualization of invisible entities in editor (to see where the camera is for example)
 
-
-
 ## Bevy support table
 
-| bevy | bevy\_editor\_pls |
-| ---- | ----------------- |
-| 0.9  | 0.2               |
-| 0.8  | 0.1               |
+| bevy | bevy_editor_pls |
+| ---- | --------------- |
+| 0.10 | 0.3             |
+| 0.9  | 0.2             |
+| 0.8  | 0.1             |
