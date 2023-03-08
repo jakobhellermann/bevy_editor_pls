@@ -18,6 +18,7 @@ use bevy_editor_pls_core::{
 
 use crate::add::{add_ui, AddWindow, AddWindowState};
 use crate::debug_settings::DebugSettingsWindow;
+use crate::inspector::{InspectorSelection, InspectorWindow};
 
 #[derive(Component)]
 pub struct HideInEditor;
@@ -28,21 +29,33 @@ impl EditorWindow for HierarchyWindow {
     const NAME: &'static str = "Hierarchy";
 
     fn ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
-        let (hierarchy_state, add_state) = cx.state_mut_pair::<HierarchyWindow, AddWindow>();
-        let hierarchy_state = hierarchy_state.unwrap();
+        let (hierarchy_state, inspector_state, add_state) =
+            match cx.state_mut_triplet::<HierarchyWindow, InspectorWindow, AddWindow>() {
+                Some((a, b, c)) => (a, b, Some(c)),
+                None => {
+                    let (a, b) = cx
+                        .state_mut_pair::<HierarchyWindow, InspectorWindow>()
+                        .unwrap();
+                    (a, b, None)
+                }
+            };
 
         ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 let type_registry = world.resource::<AppTypeRegistry>().clone();
                 let type_registry = type_registry.read();
-                Hierarchy {
+                let new_selected = Hierarchy {
                     world,
                     state: hierarchy_state,
                     type_registry: &type_registry,
                     add_state: add_state.as_deref(),
                 }
                 .show(ui);
+
+                if new_selected {
+                    inspector_state.selected = InspectorSelection::Entities;
+                }
             });
     }
 
@@ -129,7 +142,7 @@ struct Hierarchy<'a> {
 }
 
 impl<'a> Hierarchy<'a> {
-    fn show(&mut self, ui: &mut egui::Ui) {
+    fn show(&mut self, ui: &mut egui::Ui) -> bool {
         let mut despawn_recursive = None;
         let mut despawn = None;
 
@@ -138,7 +151,7 @@ impl<'a> Hierarchy<'a> {
             rename_info,
         } = self.state;
 
-        bevy_inspector_egui::bevy_inspector::hierarchy::Hierarchy {
+        let new_selection = bevy_inspector_egui::bevy_inspector::hierarchy::Hierarchy {
             extra_state: rename_info,
             world: self.world,
             type_registry: self.type_registry,
@@ -199,6 +212,8 @@ impl<'a> Hierarchy<'a> {
             }
             self.state.selected.clear();
         }
+
+        new_selection
     }
 }
 

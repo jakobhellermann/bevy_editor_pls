@@ -45,31 +45,42 @@ impl EditorWindowContext<'_> {
             .and_then(|s| s.downcast_ref::<W::State>())
     }
 
+    pub fn state_mut_many<const N: usize>(
+        &mut self,
+        ids: [&TypeId; N],
+    ) -> [&mut (dyn Any + Send + Sync + 'static); N] {
+        self.window_states
+            .get_many_mut(ids)
+            .unwrap()
+            .map(|val| &mut **val)
+    }
+    pub fn state_mut_triplet<'a, W1: EditorWindow, W2: EditorWindow, W3: EditorWindow>(
+        &'a mut self,
+    ) -> Option<(&'a mut W1::State, &'a mut W2::State, &'a mut W3::State)> {
+        let [a, b, c] = self.window_states.get_many_mut([
+            &TypeId::of::<W1>(),
+            &TypeId::of::<W2>(),
+            &TypeId::of::<W3>(),
+        ])?;
+
+        let a = a.downcast_mut::<W1::State>()?;
+        let b = b.downcast_mut::<W2::State>()?;
+        let c = c.downcast_mut::<W3::State>()?;
+        Some((a, b, c))
+    }
+
     pub fn state_mut_pair<'a, W1: EditorWindow, W2: EditorWindow>(
         &'a mut self,
-    ) -> (Option<&'a mut W1::State>, Option<&'a mut W2::State>) {
+    ) -> Option<(&'a mut W1::State, &'a mut W2::State)> {
         assert_ne!(TypeId::of::<W1>(), TypeId::of::<W2>());
 
-        let a = self
+        let [a, b] = self
             .window_states
-            .get_mut(&TypeId::of::<W1>())
-            .and_then(|state| state.downcast_mut::<W1::State>())
-            .map(|state| state as *mut _);
-        let b = self
-            .window_states
-            .get_mut(&TypeId::of::<W2>())
-            .and_then(|state| state.downcast_mut::<W2::State>())
-            .map(|state| state as *mut _);
+            .get_many_mut([&TypeId::of::<W1>(), &TypeId::of::<W2>()])?;
 
-        if let (Some(a), Some(b)) = (a, b) {
-            assert_ne!(
-                a as *mut (), b as *mut (),
-                "the two keys must not resolve to the same value"
-            );
-        }
-
-        // Safety: we have &mut self access, the values are distinct and the lifetime is tied to &'a self
-        (a.map(|a| unsafe { &mut *a }), b.map(|b| unsafe { &mut *b }))
+        let a = a.downcast_mut::<W1::State>()?;
+        let b = b.downcast_mut::<W2::State>()?;
+        Some((a, b))
     }
 
     pub fn open_floating_window<W: ?Sized + EditorWindow>(&mut self) {
