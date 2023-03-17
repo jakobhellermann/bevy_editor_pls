@@ -302,15 +302,21 @@ impl Editor {
             &mut internal_state.tree,
             egui_dock::Tree::new(Vec::default()),
         );
-        egui_dock::DockArea::new(&mut tree).show(
-            ctx,
-            &mut TabViewer {
-                editor: self,
-                internal_state,
-                world,
-                editor_state,
-            },
-        );
+
+        egui_dock::DockArea::new(&mut tree)
+            .style(egui_dock::Style {
+                tab_bar_background_color: ctx.style().visuals.window_fill(),
+                ..egui_dock::Style::from_egui(ctx.style().as_ref())
+            })
+            .show(
+                ctx,
+                &mut TabViewer {
+                    editor: self,
+                    internal_state,
+                    world,
+                    editor_state,
+                },
+            );
         internal_state.tree = tree;
 
         let pointer_pos = ctx.input(|input| input.pointer.interact_pos());
