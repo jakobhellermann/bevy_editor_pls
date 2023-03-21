@@ -1,16 +1,10 @@
-use bevy::{
-    input::mouse::MouseMotion,
-    prelude::*,
-    window::{CursorGrabMode, PrimaryWindow},
-};
-use bevy_editor_pls_core::EditorState;
+use bevy::{input::mouse::MouseMotion, prelude::*};
 
 pub(crate) struct FlycamPlugin;
 impl Plugin for FlycamPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(camera_movement.in_set(CameraSystem::Movement))
-            .add_system(camera_look)
-            .add_system(toggle_cursor);
+            .add_system(camera_look);
     }
 }
 
@@ -119,25 +113,4 @@ fn camera_look(
         .clamp(-std::f32::consts::PI / 2.0, std::f32::consts::PI / 2.0);
 
     transform.rotation = Quat::from_euler(EulerRot::YXZ, flycam.yaw, flycam.pitch, 0.0);
-}
-
-fn toggle_cursor(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut primary_window: Query<&mut Window, With<PrimaryWindow>>,
-    editor_state: Res<EditorState>,
-) {
-    let Ok(mut window) = primary_window.get_single_mut() else { return };
-
-    if !editor_state.active {
-        return;
-    }
-
-    if keyboard_input.just_pressed(KeyCode::LAlt) {
-        window.cursor.grab_mode = CursorGrabMode::Confined;
-        window.cursor.visible = false;
-    }
-    if keyboard_input.just_released(KeyCode::LAlt) {
-        window.cursor.grab_mode = CursorGrabMode::None;
-        window.cursor.visible = true;
-    }
 }
