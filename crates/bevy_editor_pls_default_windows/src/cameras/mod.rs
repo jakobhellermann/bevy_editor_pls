@@ -545,7 +545,7 @@ fn set_main_pass_viewport(
     editor_state: Res<bevy_editor_pls_core::EditorState>,
     egui_settings: Res<bevy_inspector_egui::bevy_egui::EguiSettings>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
-    mut cameras: Query<&mut Camera>,
+    mut cameras: Query<&mut Camera, With<EditorCamera>>,
 ) {
     if !editor_state.is_changed() {
         return;
