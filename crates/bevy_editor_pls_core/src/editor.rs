@@ -10,6 +10,12 @@ use indexmap::IndexMap;
 
 use crate::editor_window::{EditorWindow, EditorWindowContext};
 
+#[derive(SystemSet, Clone, Copy, Debug, Hash, Eq, PartialEq)]
+pub enum EditorSet {
+    /// In [`CoreSet::PostUpdate`]
+    UI,
+}
+
 pub struct EditorPlugin;
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
@@ -24,9 +30,10 @@ impl Plugin for EditorPlugin {
             .init_resource::<EditorInternalState>()
             .init_resource::<EditorState>()
             .add_event::<EditorEvent>()
+            .configure_set(EditorSet::UI.in_base_set(CoreSet::PostUpdate))
             .add_system(
                 Editor::system
-                    .in_base_set(CoreSet::PostUpdate)
+                    .in_set(EditorSet::UI)
                     .after(EguiSet::ProcessOutput),
             );
     }

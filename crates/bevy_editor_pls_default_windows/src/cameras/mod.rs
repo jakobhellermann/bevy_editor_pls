@@ -130,9 +130,11 @@ impl EditorWindow for CameraWindow {
             .add_system(initial_camera_setup);
         app.add_startup_system(spawn_editor_cameras.in_base_set(StartupSet::PreStartup));
 
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
-            set_main_pass_viewport.before(bevy::render::camera::CameraUpdateSystem),
+        app.add_system(
+            set_main_pass_viewport
+                .in_base_set(CoreSet::PostUpdate)
+                .after(bevy_editor_pls_core::editor::EditorSet::UI)
+                .before(bevy::render::camera::CameraUpdateSystem),
         );
     }
 }
@@ -542,26 +544,36 @@ fn initial_camera_setup(
 fn set_main_pass_viewport(
     editor_state: Res<bevy_editor_pls_core::EditorState>,
     egui_settings: Res<bevy_inspector_egui::bevy_egui::EguiSettings>,
-    windows: Res<Windows>,
+    primary_window: Query<&Window, With<PrimaryWindow>>,
     mut cameras: Query<&mut Camera>,
 ) {
     if !editor_state.is_changed() {
         return;
     };
 
-    let scale_factor = windows.get_primary().unwrap().scale_factor() * egui_settings.scale_factor;
+    let Ok(primary_window) = primary_window.get_single() else { return };
 
-    let viewport_pos = editor_state.viewport.left_top().to_vec2() * scale_factor as f32;
-    let viewport_size = editor_state.viewport.size() * scale_factor as f32;
+    let viewport = editor_state.active.then(|| {
+        let scale_factor = primary_window.scale_factor() * egui_settings.scale_factor;
 
-    cameras.iter_mut().for_each(|mut cam| {
-        cam.viewport = editor_state.active.then(|| bevy::render::camera::Viewport {
+        let viewport_pos = editor_state.viewport.left_top().to_vec2() * scale_factor as f32;
+        let viewport_size = editor_state.viewport.size() * scale_factor as f32;
+
+        if !viewport_size.is_finite() {
+            warn!("editor viewport size is infinite");
+        }
+
+        bevy::render::camera::Viewport {
             physical_position: UVec2::new(viewport_pos.x as u32, viewport_pos.y as u32),
             physical_size: UVec2::new(
                 (viewport_size.x as u32).max(1),
                 (viewport_size.y as u32).max(1),
             ),
             depth: 0.0..1.0,
-        });
+        }
+    });
+
+    cameras.iter_mut().for_each(|mut cam| {
+        cam.viewport = viewport.clone();
     });
 }
