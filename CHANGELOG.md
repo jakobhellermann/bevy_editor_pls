@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.4 (unreleased)
+- allow editor on non-primary window
+- breaking: require `.add_plugin(EditorPlugin::new())` instead of `.add_plugin(EditorPlugin)`
+
 ## Version 0.3.1
 - fix clear tab background
 - fix editor camera viewport

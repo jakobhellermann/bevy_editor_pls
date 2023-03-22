@@ -4,8 +4,8 @@ use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
     render::camera::Projection,
-    window::PrimaryWindow,
 };
+use bevy_editor_pls_core::Editor;
 
 pub struct PanOrbitCameraPlugin;
 impl Plugin for PanOrbitCameraPlugin {
@@ -50,13 +50,14 @@ pub(crate) enum CameraSystem {
 
 /// Pan the camera with middle mouse click, zoom with scroll wheel, orbit with right mouse click.
 fn pan_orbit_camera(
-    primary_window: Query<&Window, With<PrimaryWindow>>,
+    editor: Res<Editor>,
+    window: Query<&Window>,
     mut ev_motion: EventReader<MouseMotion>,
     mut ev_scroll: EventReader<MouseWheel>,
     input_mouse: Res<Input<MouseButton>>,
     mut query: Query<(&mut PanOrbitCamera, &mut Transform, &Projection)>,
 ) {
-    let Ok(window) = primary_window.get_single() else { return };
+    let Ok(window) = window.get(editor.window()) else { return };
 
     // change input mapping for orbit and panning here
     let (mut pan_orbit, mut transform, projection) = query.single_mut();
@@ -115,7 +116,7 @@ fn pan_orbit_camera(
     } else if pan.length_squared() > 0.0 {
         any = true;
         // make panning distance independent of resolution and FOV,
-        let window_size = get_primary_window_size(&window);
+        let window_size = Vec2::new(window.width() as f32, window.height() as f32);
         if let Projection::Perspective(projection) = projection {
             pan *=
                 Vec2::new(projection.fov * projection.aspect_ratio, projection.fov) / window_size;
@@ -141,9 +142,4 @@ fn pan_orbit_camera(
         transform.translation =
             pan_orbit.focus + rot_matrix.mul_vec3(Vec3::new(0.0, 0.0, pan_orbit.radius));
     }
-}
-
-fn get_primary_window_size(window: &Window) -> Vec2 {
-    let window = Vec2::new(window.width() as f32, window.height() as f32);
-    window
 }

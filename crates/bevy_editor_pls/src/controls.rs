@@ -175,10 +175,12 @@ pub fn editor_controls_system(
         &mouse_input,
         &editor_state,
     ) {
-        editor_state.active = !editor_state.active;
-        editor_events.send(EditorEvent::Toggle {
-            now_active: editor_state.active,
-        });
+        if !editor.always_active() {
+            editor_state.active = !editor_state.active;
+            editor_events.send(EditorEvent::Toggle {
+                now_active: editor_state.active,
+            });
+        }
     }
 
     if controls.just_pressed(

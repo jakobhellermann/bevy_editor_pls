@@ -3,7 +3,7 @@ use bevy::prelude::*;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(bevy_editor_pls::EditorPlugin)
+        .add_plugin(bevy_editor_pls::EditorPlugin::new())
         .add_startup_system(setup_2d)
         .add_startup_system(setup_3d)
         .run();

@@ -1,7 +1,7 @@
 use std::any::{Any, TypeId};
 
 use bevy::ecs::event::Events;
-use bevy::window::{PrimaryWindow, WindowMode};
+use bevy::window::{PrimaryWindow, WindowMode, WindowRef};
 use bevy::{prelude::*, utils::HashMap};
 use bevy_inspector_egui::bevy_egui::{egui, EguiContext, EguiPlugin, EguiSet};
 use bevy_inspector_egui::DefaultInspectorConfigPlugin;
@@ -16,7 +16,9 @@ pub enum EditorSet {
     UI,
 }
 
-pub struct EditorPlugin;
+pub struct EditorPlugin {
+    pub window: WindowRef,
+}
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         if !app.is_plugin_added::<DefaultInspectorConfigPlugin>() {
@@ -26,9 +28,23 @@ impl Plugin for EditorPlugin {
             app.add_plugin(EguiPlugin);
         }
 
-        app.init_resource::<Editor>()
+        let (window_entity, always_active) = match self.window {
+            WindowRef::Primary => {
+                let entity = app
+                    .world
+                    .query_filtered::<Entity, With<PrimaryWindow>>()
+                    .single(&app.world);
+                (entity, false)
+            }
+            WindowRef::Entity(entity) => (entity, true),
+        };
+
+        app.insert_resource(Editor::new(window_entity, always_active))
+            .insert_resource(EditorState {
+                active: always_active,
+                ..Default::default()
+            })
             .init_resource::<EditorInternalState>()
-            .init_resource::<EditorState>()
             .add_event::<EditorEvent>()
             .configure_set(EditorSet::UI.in_base_set(CoreSet::PostUpdate))
             .add_system(
@@ -94,10 +110,30 @@ impl Default for EditorState {
     }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct Editor {
+    on_window: Entity,
+    always_active: bool,
+
     windows: IndexMap<TypeId, EditorWindowData>,
     window_states: HashMap<TypeId, EditorWindowState>,
+}
+impl Editor {
+    pub fn new(on_window: Entity, always_active: bool) -> Self {
+        Editor {
+            on_window,
+            always_active,
+            windows: IndexMap::default(),
+            window_states: HashMap::default(),
+        }
+    }
+
+    pub fn window(&self) -> Entity {
+        self.on_window
+    }
+    pub fn always_active(&self) -> bool {
+        self.always_active
+    }
 }
 
 pub(crate) type UiFn =
@@ -263,12 +299,12 @@ impl Editor {
 
 impl Editor {
     fn system(world: &mut World) {
-        let Ok(mut egui_context) = world.query_filtered::<&mut EguiContext, With<PrimaryWindow>>().get_single_mut(world) else {
-            return;
-        };
-        let egui_context = egui_context.get_mut().clone();
-
         world.resource_scope(|world, mut editor: Mut<Editor>| {
+            let Ok(mut egui_context) = world.query::<&mut EguiContext>().get_mut(world, editor.on_window) else {
+                return;
+            };
+            let egui_context = egui_context.get_mut().clone();
+
             world.resource_scope(|world, mut editor_state: Mut<EditorState>| {
                 world.resource_scope(
                     |world, mut editor_internal_state: Mut<EditorInternalState>| {
@@ -358,11 +394,13 @@ impl Editor {
     ) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             let bar_response = egui::menu::bar(ui, |ui| {
-                if play_pause_button(editor_state.active, ui).clicked() {
-                    editor_state.active = !editor_state.active;
-                    editor_events.send(EditorEvent::Toggle {
-                        now_active: editor_state.active,
-                    });
+                if !self.always_active {
+                    if play_pause_button(editor_state.active, ui).clicked() {
+                        editor_state.active = !editor_state.active;
+                        editor_events.send(EditorEvent::Toggle {
+                            now_active: editor_state.active,
+                        });
+                    }
                 }
 
                 ui.menu_button("Open window", |ui| {
@@ -380,11 +418,12 @@ impl Editor {
 
             if bar_response.double_clicked() {
                 let mut window = world
-                    .query_filtered::<&mut Window, With<PrimaryWindow>>()
-                    .single_mut(world);
+                    .query::<&mut Window>()
+                    .get_mut(world, self.on_window)
+                    .unwrap();
 
                 match window.mode {
-                    WindowMode::Windowed => window.mode = WindowMode::Fullscreen,
+                    WindowMode::Windowed => window.mode = WindowMode::BorderlessFullscreen,
                     _ => window.mode = WindowMode::Windowed,
                 }
             }

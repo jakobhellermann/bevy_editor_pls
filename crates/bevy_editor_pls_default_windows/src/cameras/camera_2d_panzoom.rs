@@ -4,8 +4,8 @@ use bevy::{
     input::mouse::{MouseScrollUnit, MouseWheel},
     prelude::*,
     render::camera::OrthographicProjection,
-    window::PrimaryWindow,
 };
+use bevy_editor_pls_core::Editor;
 
 #[derive(SystemSet, PartialEq, Eq, Clone, Hash, Debug)]
 pub(crate) enum CameraSystem {
@@ -46,12 +46,13 @@ fn camera_zoom(
 }
 
 fn camera_movement(
-    primary_window: Query<&Window, With<PrimaryWindow>>,
+    editor: Res<Editor>,
+    window: Query<&Window>,
     mouse_buttons: Res<Input<MouseButton>>,
     mut query: Query<(&PanCamControls, &mut Transform, &OrthographicProjection)>,
     mut last_pos: Local<Option<Vec2>>,
 ) {
-    let Ok(window) = primary_window.get_single() else { return };
+    let Ok(window) = window.get(editor.window()) else { return };
 
     // Use position instead of MouseMotion, otherwise we don't get acceleration movement
     let current_pos = match window.cursor_position() {

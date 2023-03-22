@@ -3,7 +3,10 @@ pub mod controls;
 
 use std::any::TypeId;
 
-use bevy::prelude::Plugin;
+use bevy::{
+    prelude::{Entity, Plugin},
+    window::{Window, WindowRef},
+};
 pub use bevy_editor_pls_core::*;
 
 use bevy_editor_pls_core::{editor::EditorInternalState, egui_dock::NodeIndex};
@@ -18,10 +21,45 @@ pub mod prelude {
     pub use bevy_editor_pls_default_windows::scenes::NotInScene;
 }
 
-pub struct EditorPlugin;
+#[derive(Default)]
+pub enum EditorWindow {
+    New(Window),
+    #[default]
+    Primary,
+    Window(Entity),
+}
+
+#[derive(Default)]
+pub struct EditorPlugin {
+    pub window: EditorWindow,
+}
+
+impl EditorPlugin {
+    pub fn new() -> Self {
+        EditorPlugin::default()
+    }
+    pub fn in_separate_window(mut self) -> Self {
+        self.window = EditorWindow::New(Window::default());
+        self
+    }
+}
+
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugin(bevy_editor_pls_core::EditorPlugin);
+        let window = match self.window {
+            EditorWindow::New(ref window) => {
+                let mut window = window.clone();
+                if window.title == "Bevy App" {
+                    window.title = "bevy_editor_pls".into();
+                }
+                let entity = app.world.spawn(window);
+                WindowRef::Entity(entity.id())
+            }
+            EditorWindow::Window(entity) => WindowRef::Entity(entity),
+            EditorWindow::Primary => WindowRef::Primary,
+        };
+
+        app.add_plugin(bevy_editor_pls_core::EditorPlugin { window });
 
         // if !app.is_plugin_added::<FramepacePlugin>() {
         // app.add_plugin(FramepacePlugin);

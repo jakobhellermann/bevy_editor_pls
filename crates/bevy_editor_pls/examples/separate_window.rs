@@ -1,22 +1,20 @@
-use bevy::{
-    asset::diagnostic::AssetCountDiagnosticsPlugin,
-    diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
-    prelude::*,
-    render::{render_resource::WgpuFeatures, settings::WgpuSettings, RenderPlugin},
-};
-use bevy_editor_pls::prelude::*;
+use bevy::prelude::*;
+use bevy::window::WindowResolution;
+use bevy_editor_pls::EditorPlugin;
 
 fn main() {
-    // enable wireframe rendering
-    let mut wgpu_settings = WgpuSettings::default();
-    wgpu_settings.features |= WgpuFeatures::POLYGON_MODE_LINE;
-
     App::new()
-        .add_plugins(DefaultPlugins.set(RenderPlugin { wgpu_settings }))
-        .add_plugin(EditorPlugin::new())
-        .add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(EntityCountDiagnosticsPlugin)
-        .add_plugin(AssetCountDiagnosticsPlugin::<StandardMaterial>::default())
+        .add_plugins(DefaultPlugins)
+        // .add_plugin(EditorPlugin::new().in_separate_window())
+        .add_plugin(EditorPlugin {
+            window: bevy_editor_pls::EditorWindow::New({
+                let mut window = Window::default();
+                window.resolution = WindowResolution::new(1920.0, 1280.0);
+                window.position = WindowPosition::Centered(MonitorSelection::Index(1));
+                window.decorations = false;
+                window
+            }),
+        })
         .add_startup_system(setup)
         .run();
 }

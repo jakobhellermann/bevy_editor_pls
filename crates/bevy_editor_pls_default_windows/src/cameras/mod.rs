@@ -5,7 +5,7 @@ use crate::scenes::NotInScene;
 
 use bevy::render::camera::RenderTarget;
 use bevy::utils::HashSet;
-use bevy::window::PrimaryWindow;
+use bevy::window::WindowRef;
 use bevy::{prelude::*, render::primitives::Aabb};
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
@@ -201,7 +201,7 @@ fn cameras_ui(ui: &mut egui::Ui, world: &mut World) {
     }
 }
 
-fn spawn_editor_cameras(mut commands: Commands) {
+fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
     #[derive(Component, Default)]
     struct Ec2d;
     #[derive(Component, Default)]
@@ -212,11 +212,14 @@ fn spawn_editor_cameras(mut commands: Commands) {
     let show_ui_by_default = false;
     let editor_cam_priority = 100;
 
+    let target = RenderTarget::Window(WindowRef::Entity(editor.window()));
+
     commands
         .spawn(Camera3dBundle {
             camera: Camera {
                 order: editor_cam_priority,
                 is_active: false,
+                target: target.clone(),
                 ..default()
             },
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
@@ -239,6 +242,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
             camera: Camera {
                 //  Prevent multiple cameras from having the same priority.
                 order: editor_cam_priority + 1,
+                target: target.clone(),
                 is_active: false,
                 ..default()
             },
@@ -262,6 +266,7 @@ fn spawn_editor_cameras(mut commands: Commands) {
             camera: Camera {
                 //  Prevent multiple cameras from having the same priority.
                 order: editor_cam_priority + 2,
+                target,
                 is_active: false,
                 ..default()
             },
@@ -327,10 +332,15 @@ fn set_editor_cam_active(
 struct PreviouslyActiveCameras(HashSet<Entity>);
 
 fn toggle_editor_cam(
+    editor: Res<Editor>,
     mut editor_events: EventReader<EditorEvent>,
     mut prev_active_cams: ResMut<PreviouslyActiveCameras>,
     mut cam_query: Query<(Entity, &mut Camera)>,
 ) {
+    if editor.always_active() {
+        return;
+    }
+
     for event in editor_events.iter() {
         if let EditorEvent::Toggle { now_active } = *event {
             if now_active {
@@ -371,9 +381,9 @@ fn focus_selected(
         Without<ActiveEditorCamera>,
     >,
     editor: Res<Editor>,
-    primary_window: Query<&Window, With<PrimaryWindow>>,
+    window: Query<&Window>,
 ) {
-    let Ok(window) = primary_window.get_single() else { return };
+    let Ok(window) = window.get(editor.window()) else { return };
 
     for event in editor_events.iter() {
         match *event {
@@ -544,17 +554,18 @@ fn initial_camera_setup(
 fn set_main_pass_viewport(
     editor_state: Res<bevy_editor_pls_core::EditorState>,
     egui_settings: Res<bevy_inspector_egui::bevy_egui::EguiSettings>,
-    primary_window: Query<&Window, With<PrimaryWindow>>,
+    editor: Res<Editor>,
+    window: Query<&Window>,
     mut cameras: Query<&mut Camera, With<EditorCamera>>,
 ) {
     if !editor_state.is_changed() {
         return;
     };
 
-    let Ok(primary_window) = primary_window.get_single() else { return };
+    let Ok(window) = window.get(editor.window()) else { return };
 
     let viewport = editor_state.active.then(|| {
-        let scale_factor = primary_window.scale_factor() * egui_settings.scale_factor;
+        let scale_factor = window.scale_factor() * egui_settings.scale_factor;
 
         let viewport_pos = editor_state.viewport.left_top().to_vec2() * scale_factor as f32;
         let viewport_size = editor_state.viewport.size() * scale_factor as f32;

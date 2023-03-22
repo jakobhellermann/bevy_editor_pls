@@ -4,7 +4,7 @@ use bevy_editor_pls::{controls, EditorPlugin};
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(EditorPlugin)
+        .add_plugin(EditorPlugin::new())
         .insert_resource(editor_controls())
         .add_startup_system(set_cam3d_controls)
         .add_startup_system(setup)
