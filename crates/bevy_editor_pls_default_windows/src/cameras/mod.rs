@@ -519,6 +519,13 @@ fn initial_camera_setup(
 
     if !*was_positioned_2d {
         if let Some(cam2d_transform) = cam2d {
+            if !cam2d_transform.rotation.is_finite()
+                || !cam2d_transform.translation.is_finite()
+                || !cam2d_transform.scale.is_finite()
+            {
+                return;
+            };
+
             let mut query = cameras.p0();
             let (_, mut cam_transform) = query.single_mut();
             *cam_transform = cam2d_transform.clone();
@@ -529,6 +536,13 @@ fn initial_camera_setup(
 
     if !*was_positioned_3d {
         if let Some(cam3d_transform) = cam3d {
+            if !cam3d_transform.rotation.is_finite()
+                || !cam3d_transform.translation.is_finite()
+                || !cam3d_transform.scale.is_finite()
+            {
+                return;
+            };
+
             {
                 let mut query = cameras.p1();
                 let (_, mut cam_transform, mut cam) = query.single_mut();
