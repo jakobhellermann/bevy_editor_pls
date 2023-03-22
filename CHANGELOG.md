@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 0.3.1
+- fix clear tab background
+- fix editor camera viewport
+- remove left alt shortcut for hiding ursor
+
 ## Version 0.3
 - add `NotInScene` component to skip entity when saving to scene
 - update egui etc.
