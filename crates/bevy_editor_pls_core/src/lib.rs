@@ -2,6 +2,7 @@ pub mod editor;
 pub mod editor_window;
 
 use bevy::prelude::*;
+use bevy::transform::TransformSystem;
 use bevy::window::{PrimaryWindow, WindowRef};
 use bevy_inspector_egui::{
     bevy_egui::{EguiPlugin, EguiSet},
@@ -63,6 +64,7 @@ impl Plugin for EditorPlugin {
             .add_system(
                 Editor::system
                     .in_set(EditorSet::UI)
+                    .before(TransformSystem::TransformPropagate)
                     .after(EguiSet::ProcessOutput),
             );
     }
