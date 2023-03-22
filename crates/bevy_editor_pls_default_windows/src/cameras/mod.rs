@@ -133,7 +133,7 @@ impl EditorWindow for CameraWindow {
         app.add_system(
             set_main_pass_viewport
                 .in_base_set(CoreSet::PostUpdate)
-                .after(bevy_editor_pls_core::editor::EditorSet::UI)
+                .after(bevy_editor_pls_core::EditorSet::UI)
                 .before(bevy::render::camera::CameraUpdateSystem),
         );
     }
