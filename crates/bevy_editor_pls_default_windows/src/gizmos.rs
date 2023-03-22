@@ -53,9 +53,12 @@ fn draw_gizmo(
     selected_entities: &SelectedEntities,
     gizmo_mode: GizmoMode,
 ) {
-    let (cam_transform, projection) = world
+    let Ok((cam_transform, projection)) = world
         .query_filtered::<(&GlobalTransform, &Projection), With<ActiveEditorCamera>>()
-        .single(world);
+        .get_single(world)
+    else {
+        return;
+    };
     let view_matrix = Mat4::from(cam_transform.affine().inverse());
     let projection_matrix = projection.get_projection_matrix();
 
