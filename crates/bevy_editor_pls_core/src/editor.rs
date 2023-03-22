@@ -40,10 +40,6 @@ impl Plugin for EditorPlugin {
         };
 
         app.insert_resource(Editor::new(window_entity, always_active))
-            .insert_resource(EditorState {
-                active: always_active,
-                ..Default::default()
-            })
             .init_resource::<EditorInternalState>()
             .add_event::<EditorEvent>()
             .configure_set(EditorSet::UI.in_base_set(CoreSet::PostUpdate))
@@ -61,23 +57,70 @@ pub enum EditorEvent {
     FocusSelected,
 }
 
-#[derive(Resource)]
-pub struct EditorState {
-    pub active: bool,
-    pointer_used: bool,
-    active_editor_interaction: Option<ActiveEditorInteraction>,
-    pub listening_for_text: bool,
-    pub viewport: egui::Rect,
-}
-
 #[derive(Debug)]
 enum ActiveEditorInteraction {
     Viewport,
     Editor,
 }
 
-impl EditorState {
-    fn is_in_viewport(&self, pos: egui::Pos2) -> bool {
+#[derive(Resource)]
+pub struct Editor {
+    on_window: Entity,
+    always_active: bool,
+
+    active: bool,
+
+    pointer_used: bool,
+    active_editor_interaction: Option<ActiveEditorInteraction>,
+    listening_for_text: bool,
+    viewport: egui::Rect,
+
+    windows: IndexMap<TypeId, EditorWindowData>,
+    window_states: HashMap<TypeId, EditorWindowState>,
+}
+impl Editor {
+    pub fn new(on_window: Entity, always_active: bool) -> Self {
+        Editor {
+            on_window,
+            always_active,
+
+            active: always_active,
+            pointer_used: false,
+            active_editor_interaction: None,
+            listening_for_text: false,
+            viewport: egui::Rect::NOTHING,
+
+            windows: IndexMap::default(),
+            window_states: HashMap::default(),
+        }
+    }
+
+    pub fn window(&self) -> Entity {
+        self.on_window
+    }
+    pub fn always_active(&self) -> bool {
+        self.always_active
+    }
+    pub fn active(&self) -> bool {
+        self.active
+    }
+
+    /// Panics if `self.always_active` is true
+    pub fn set_active(&mut self, active: bool) {
+        if !active {
+            assert!(
+                self.always_active,
+                "cannot call set_active on always-active editor"
+            );
+        }
+
+        self.active = active;
+    }
+
+    pub fn viewport(&self) -> egui::Rect {
+        self.viewport
+    }
+    pub fn is_in_viewport(&self, pos: egui::Pos2) -> bool {
         self.viewport.contains(pos)
     }
 
@@ -89,50 +132,16 @@ impl EditorState {
             )
     }
 
+    pub fn listening_for_text(&self) -> bool {
+        self.listening_for_text
+    }
+
     pub fn viewport_interaction_active(&self) -> bool {
         !self.pointer_used
             || matches!(
                 self.active_editor_interaction,
                 Some(ActiveEditorInteraction::Viewport)
             )
-    }
-}
-
-impl Default for EditorState {
-    fn default() -> Self {
-        Self {
-            active: false,
-            pointer_used: false,
-            active_editor_interaction: None,
-            listening_for_text: false,
-            viewport: egui::Rect::NOTHING,
-        }
-    }
-}
-
-#[derive(Resource)]
-pub struct Editor {
-    on_window: Entity,
-    always_active: bool,
-
-    windows: IndexMap<TypeId, EditorWindowData>,
-    window_states: HashMap<TypeId, EditorWindowState>,
-}
-impl Editor {
-    pub fn new(on_window: Entity, always_active: bool) -> Self {
-        Editor {
-            on_window,
-            always_active,
-            windows: IndexMap::default(),
-            window_states: HashMap::default(),
-        }
-    }
-
-    pub fn window(&self) -> Entity {
-        self.on_window
-    }
-    pub fn always_active(&self) -> bool {
-        self.always_active
     }
 }
 
@@ -305,7 +314,6 @@ impl Editor {
             };
             let egui_context = egui_context.get_mut().clone();
 
-            world.resource_scope(|world, mut editor_state: Mut<EditorState>| {
                 world.resource_scope(
                     |world, mut editor_internal_state: Mut<EditorInternalState>| {
                         world.resource_scope(
@@ -313,7 +321,6 @@ impl Editor {
                                 editor.editor_ui(
                                     world,
                                     &egui_context,
-                                    &mut editor_state,
                                     &mut editor_internal_state,
                                     &mut editor_events,
                                 );
@@ -321,7 +328,7 @@ impl Editor {
                         );
                     },
                 );
-            });
+
         });
     }
 
@@ -329,15 +336,14 @@ impl Editor {
         &mut self,
         world: &mut World,
         ctx: &egui::Context,
-        editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
         editor_events: &mut Events<EditorEvent>,
     ) {
-        self.editor_menu_bar(world, ctx, editor_state, internal_state, editor_events);
+        self.editor_menu_bar(world, ctx, internal_state, editor_events);
 
-        if !editor_state.active {
+        if !self.active {
             self.editor_floating_windows(world, ctx, internal_state);
-            editor_state.pointer_used = ctx.is_pointer_over_area();
+            self.pointer_used = ctx.is_pointer_over_area();
             return;
         }
 
@@ -357,25 +363,23 @@ impl Editor {
                     editor: self,
                     internal_state,
                     world,
-                    editor_state,
                 },
             );
         internal_state.tree = tree;
 
         let pointer_pos = ctx.input(|input| input.pointer.interact_pos());
-        editor_state.pointer_used =
-            pointer_pos.map_or(false, |pos| !editor_state.is_in_viewport(pos));
+        self.pointer_used = pointer_pos.map_or(false, |pos| !self.is_in_viewport(pos));
 
         self.editor_floating_windows(world, ctx, internal_state);
 
-        editor_state.listening_for_text = ctx.wants_keyboard_input();
-        editor_state.pointer_used |= ctx.is_using_pointer();
+        self.listening_for_text = ctx.wants_keyboard_input();
+        self.pointer_used |= ctx.is_using_pointer();
 
         let is_pressed = ctx.input(|input| input.pointer.press_start_time().is_some());
-        match (&editor_state.active_editor_interaction, is_pressed) {
-            (_, false) => editor_state.active_editor_interaction = None,
+        match (&self.active_editor_interaction, is_pressed) {
+            (_, false) => self.active_editor_interaction = None,
             (None, true) => {
-                editor_state.active_editor_interaction = Some(match editor_state.pointer_used {
+                self.active_editor_interaction = Some(match self.pointer_used {
                     true => ActiveEditorInteraction::Editor,
                     false => ActiveEditorInteraction::Viewport,
                 });
@@ -388,17 +392,16 @@ impl Editor {
         &mut self,
         world: &mut World,
         ctx: &egui::Context,
-        editor_state: &mut EditorState,
         internal_state: &mut EditorInternalState,
         editor_events: &mut Events<EditorEvent>,
     ) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             let bar_response = egui::menu::bar(ui, |ui| {
                 if !self.always_active {
-                    if play_pause_button(editor_state.active, ui).clicked() {
-                        editor_state.active = !editor_state.active;
+                    if play_pause_button(self.active, ui).clicked() {
+                        self.active = !self.active;
                         editor_events.send(EditorEvent::Toggle {
-                            now_active: editor_state.active,
+                            now_active: self.active,
                         });
                     }
                 }
@@ -523,7 +526,6 @@ impl Editor {
 struct TabViewer<'a> {
     editor: &'a mut Editor,
     internal_state: &'a mut EditorInternalState,
-    editor_state: &'a mut EditorState,
     world: &'a mut World,
 }
 impl egui_dock::TabViewer for TabViewer<'_> {
@@ -542,7 +544,7 @@ impl egui_dock::TabViewer for TabViewer<'_> {
                         .editor_viewport_ui(self.world, ui, self.internal_state);
                 });
 
-                self.editor_state.viewport = viewport;
+                self.editor.viewport = viewport;
             }
             TreeTab::CustomWindow(window_id) => {
                 self.editor

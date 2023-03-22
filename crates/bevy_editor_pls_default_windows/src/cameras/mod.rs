@@ -9,7 +9,7 @@ use bevy::window::WindowRef;
 use bevy::{prelude::*, render::primitives::Aabb};
 use bevy_editor_pls_core::{
     editor_window::{EditorWindow, EditorWindowContext},
-    Editor, EditorEvent, EditorState,
+    Editor, EditorEvent,
 };
 use bevy_inspector_egui::egui;
 // use bevy_mod_picking::prelude::PickRaycastSource;
@@ -286,7 +286,6 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
 
 fn set_editor_cam_active(
     editor: Res<Editor>,
-    editor_state: Res<EditorState>,
 
     mut editor_cameras: ParamSet<(
         Query<(&mut Camera, &mut camera_3d_free::FlycamControls)>,
@@ -299,7 +298,7 @@ fn set_editor_cam_active(
     let camera_window_state = &editor.window_state::<CameraWindow>().unwrap();
     let editor_cam = camera_window_state.editor_cam;
 
-    if editor_state.active {
+    if editor.active() {
         ui_camera_settings
             .for_each_mut(|mut settings| settings.show_ui = camera_window_state.show_ui);
     }
@@ -307,24 +306,24 @@ fn set_editor_cam_active(
     {
         let mut q = editor_cameras.p0();
         let mut editor_cam_3d_free = q.single_mut();
-        let active = matches!(editor_cam, EditorCamKind::D3Free) && editor_state.active;
+        let active = matches!(editor_cam, EditorCamKind::D3Free) && editor.active();
         editor_cam_3d_free.0.is_active = active;
-        editor_cam_3d_free.1.enable_movement = active && !editor_state.listening_for_text;
-        editor_cam_3d_free.1.enable_look = active && editor_state.viewport_interaction_active();
+        editor_cam_3d_free.1.enable_movement = active && !editor.listening_for_text();
+        editor_cam_3d_free.1.enable_look = active && editor.viewport_interaction_active();
     }
     {
         let mut q = editor_cameras.p1();
         let mut editor_cam_3d_panorbit = q.single_mut();
-        let active = matches!(editor_cam, EditorCamKind::D3PanOrbit) && editor_state.active;
+        let active = matches!(editor_cam, EditorCamKind::D3PanOrbit) && editor.active();
         editor_cam_3d_panorbit.0.is_active = active;
-        editor_cam_3d_panorbit.1.enabled = active && editor_state.viewport_interaction_active();
+        editor_cam_3d_panorbit.1.enabled = active && editor.viewport_interaction_active();
     }
     {
         let mut q = editor_cameras.p2();
         let mut editor_cam_2d_panzoom = q.single_mut();
-        let active = matches!(editor_cam, EditorCamKind::D2PanZoom) && editor_state.active;
+        let active = matches!(editor_cam, EditorCamKind::D2PanZoom) && editor.active();
         editor_cam_2d_panzoom.0.is_active = active;
-        editor_cam_2d_panzoom.1.enabled = active && editor_state.viewport_interaction_active();
+        editor_cam_2d_panzoom.1.enabled = active && editor.viewport_interaction_active();
     }
 }
 
@@ -552,23 +551,22 @@ fn initial_camera_setup(
 }
 
 fn set_main_pass_viewport(
-    editor_state: Res<bevy_editor_pls_core::EditorState>,
     egui_settings: Res<bevy_inspector_egui::bevy_egui::EguiSettings>,
     editor: Res<Editor>,
     window: Query<&Window>,
     mut cameras: Query<&mut Camera, With<EditorCamera>>,
 ) {
-    if !editor_state.is_changed() {
+    if !editor.is_changed() {
         return;
     };
 
     let Ok(window) = window.get(editor.window()) else { return };
 
-    let viewport = editor_state.active.then(|| {
+    let viewport = editor.active().then(|| {
         let scale_factor = window.scale_factor() * egui_settings.scale_factor;
 
-        let viewport_pos = editor_state.viewport.left_top().to_vec2() * scale_factor as f32;
-        let viewport_size = editor_state.viewport.size() * scale_factor as f32;
+        let viewport_pos = editor.viewport().left_top().to_vec2() * scale_factor as f32;
+        let viewport_size = editor.viewport().size() * scale_factor as f32;
 
         if !viewport_size.is_finite() {
             warn!("editor viewport size is infinite");

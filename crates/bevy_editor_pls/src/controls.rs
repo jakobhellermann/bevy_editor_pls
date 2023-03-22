@@ -1,5 +1,5 @@
 use bevy::{prelude::*, utils::HashMap};
-use bevy_editor_pls_core::{editor_window::EditorWindow, Editor, EditorEvent, EditorState};
+use bevy_editor_pls_core::{editor_window::EditorWindow, Editor, EditorEvent};
 
 #[derive(Debug)]
 pub enum Button {
@@ -21,18 +21,18 @@ pub enum BindingCondition {
 }
 
 impl BindingCondition {
-    fn evaluate(&self, editor_state: &EditorState) -> bool {
+    fn evaluate(&self, editor: &Editor) -> bool {
         match *self {
             BindingCondition::InViewport(in_viewport) => {
                 if in_viewport {
-                    return !editor_state.pointer_used();
+                    return !editor.pointer_used();
                 } else {
-                    return editor_state.pointer_used();
+                    return editor.pointer_used();
                 }
             }
-            BindingCondition::EditorActive(editor_active) => editor_active == editor_state.active,
+            BindingCondition::EditorActive(editor_active) => editor_active == editor.active(),
             BindingCondition::ListeningForText(listening) => {
-                listening == editor_state.listening_for_text
+                listening == editor.listening_for_text()
             }
         }
     }
@@ -103,12 +103,12 @@ impl Binding {
         &self,
         keyboard_input: &Input<KeyCode>,
         mouse_input: &Input<MouseButton>,
-        editor_state: &EditorState,
+        editor: &Editor,
     ) -> bool {
         let can_trigger = self
             .conditions
             .iter()
-            .all(|condition| condition.evaluate(editor_state));
+            .all(|condition| condition.evaluate(editor));
         if !can_trigger {
             return false;
         }
@@ -152,12 +152,12 @@ impl EditorControls {
         action: Action,
         keyboard_input: &Input<KeyCode>,
         mouse_input: &Input<MouseButton>,
-        editor_state: &EditorState,
+        editor: &Editor,
     ) -> bool {
         let bindings = &self.actions.get(&action).unwrap();
         bindings
             .iter()
-            .any(|binding| binding.just_pressed(keyboard_input, mouse_input, editor_state))
+            .any(|binding| binding.just_pressed(keyboard_input, mouse_input, editor))
     }
 }
 
@@ -165,7 +165,6 @@ pub fn editor_controls_system(
     controls: Res<EditorControls>,
     keyboard_input: Res<Input<KeyCode>>,
     mouse_input: Res<Input<MouseButton>>,
-    mut editor_state: ResMut<EditorState>,
     mut editor_events: EventWriter<EditorEvent>,
     mut editor: ResMut<Editor>,
 ) {
@@ -173,12 +172,13 @@ pub fn editor_controls_system(
         Action::PlayPauseEditor,
         &keyboard_input,
         &mouse_input,
-        &editor_state,
+        &editor,
     ) {
         if !editor.always_active() {
-            editor_state.active = !editor_state.active;
+            let was_active = editor.active();
+            editor.set_active(!was_active);
             editor_events.send(EditorEvent::Toggle {
-                now_active: editor_state.active,
+                now_active: !was_active,
             });
         }
     }
@@ -187,7 +187,7 @@ pub fn editor_controls_system(
         Action::PauseUnpauseTime,
         &keyboard_input,
         &mouse_input,
-        &editor_state,
+        &editor,
     ) {
         if let Some(default_window) = editor.window_state_mut::<bevy_editor_pls_default_windows::debug_settings::DebugSettingsWindow>() {
             default_window.pause_time = !default_window.pause_time;
@@ -198,7 +198,7 @@ pub fn editor_controls_system(
         Action::FocusSelected,
         &keyboard_input,
         &mouse_input,
-        &editor_state,
+        &editor,
     ) {
         editor_events.send(EditorEvent::FocusSelected);
     }

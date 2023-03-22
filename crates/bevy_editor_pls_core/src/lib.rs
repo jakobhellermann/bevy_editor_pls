@@ -1,7 +1,7 @@
 pub mod editor;
 pub mod editor_window;
 
-pub use editor::{Editor, EditorEvent, EditorPlugin, EditorState};
+pub use editor::{Editor, EditorEvent, EditorPlugin};
 
 use bevy::prelude::App;
 use editor_window::EditorWindow;
