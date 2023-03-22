@@ -5,6 +5,7 @@
 - breaking: require `.add_plugin(EditorPlugin::new())` instead of `.add_plugin(EditorPlugin)`
 - merge `EditorState` and `Editor`
 - fix: run editor before transform propagation
+- add translate/rotate/scale gizmos
 
 ## Version 0.3.1
 - fix clear tab background

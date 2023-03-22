@@ -112,6 +112,7 @@ struct EditorWindowData {
     ui_fn: UiFn,
     menu_ui_fn: UiFn,
     viewport_toolbar_ui_fn: UiFn,
+    viewport_ui_fn: UiFn,
     default_size: (f32, f32),
 }
 
@@ -228,6 +229,9 @@ fn viewport_toolbar_ui_fn<W: EditorWindow>(
 ) {
     W::viewport_toolbar_ui(world, cx, ui);
 }
+fn viewport_ui_fn<W: EditorWindow>(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
+    W::viewport_ui(world, cx, ui);
+}
 
 impl Editor {
     pub fn add_window<W: EditorWindow>(&mut self) {
@@ -235,10 +239,12 @@ impl Editor {
         let ui_fn = Box::new(ui_fn::<W>);
         let menu_ui_fn = Box::new(menu_ui_fn::<W>);
         let viewport_toolbar_ui_fn = Box::new(viewport_toolbar_ui_fn::<W>);
+        let viewport_ui_fn = Box::new(viewport_ui_fn::<W>);
         let data = EditorWindowData {
             ui_fn,
             menu_ui_fn,
             viewport_toolbar_ui_fn,
+            viewport_ui_fn,
             name: W::NAME,
             default_size: W::DEFAULT_SIZE,
         };
@@ -464,7 +470,7 @@ impl Editor {
         }
     }
 
-    fn editor_viewport_ui(
+    fn editor_viewport_toolbar_ui(
         &mut self,
         world: &mut World,
         ui: &mut egui::Ui,
@@ -477,6 +483,22 @@ impl Editor {
             };
 
             (window.viewport_toolbar_ui_fn)(world, cx, ui);
+        }
+    }
+
+    fn editor_viewport_ui(
+        &mut self,
+        world: &mut World,
+        ui: &mut egui::Ui,
+        internal_state: &mut EditorInternalState,
+    ) {
+        for (_, window) in self.windows.iter() {
+            let cx = EditorWindowContext {
+                window_states: &mut self.window_states,
+                internal_state,
+            };
+
+            (window.viewport_ui_fn)(world, cx, ui);
         }
     }
 }
@@ -493,16 +515,20 @@ impl egui_dock::TabViewer for TabViewer<'_> {
         match *tab {
             TreeTab::GameView => {
                 let viewport = ui.clip_rect();
+
                 ui.horizontal(|ui| {
                     ui.style_mut().spacing.button_padding = egui::vec2(2.0, 0.0);
                     let height = ui.spacing().interact_size.y;
                     ui.set_min_size(egui::vec2(ui.available_width(), height));
 
                     self.editor
-                        .editor_viewport_ui(self.world, ui, self.internal_state);
+                        .editor_viewport_toolbar_ui(self.world, ui, self.internal_state);
                 });
 
                 self.editor.viewport = viewport;
+
+                self.editor
+                    .editor_viewport_ui(self.world, ui, self.internal_state);
             }
             TreeTab::CustomWindow(window_id) => {
                 self.editor

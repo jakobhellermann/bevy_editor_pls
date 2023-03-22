@@ -72,6 +72,7 @@ impl Plugin for EditorPlugin {
             use bevy_editor_pls_default_windows::cameras::CameraWindow;
             use bevy_editor_pls_default_windows::debug_settings::DebugSettingsWindow;
             use bevy_editor_pls_default_windows::diagnostics::DiagnosticsWindow;
+            use bevy_editor_pls_default_windows::gizmos::GizmoWindow;
             use bevy_editor_pls_default_windows::hierarchy::HierarchyWindow;
             use bevy_editor_pls_default_windows::inspector::InspectorWindow;
             use bevy_editor_pls_default_windows::renderer::RendererWindow;
@@ -88,7 +89,7 @@ impl Plugin for EditorPlugin {
             app.add_editor_window::<CameraWindow>();
             app.add_editor_window::<ResourcesWindow>();
             app.add_editor_window::<SceneWindow>();
-
+            app.add_editor_window::<GizmoWindow>();
             app.add_editor_window::<controls::ControlsWindow>();
 
             app.add_plugin(bevy::pbr::wireframe::WireframePlugin);

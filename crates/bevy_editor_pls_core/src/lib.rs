@@ -2,6 +2,7 @@ pub mod editor;
 pub mod editor_window;
 
 use bevy::prelude::*;
+use bevy::render::camera::CameraUpdateSystem;
 use bevy::transform::TransformSystem;
 use bevy::window::{PrimaryWindow, WindowRef};
 use bevy_inspector_egui::{
@@ -65,6 +66,7 @@ impl Plugin for EditorPlugin {
                 Editor::system
                     .in_set(EditorSet::UI)
                     .before(TransformSystem::TransformPropagate)
+                    .before(CameraUpdateSystem)
                     .after(EguiSet::ProcessOutput),
             );
     }

@@ -58,6 +58,15 @@ pub struct Binding {
     pub conditions: Vec<BindingCondition>,
 }
 
+impl From<UserInput> for Binding {
+    fn from(input: UserInput) -> Self {
+        Binding {
+            input,
+            conditions: Vec::new(),
+        }
+    }
+}
+
 impl Button {
     fn just_pressed(
         &self,
@@ -122,6 +131,13 @@ pub enum Action {
     PlayPauseEditor,
     PauseUnpauseTime,
     FocusSelected,
+
+    #[cfg(feature = "default_windows")]
+    SetGizmoModeTranslate,
+    #[cfg(feature = "default_windows")]
+    SetGizmoModeRotate,
+    #[cfg(feature = "default_windows")]
+    SetGizmoModeScale,
 }
 
 impl std::fmt::Display for Action {
@@ -130,6 +146,12 @@ impl std::fmt::Display for Action {
             Action::PlayPauseEditor => write!(f, "Play/Pause editor"),
             Action::PauseUnpauseTime => write!(f, "Pause/Unpause time"),
             Action::FocusSelected => write!(f, "Focus Selected Entity"),
+            #[cfg(feature = "default_windows")]
+            Action::SetGizmoModeTranslate => write!(f, "Activate translation gizmo"),
+            #[cfg(feature = "default_windows")]
+            Action::SetGizmoModeRotate => write!(f, "Activate rotation gizmo"),
+            #[cfg(feature = "default_windows")]
+            Action::SetGizmoModeScale => write!(f, "Activate scale gizmo"),
         }
     }
 }
@@ -202,6 +224,43 @@ pub fn editor_controls_system(
     ) {
         editor_events.send(EditorEvent::FocusSelected);
     }
+
+    #[cfg(feature = "default_windows")]
+    {
+        if controls.just_pressed(
+            Action::SetGizmoModeTranslate,
+            &keyboard_input,
+            &mouse_input,
+            &editor,
+        ) {
+            editor
+                .window_state_mut::<bevy_editor_pls_default_windows::gizmos::GizmoWindow>()
+                .unwrap()
+                .gizmo_mode = egui_gizmo::GizmoMode::Translate;
+        }
+        if controls.just_pressed(
+            Action::SetGizmoModeRotate,
+            &keyboard_input,
+            &mouse_input,
+            &editor,
+        ) {
+            editor
+                .window_state_mut::<bevy_editor_pls_default_windows::gizmos::GizmoWindow>()
+                .unwrap()
+                .gizmo_mode = egui_gizmo::GizmoMode::Rotate;
+        }
+        if controls.just_pressed(
+            Action::SetGizmoModeScale,
+            &keyboard_input,
+            &mouse_input,
+            &editor,
+        ) {
+            editor
+                .window_state_mut::<bevy_editor_pls_default_windows::gizmos::GizmoWindow>()
+                .unwrap()
+                .gizmo_mode = egui_gizmo::GizmoMode::Scale;
+        }
+    }
 }
 
 impl EditorControls {
@@ -238,6 +297,22 @@ impl EditorControls {
                 conditions: vec![BindingCondition::EditorActive(true)],
             },
         );
+
+        #[cfg(feature = "default_windows")]
+        {
+            controls.insert(
+                Action::SetGizmoModeTranslate,
+                UserInput::Single(Button::Keyboard(KeyCode::T)).into(),
+            );
+            controls.insert(
+                Action::SetGizmoModeRotate,
+                UserInput::Single(Button::Keyboard(KeyCode::R)).into(),
+            );
+            controls.insert(
+                Action::SetGizmoModeScale,
+                UserInput::Single(Button::Keyboard(KeyCode::S)).into(),
+            );
+        }
 
         controls
     }
