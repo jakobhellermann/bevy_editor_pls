@@ -1,10 +1,11 @@
 [package]
 name = "bevy_editor_pls_default_windows"
-version = "0.3.0"
-edition = "2021"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/jakobhellermann/bevy_editor_pls"
-description = "In-App editor tools for bevy apps"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
+readme.workspace = true
 
 [features]
 highlight_changes = ["bevy-inspector-egui/highlight_changes"]
@@ -17,8 +18,8 @@ bevy = { version = "0.10", default-features = false, features = [
     "bevy_sprite",
     "bevy_pbr",
 ] }
-bevy_editor_pls_core = { version = "0.3", path = "../bevy_editor_pls_core" }
-bevy-inspector-egui = { version = "0.18", default-features = false }
+bevy_editor_pls_core.workspace = true
+bevy-inspector-egui.workspace = true
 # bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "7a9ffd020b530acef25c8cf8bc9475b7a13bd353", default-features = false, features = [
 #     "backend_raycast",
 #     "backend_egui",

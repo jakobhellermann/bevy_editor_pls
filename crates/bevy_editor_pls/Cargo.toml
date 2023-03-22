@@ -1,11 +1,11 @@
 [package]
 name = "bevy_editor_pls"
-version = "0.3.0"
-edition = "2021"
-license = "MIT OR Apache-2.0"
-readme = "../../README.md"
-repository = "https://github.com/jakobhellermann/bevy_editor_pls"
-description = "In-App editor tools for bevy apps"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
+readme.workspace = true
 keywords = ["bevy", "editor"]
 categories = ["game-development", "gui", "visualization"]
 exclude = ["assets"]
@@ -16,10 +16,10 @@ highlight_changes = ["bevy_editor_pls_default_windows/highlight_changes"]
 default = ["default_windows"]
 
 [dependencies]
+bevy_editor_pls_core.workspace = true
+bevy_editor_pls_default_windows = { workspace = true, optional = true }
 bevy = { version = "0.10", default-features = false, features = ["x11"] }
-egui = "0.21.0"
-bevy_editor_pls_core = { version = "0.3", path = "../bevy_editor_pls_core" }
-bevy_editor_pls_default_windows = { version = "0.3", path = "../bevy_editor_pls_default_windows", optional = true }
+egui.workspace = true
 # bevy_framepace = { version = "0.11", default-features = false }
 
 [dev-dependencies]

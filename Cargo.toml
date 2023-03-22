@@ -2,5 +2,21 @@
 members = ["crates/*"]
 resolver = "2"
 
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/jakobhellermann/bevy_editor_pls"
+description = "In-App editor tools for bevy apps"
+readme = "README.md"
+
+[workspace.dependencies]
+bevy_editor_pls = { version = "0.3.1", path = "crates/bevy_editor_pls" }
+bevy_editor_pls_core = { version = "0.3.1", path = "crates/bevy_editor_pls_core" }
+bevy_editor_pls_default_windows = { version = "0.3.1", path = "crates/bevy_editor_pls_default_windows" }
+
+bevy-inspector-egui = "0.18"
+egui = "0.21"
+
 [profile.dev.package."*"]
 opt-level = 2
