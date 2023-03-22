@@ -1,15 +1,12 @@
 #[cfg(feature = "default_windows")]
 pub mod controls;
 
-use std::any::TypeId;
-
 use bevy::{
     prelude::{Entity, Plugin},
     window::{Window, WindowRef},
 };
 pub use bevy_editor_pls_core::*;
 
-use bevy_editor_pls_core::{editor::EditorInternalState, egui_dock::NodeIndex};
 // use bevy_framepace::FramepacePlugin;
 pub use egui;
 
@@ -18,6 +15,7 @@ pub use bevy_editor_pls_default_windows as default_windows;
 
 pub mod prelude {
     pub use crate::{AddEditorWindow, EditorPlugin};
+    #[cfg(feature = "default_windows")]
     pub use bevy_editor_pls_default_windows::scenes::NotInScene;
 }
 
@@ -97,20 +95,20 @@ impl Plugin for EditorPlugin {
             app.insert_resource(controls::EditorControls::default_bindings())
                 .add_system(controls::editor_controls_system);
 
-            let mut internal_state = app.world.resource_mut::<EditorInternalState>();
+            let mut internal_state = app.world.resource_mut::<editor::EditorInternalState>();
 
             let [game, _inspector] =
-                internal_state.split_right::<InspectorWindow>(NodeIndex::root(), 0.75);
+                internal_state.split_right::<InspectorWindow>(egui_dock::NodeIndex::root(), 0.75);
             let [game, _hierarchy] = internal_state.split_left::<HierarchyWindow>(game, 0.2);
             let [_game, _bottom] = internal_state.split_many(
                 game,
                 0.8,
                 egui_dock::Split::Below,
                 &[
-                    TypeId::of::<ResourcesWindow>(),
-                    TypeId::of::<AssetsWindow>(),
-                    TypeId::of::<DebugSettingsWindow>(),
-                    TypeId::of::<DiagnosticsWindow>(),
+                    std::any::TypeId::of::<ResourcesWindow>(),
+                    std::any::TypeId::of::<AssetsWindow>(),
+                    std::any::TypeId::of::<DebugSettingsWindow>(),
+                    std::any::TypeId::of::<DiagnosticsWindow>(),
                 ],
             );
         }
