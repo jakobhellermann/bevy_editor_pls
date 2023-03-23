@@ -21,9 +21,9 @@ pub mod prelude {
 
 #[derive(Default)]
 pub enum EditorWindow {
-    New(Window),
     #[default]
     Primary,
+    New(Window),
     Window(Entity),
 }
 

@@ -65,11 +65,8 @@ impl Editor {
 
     /// Panics if `self.always_active` is true
     pub fn set_active(&mut self, active: bool) {
-        if !active {
-            assert!(
-                self.always_active,
-                "cannot call set_active on always-active editor"
-            );
+        if !active && self.always_active {
+            warn!("cannot call set_active on always-active editor");
         }
 
         self.active = active;
