@@ -56,7 +56,7 @@ pub fn setup(app: &mut App) {
         &schedule_settings,
     );
 
-    let render_graph = render_graph::render_graph_dot(&*render_graph, &rendergraph_settings);
+    let render_graph = render_graph::render_graph_dot(render_graph, &rendergraph_settings);
 
     app.insert_resource(DotGraphs {
         main_schedule,

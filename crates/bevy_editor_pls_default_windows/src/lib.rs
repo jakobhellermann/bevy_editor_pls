@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 pub mod add;
 pub mod assets;
 pub mod cameras;

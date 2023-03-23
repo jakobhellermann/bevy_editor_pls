@@ -57,9 +57,9 @@ impl EditorWindowContext<'_> {
             .unwrap()
             .map(|val| &mut **val)
     }
-    pub fn state_mut_triplet<'a, W1: EditorWindow, W2: EditorWindow, W3: EditorWindow>(
-        &'a mut self,
-    ) -> Option<(&'a mut W1::State, &'a mut W2::State, &'a mut W3::State)> {
+    pub fn state_mut_triplet<W1: EditorWindow, W2: EditorWindow, W3: EditorWindow>(
+        &mut self,
+    ) -> Option<(&mut W1::State, &mut W2::State, &mut W3::State)> {
         let [a, b, c] = self.window_states.get_many_mut([
             &TypeId::of::<W1>(),
             &TypeId::of::<W2>(),
@@ -72,9 +72,9 @@ impl EditorWindowContext<'_> {
         Some((a, b, c))
     }
 
-    pub fn state_mut_pair<'a, W1: EditorWindow, W2: EditorWindow>(
-        &'a mut self,
-    ) -> Option<(&'a mut W1::State, &'a mut W2::State)> {
+    pub fn state_mut_pair<W1: EditorWindow, W2: EditorWindow>(
+        &mut self,
+    ) -> Option<(&mut W1::State, &mut W2::State)> {
         assert_ne!(TypeId::of::<W1>(), TypeId::of::<W2>());
 
         let [a, b] = self

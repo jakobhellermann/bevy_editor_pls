@@ -42,12 +42,13 @@ impl EditorPlugin {
     }
 
     pub fn in_separate_window_fullscreen(mut self) -> Self {
-        let mut window = Window::default();
-        // TODO: just use `mode: BorderlessFullscreen` https://github.com/bevyengine/bevy/pull/8178
-        window.resolution = WindowResolution::new(1920.0, 1080.0);
-        window.position = WindowPosition::Centered(MonitorSelection::Index(1));
-        window.decorations = false;
-        self.window = EditorWindow::New(window);
+        self.window = EditorWindow::New(Window {
+            // TODO: just use `mode: BorderlessFullscreen` https://github.com/bevyengine/bevy/pull/8178
+            resolution: WindowResolution::new(1920.0, 1080.0),
+            position: WindowPosition::Centered(MonitorSelection::Index(1)),
+            decorations: false,
+            ..Default::default()
+        });
 
         self
     }

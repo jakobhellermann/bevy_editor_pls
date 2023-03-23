@@ -158,8 +158,8 @@ fn debug_ui_debugdump(world: &mut World, state: &mut DebugSettingsWindowState, u
             Err(e) => return Err(DebugdumpError::IO(e)),
         };
         let path = std::env::temp_dir().join(path).with_extension(format);
-        std::fs::write(&path, &rendered).map_err(DebugdumpError::IO)?;
-        opener::open(path).map_err(|e| DebugdumpError::OpenError(e))?;
+        std::fs::write(&path, rendered).map_err(DebugdumpError::IO)?;
+        opener::open(path).map_err(DebugdumpError::OpenError)?;
         Ok(())
     };
 

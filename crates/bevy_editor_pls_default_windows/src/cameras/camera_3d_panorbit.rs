@@ -112,11 +112,11 @@ fn pan_orbit_camera(
         let yaw = Quat::from_rotation_y(-delta_x);
         let pitch = Quat::from_rotation_x(-delta_y);
         transform.rotation = yaw * transform.rotation; // rotate around global y axis
-        transform.rotation = transform.rotation * pitch; // rotate around local x axis
+        transform.rotation *= pitch; // rotate around local x axis
     } else if pan.length_squared() > 0.0 {
         any = true;
         // make panning distance independent of resolution and FOV,
-        let window_size = Vec2::new(window.width() as f32, window.height() as f32);
+        let window_size = Vec2::new(window.width(), window.height());
         if let Projection::Perspective(projection) = projection {
             pan *=
                 Vec2::new(projection.fov * projection.aspect_ratio, projection.fov) / window_size;

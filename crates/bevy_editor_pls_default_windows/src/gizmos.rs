@@ -81,9 +81,9 @@ impl EditorWindow for GizmoWindow {
             point_light_mesh: sphere.clone(),
             point_light_material: material_light.clone(),
             directional_light_mesh: sphere.clone(),
-            directional_light_material: material_light.clone(),
-            camera_mesh: sphere.clone(),
-            camera_material: material_camera.clone(),
+            directional_light_material: material_light,
+            camera_mesh: sphere,
+            camera_material: material_camera,
         });
 
         app.add_system(add_gizmo_markers.in_base_set(CoreSet::PostUpdate));

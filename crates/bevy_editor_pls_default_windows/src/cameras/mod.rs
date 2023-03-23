@@ -44,9 +44,11 @@ struct EditorCamera2dPanZoom;
 pub struct CameraWindow;
 
 #[derive(Clone, Copy, PartialEq)]
+#[derive(Default)]
 pub enum EditorCamKind {
     D2PanZoom,
     D3Free,
+    #[default]
     D3PanOrbit,
 }
 
@@ -68,11 +70,7 @@ impl EditorCamKind {
     }
 }
 
-impl Default for EditorCamKind {
-    fn default() -> Self {
-        EditorCamKind::D3PanOrbit
-    }
-}
+
 
 #[derive(Default)]
 pub struct CameraWindowState {
@@ -537,7 +535,7 @@ fn initial_camera_setup(
 
             let mut query = cameras.p0();
             let (_, mut cam_transform) = query.single_mut();
-            *cam_transform = cam2d_transform.clone();
+            *cam_transform = cam2d_transform;
 
             *was_positioned_2d = true;
         }
@@ -555,7 +553,7 @@ fn initial_camera_setup(
             {
                 let mut query = cameras.p1();
                 let (_, mut cam_transform, mut cam) = query.single_mut();
-                *cam_transform = cam3d_transform.clone();
+                *cam_transform = cam3d_transform;
                 let (yaw, pitch, _) = cam3d_transform.rotation.to_euler(EulerRot::YXZ);
                 cam.yaw = yaw;
                 cam.pitch = pitch;
@@ -565,7 +563,7 @@ fn initial_camera_setup(
                 let mut query = cameras.p2();
                 let (_, mut cam_transform, mut cam) = query.single_mut();
                 cam.radius = cam3d_transform.translation.distance(cam.focus);
-                *cam_transform = cam3d_transform.clone();
+                *cam_transform = cam3d_transform;
             }
 
             *was_positioned_3d = true;

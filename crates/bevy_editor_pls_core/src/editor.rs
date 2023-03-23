@@ -255,7 +255,7 @@ impl Editor {
             );
         }
         self.window_states
-            .insert(type_id, Box::new(W::State::default()));
+            .insert(type_id, Box::<<W as EditorWindow>::State>::default());
     }
 
     pub fn window_state_mut<W: EditorWindow>(&mut self) -> Option<&mut W::State> {
@@ -360,13 +360,11 @@ impl Editor {
     ) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             let bar_response = egui::menu::bar(ui, |ui| {
-                if !self.always_active {
-                    if play_pause_button(self.active, ui).clicked() {
-                        self.active = !self.active;
-                        editor_events.send(EditorEvent::Toggle {
-                            now_active: self.active,
-                        });
-                    }
+                if !self.always_active && play_pause_button(self.active, ui).clicked() {
+                    self.active = !self.active;
+                    editor_events.send(EditorEvent::Toggle {
+                        now_active: self.active,
+                    });
                 }
 
                 ui.menu_button("Open window", |ui| {

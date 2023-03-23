@@ -25,9 +25,9 @@ impl BindingCondition {
         match *self {
             BindingCondition::InViewport(in_viewport) => {
                 if in_viewport {
-                    return !editor.pointer_used();
+                    !editor.pointer_used()
                 } else {
-                    return editor.pointer_used();
+                    editor.pointer_used()
                 }
             }
             BindingCondition::EditorActive(editor_active) => editor_active == editor.active(),
@@ -195,14 +195,12 @@ pub fn editor_controls_system(
         &keyboard_input,
         &mouse_input,
         &editor,
-    ) {
-        if !editor.always_active() {
-            let was_active = editor.active();
-            editor.set_active(!was_active);
-            editor_events.send(EditorEvent::Toggle {
-                now_active: !was_active,
-            });
-        }
+    ) && !editor.always_active() {
+        let was_active = editor.active();
+        editor.set_active(!was_active);
+        editor_events.send(EditorEvent::Toggle {
+            now_active: !was_active,
+        });
     }
 
     if controls.just_pressed(
