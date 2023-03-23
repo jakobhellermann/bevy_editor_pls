@@ -1,11 +1,15 @@
-use bevy::{prelude::*, render::camera::CameraProjection};
+use bevy::{
+    ecs::query::ReadOnlyWorldQuery,
+    prelude::*,
+    render::{camera::CameraProjection, view::RenderLayers},
+};
 
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::{bevy_inspector::hierarchy::SelectedEntities, egui};
 use egui_gizmo::GizmoMode;
 
 use crate::{
-    cameras::{ActiveEditorCamera, CameraWindow},
+    cameras::{ActiveEditorCamera, CameraWindow, EditorCamera, EDITOR_RENDER_LAYER},
     hierarchy::HierarchyWindow,
 };
 
@@ -44,6 +48,127 @@ impl EditorWindow for GizmoWindow {
                 draw_gizmo(ui, world, &hierarchy_state.selected, gizmo_state.gizmo_mode);
             }
         }
+    }
+
+    fn app_setup(app: &mut App) {
+        let mut materials = app.world.resource_mut::<Assets<StandardMaterial>>();
+        let material_light = materials.add(StandardMaterial {
+            base_color: Color::rgba_u8(222, 208, 103, 255),
+            unlit: true,
+            fog_enabled: false,
+            alpha_mode: AlphaMode::Add,
+            ..default()
+        });
+        let material_camera = materials.add(StandardMaterial {
+            base_color: Color::rgb(1.0, 1.0, 1.0),
+            unlit: true,
+            fog_enabled: false,
+            alpha_mode: AlphaMode::Multiply,
+            ..default()
+        });
+
+        let mut meshes = app.world.resource_mut::<Assets<Mesh>>();
+        let sphere = meshes.add(
+            shape::UVSphere {
+                radius: 0.3,
+                sectors: 16,
+                stacks: 16,
+            }
+            .into(),
+        );
+
+        app.world.insert_resource(GizmoMarkerConfig {
+            point_light_mesh: sphere.clone(),
+            point_light_material: material_light.clone(),
+            directional_light_mesh: sphere.clone(),
+            directional_light_material: material_light.clone(),
+            camera_mesh: sphere.clone(),
+            camera_material: material_camera.clone(),
+        });
+
+        app.add_system(add_gizmo_markers.in_base_set(CoreSet::PostUpdate));
+    }
+}
+
+#[derive(Resource)]
+struct GizmoMarkerConfig {
+    point_light_mesh: Handle<Mesh>,
+    point_light_material: Handle<StandardMaterial>,
+    directional_light_mesh: Handle<Mesh>,
+    directional_light_material: Handle<StandardMaterial>,
+    camera_mesh: Handle<Mesh>,
+    camera_material: Handle<StandardMaterial>,
+}
+
+#[derive(Component)]
+struct HasGizmoMarker;
+
+type GizmoMarkerQuery<'w, 's, T, F = ()> =
+    Query<'w, 's, Entity, (With<T>, Without<HasGizmoMarker>, F)>;
+
+fn add_gizmo_markers(
+    mut commands: Commands,
+    gizmo_marker_meshes: Res<GizmoMarkerConfig>,
+
+    point_lights: GizmoMarkerQuery<PointLight>,
+    directional_lights: GizmoMarkerQuery<DirectionalLight>,
+    cameras: GizmoMarkerQuery<Camera, Without<EditorCamera>>,
+) {
+    fn add<T: Component, F: ReadOnlyWorldQuery, B: Bundle>(
+        commands: &mut Commands,
+        query: GizmoMarkerQuery<T, F>,
+        name: &'static str,
+        f: impl Fn() -> B,
+    ) {
+        let render_layers = RenderLayers::layer(EDITOR_RENDER_LAYER);
+        for entity in &query {
+            commands
+                .entity(entity)
+                .insert(HasGizmoMarker)
+                .with_children(|commands| {
+                    commands.spawn((f(), render_layers, Name::new(name)));
+                });
+        }
+    }
+
+    add(&mut commands, point_lights, "PointLight Gizmo", || {
+        PbrBundle {
+            mesh: gizmo_marker_meshes.point_light_mesh.clone_weak(),
+            material: gizmo_marker_meshes.point_light_material.clone_weak(),
+            ..default()
+        }
+    });
+    add(
+        &mut commands,
+        directional_lights,
+        "DirectionalLight Gizmo",
+        || PbrBundle {
+            mesh: gizmo_marker_meshes.directional_light_mesh.clone_weak(),
+            material: gizmo_marker_meshes.directional_light_material.clone_weak(),
+            ..default()
+        },
+    );
+
+    let render_layers = RenderLayers::layer(EDITOR_RENDER_LAYER);
+    for entity in &cameras {
+        commands
+            .entity(entity)
+            .insert((
+                HasGizmoMarker,
+                Visibility::Visible,
+                ComputedVisibility::default(),
+            ))
+            .with_children(|commands| {
+                commands.spawn((
+                    PbrBundle {
+                        mesh: gizmo_marker_meshes.camera_mesh.clone_weak(),
+                        material: gizmo_marker_meshes.camera_material.clone_weak(),
+                        ..default()
+                    },
+                    render_layers,
+                    Name::new("Camera Gizmo"),
+                ));
+            });
     }
 }
 

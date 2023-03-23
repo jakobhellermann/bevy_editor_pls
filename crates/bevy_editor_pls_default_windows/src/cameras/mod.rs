@@ -4,6 +4,7 @@ pub mod camera_3d_panorbit;
 use crate::scenes::NotInScene;
 
 use bevy::render::camera::RenderTarget;
+use bevy::render::view::RenderLayers;
 use bevy::utils::HashSet;
 use bevy::window::WindowRef;
 use bevy::{prelude::*, render::primitives::Aabb};
@@ -17,6 +18,8 @@ use bevy_inspector_egui::egui;
 use crate::hierarchy::{HideInEditor, HierarchyWindow};
 
 use self::camera_3d_panorbit::PanOrbitCamera;
+
+pub const EDITOR_RENDER_LAYER: u8 = 19;
 
 // Present on all editor cameras
 #[derive(Component)]
@@ -209,13 +212,15 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
 
     info!("Spawning editor cameras");
 
+    let render_layers = RenderLayers::default().with(EDITOR_RENDER_LAYER);
+
     let show_ui_by_default = false;
     let editor_cam_priority = 100;
 
     let target = RenderTarget::Window(WindowRef::Entity(editor.window()));
 
-    commands
-        .spawn(Camera3dBundle {
+    commands.spawn((
+        Camera3dBundle {
             camera: Camera {
                 order: editor_cam_priority,
                 is_active: false,
@@ -224,21 +229,22 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
             },
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Camera3dBundle::default()
-        })
-        .insert(UiCameraConfig {
+        },
+        UiCameraConfig {
             show_ui: show_ui_by_default,
-        })
-        .insert(Ec3d)
-        .insert(camera_3d_free::FlycamControls::default())
-        // .insert(PickRaycastSource)
-        .insert(EditorCamera)
-        .insert(EditorCamera3dFree)
-        .insert(HideInEditor)
-        .insert(Name::new("Editor Camera 3D Free"))
-        .insert(NotInScene);
+        },
+        Ec3d,
+        camera_3d_free::FlycamControls::default(),
+        EditorCamera,
+        EditorCamera3dFree,
+        HideInEditor,
+        Name::new("Editor Camera 3D Free"),
+        NotInScene,
+        render_layers,
+    ));
 
-    commands
-        .spawn(Camera3dBundle {
+    commands.spawn((
+        Camera3dBundle {
             camera: Camera {
                 //  Prevent multiple cameras from having the same priority.
                 order: editor_cam_priority + 1,
@@ -248,21 +254,22 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
             },
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Camera3dBundle::default()
-        })
-        .insert(UiCameraConfig {
+        },
+        UiCameraConfig {
             show_ui: show_ui_by_default,
-        })
-        .insert(Ec3d)
-        .insert(PanOrbitCamera::default())
-        // .insert(PickRaycastSource)
-        .insert(EditorCamera)
-        .insert(EditorCamera3dPanOrbit)
-        .insert(HideInEditor)
-        .insert(Name::new("Editor Camera 3D Pan/Orbit"))
-        .insert(NotInScene);
+        },
+        Ec3d,
+        PanOrbitCamera::default(),
+        EditorCamera,
+        EditorCamera3dPanOrbit,
+        HideInEditor,
+        Name::new("Editor Camera 3D Pan/Orbit"),
+        NotInScene,
+        render_layers,
+    ));
 
-    commands
-        .spawn(Camera2dBundle {
+    commands.spawn((
+        Camera2dBundle {
             camera: Camera {
                 //  Prevent multiple cameras from having the same priority.
                 order: editor_cam_priority + 2,
@@ -271,17 +278,19 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
                 ..default()
             },
             ..default()
-        })
-        .insert(UiCameraConfig {
+        },
+        UiCameraConfig {
             show_ui: show_ui_by_default,
-        })
-        .insert(Ec2d)
-        .insert(camera_2d_panzoom::PanCamControls::default())
-        .insert(EditorCamera)
-        .insert(EditorCamera2dPanZoom)
-        .insert(HideInEditor)
-        .insert(Name::new("Editor Camera 2D Pan/Zoom"))
-        .insert(NotInScene);
+        },
+        Ec2d,
+        camera_2d_panzoom::PanCamControls::default(),
+        EditorCamera,
+        EditorCamera2dPanZoom,
+        HideInEditor,
+        Name::new("Editor Camera 2D Pan/Zoom"),
+        NotInScene,
+        render_layers,
+    ));
 }
 
 fn set_editor_cam_active(
