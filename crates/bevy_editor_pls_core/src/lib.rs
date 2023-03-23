@@ -67,7 +67,7 @@ impl Plugin for EditorPlugin {
                     .in_set(EditorSet::UI)
                     .before(TransformSystem::TransformPropagate)
                     .before(CameraUpdateSystem)
-                    .after(EguiSet::ProcessOutput),
+                    .before(EguiSet::ProcessOutput),
             );
     }
 }
