@@ -6,6 +6,7 @@
 - merge `EditorState` and `Editor`
 - fix: run editor before transform propagation
 - add translate/rotate/scale gizmos
+- add indicators for cameras and lights in editor
 
 ## Version 0.3.1
 - fix clear tab background
