@@ -3,7 +3,7 @@ pub mod controls;
 
 use bevy::{
     prelude::{Entity, Plugin},
-    window::{Window, WindowRef},
+    window::{MonitorSelection, Window, WindowPosition, WindowRef, WindowResolution},
 };
 pub use bevy_editor_pls_core::*;
 
@@ -38,6 +38,17 @@ impl EditorPlugin {
     }
     pub fn in_separate_window(mut self) -> Self {
         self.window = EditorWindow::New(Window::default());
+        self
+    }
+
+    pub fn in_separate_window_fullscreen(mut self) -> Self {
+        let mut window = Window::default();
+        // TODO: just use `mode: BorderlessFullscreen` https://github.com/bevyengine/bevy/pull/8178
+        window.resolution = WindowResolution::new(1920.0, 1080.0);
+        window.position = WindowPosition::Centered(MonitorSelection::Index(1));
+        window.decorations = false;
+        self.window = EditorWindow::New(window);
+
         self
     }
 }
