@@ -1,4 +1,3 @@
-pub mod camera_2d_panzoom;
 pub mod camera_3d_free;
 pub mod camera_3d_panorbit;
 use crate::scenes::NotInScene;
@@ -43,8 +42,7 @@ struct EditorCamera2dPanZoom;
 
 pub struct CameraWindow;
 
-#[derive(Clone, Copy, PartialEq)]
-#[derive(Default)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub enum EditorCamKind {
     D2PanZoom,
     D3Free,
@@ -69,8 +67,6 @@ impl EditorCamKind {
         ]
     }
 }
-
-
 
 #[derive(Default)]
 pub struct CameraWindowState {
@@ -117,14 +113,14 @@ impl EditorWindow for CameraWindow {
     fn app_setup(app: &mut App) {
         app.init_resource::<PreviouslyActiveCameras>();
 
-        app.add_plugin(camera_2d_panzoom::PanCamPlugin)
+        app.add_plugin(bevy_pancam::PanCamPlugin)
             .add_plugin(camera_3d_free::FlycamPlugin)
             .add_plugin(camera_3d_panorbit::PanOrbitCameraPlugin)
             .add_system(
                 set_editor_cam_active
                     .before(camera_3d_panorbit::CameraSystem::Movement)
                     .before(camera_3d_free::CameraSystem::Movement)
-                    .before(camera_2d_panzoom::CameraSystem::Movement),
+                    .before(bevy_pancam::PanCamSystemSet),
             )
             .add_system(toggle_editor_cam.in_base_set(CoreSet::PreUpdate))
             .add_system(focus_selected.in_base_set(CoreSet::PreUpdate))
@@ -281,7 +277,7 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
             show_ui: show_ui_by_default,
         },
         Ec2d,
-        camera_2d_panzoom::PanCamControls::default(),
+        bevy_pancam::PanCam::default(),
         EditorCamera,
         EditorCamera2dPanZoom,
         HideInEditor,
@@ -297,7 +293,7 @@ fn set_editor_cam_active(
     mut editor_cameras: ParamSet<(
         Query<(&mut Camera, &mut camera_3d_free::FlycamControls)>,
         Query<(&mut Camera, &mut camera_3d_panorbit::PanOrbitCamera)>,
-        Query<(&mut Camera, &mut camera_2d_panzoom::PanCamControls)>,
+        Query<(&mut Camera, &mut bevy_pancam::PanCam)>,
     )>,
 
     mut ui_camera_settings: Query<&mut UiCameraConfig, With<EditorCamera>>,

@@ -26,6 +26,7 @@ bevy-inspector-egui.workspace = true
 #     "backend_sprite",
 #     "backend_bevy_ui",
 # ] }
+bevy_pancam = { version = "0.8", default-features = false, features = ["bevy_egui"] }
 indexmap = "1.7"
 pretty-type-name = "1.0"
 bevy_mod_debugdump = "0.7"
