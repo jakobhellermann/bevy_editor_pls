@@ -5,7 +5,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         // .add_plugin(EditorPlugin::new().in_separate_window())
-        .add_plugin(EditorPlugin::new().in_separate_window_fullscreen())
+        .add_plugin(EditorPlugin::new().in_new_window(Window::default()))
         .add_startup_system(setup)
         .run();
 }

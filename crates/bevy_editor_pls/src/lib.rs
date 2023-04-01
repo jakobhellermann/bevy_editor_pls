@@ -36,21 +36,20 @@ impl EditorPlugin {
     pub fn new() -> Self {
         EditorPlugin::default()
     }
-    pub fn in_separate_window(mut self) -> Self {
-        self.window = EditorWindow::New(Window::default());
+
+    /// Start the editor in a new window. Use [`Window::default`] for creating a new window with default settings.
+    pub fn in_new_window(mut self, window: Window) -> Self {
+        self.window = EditorWindow::New(window);
         self
     }
-
-    pub fn in_separate_window_fullscreen(mut self) -> Self {
-        self.window = EditorWindow::New(Window {
+    pub fn on_second_monitor_fullscreen(self) -> Self {
+        self.in_new_window(Window {
             // TODO: just use `mode: BorderlessFullscreen` https://github.com/bevyengine/bevy/pull/8178
             resolution: WindowResolution::new(1920.0, 1080.0),
             position: WindowPosition::Centered(MonitorSelection::Index(1)),
             decorations: false,
             ..Default::default()
-        });
-
-        self
+        })
     }
 }
 
