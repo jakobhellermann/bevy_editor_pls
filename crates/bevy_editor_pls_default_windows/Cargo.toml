@@ -17,6 +17,7 @@ bevy = { version = "0.10", default-features = false, features = [
     "bevy_ui",
     "bevy_sprite",
     "bevy_pbr",
+    "bevy_core_pipeline",
 ] }
 bevy_editor_pls_core.workspace = true
 bevy-inspector-egui.workspace = true

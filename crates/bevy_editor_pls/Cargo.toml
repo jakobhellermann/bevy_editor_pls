@@ -26,6 +26,7 @@ egui-gizmo = "0.10.0"
 [dev-dependencies]
 bevy = { version = "0.10", default-features = false, features = [
     "bevy_winit",
+    "bevy_core_pipeline",
     "x11",
 ] }
 
