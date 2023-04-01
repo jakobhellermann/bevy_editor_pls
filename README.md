@@ -21,7 +21,7 @@ Add the `EditorPlugin`:
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-+       .add_plugin(EditorPlugin)
++       .add_plugin(EditorPlugin::default())
         ...
         .run();
 }
