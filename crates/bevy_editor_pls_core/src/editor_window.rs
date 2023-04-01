@@ -5,6 +5,7 @@ use std::any::{Any, TypeId};
 
 use crate::editor::EditorWindowState;
 
+/// An editor window type
 pub trait EditorWindow: 'static {
     type State: Default + Any + Send + Sync;
 
@@ -12,6 +13,7 @@ pub trait EditorWindow: 'static {
     const DEFAULT_SIZE: (f32, f32) = (0.0, 0.0);
 
     fn ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui);
+    /// Ui shown in the `Open Window` menu item. By default opens the window as a floating window.
     fn menu_ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
         let _ = world;
 
@@ -20,13 +22,16 @@ pub trait EditorWindow: 'static {
             ui.close_menu();
         }
     }
+    /// Ui shown in the viewport toolbar.
     fn viewport_toolbar_ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
         let _ = (world, cx, ui);
     }
+    /// Ui shown on top of the game viewport.
     fn viewport_ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
         let _ = (world, cx, ui);
     }
 
+    /// Necessary setup (resources, systems) for the window.
     fn app_setup(app: &mut App) {
         let _ = app;
     }

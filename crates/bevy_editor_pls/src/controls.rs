@@ -156,6 +156,7 @@ impl std::fmt::Display for Action {
     }
 }
 
+/// Resource mapping input bindings to [`Action`]s
 #[derive(Resource, Default)]
 pub struct EditorControls {
     pub actions: HashMap<Action, Vec<Binding>>,
@@ -195,7 +196,8 @@ pub fn editor_controls_system(
         &keyboard_input,
         &mouse_input,
         &editor,
-    ) && !editor.always_active() {
+    ) && !editor.always_active()
+    {
         let was_active = editor.active();
         editor.set_active(!was_active);
         editor_events.send(EditorEvent::Toggle {
@@ -266,6 +268,10 @@ impl EditorControls {
         self.actions.remove(&action);
     }
 
+    /// - `C-Enter`: pause time
+    /// - `E`: toggle editor
+    /// - `F`: focus on selected entity
+    /// `T/R/S`: show translate/rotate/scale gizmo
     pub fn default_bindings() -> Self {
         let mut controls = EditorControls::default();
 

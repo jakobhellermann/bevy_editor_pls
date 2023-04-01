@@ -7,6 +7,7 @@
 - fix: run editor before transform propagation
 - add translate/rotate/scale gizmos
 - add indicators for cameras and lights in editor
+- document the crate
 
 ## Version 0.3.1
 - fix clear tab background

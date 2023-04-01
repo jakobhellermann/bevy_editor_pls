@@ -1,4 +1,5 @@
 #![allow(clippy::type_complexity)]
+//! Default windows for the editor
 
 pub mod add;
 pub mod assets;

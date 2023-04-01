@@ -64,8 +64,8 @@ The default controls are:
 
 - `E` to toggle the editor
 - `Ctrl+Enter` to pause/unpause time
-- `Click` (or `Ctrl+Click` when not in editor) to select mesh
-- `Click + Drag` for the pan/zoom 2d camera
+- `F` to focus selected entity
+- `T/R/S` to show translate/rotate/scale gizmo
 - Double click on the menu bar to go fullscreen
 
 Cameras:

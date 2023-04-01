@@ -1,3 +1,4 @@
+/// input settings for the editor UI
 #[cfg(feature = "default_windows")]
 pub mod controls;
 
@@ -5,31 +6,51 @@ use bevy::{
     prelude::{Entity, Plugin},
     window::{MonitorSelection, Window, WindowPosition, WindowRef, WindowResolution},
 };
-pub use bevy_editor_pls_core::*;
 
-// use bevy_framepace::FramepacePlugin;
+pub use bevy_editor_pls_core::egui_dock;
+#[doc(inline)]
+pub use bevy_editor_pls_core::{editor, editor_window, AddEditorWindow};
 pub use egui;
 
 #[cfg(feature = "default_windows")]
+#[doc(inline)]
 pub use bevy_editor_pls_default_windows as default_windows;
 
+/// Commonly used types and extension traits
 pub mod prelude {
     pub use crate::{AddEditorWindow, EditorPlugin};
     #[cfg(feature = "default_windows")]
     pub use bevy_editor_pls_default_windows::scenes::NotInScene;
 }
 
+/// Where to show the editor
 #[derive(Default)]
-pub enum EditorWindow {
+pub enum EditorWindowPlacement {
+    /// On the primary window
     #[default]
     Primary,
+    /// Spawn a new window for the editor
     New(Window),
+    /// On an existing window
     Window(Entity),
 }
 
+/// Plugin adding various editor UI to the game executable.
+///
+/// ```rust,no_run
+/// use bevy::prelude::*;
+/// use bevy_editor_pls::EditorPlugin;
+///
+/// fn main() {
+///     App::new()
+///         .add_plugins(DefaultPlugins)
+///         .add_plugin(EditorPlugin::new())
+///         .run();
+/// }
+/// ```
 #[derive(Default)]
 pub struct EditorPlugin {
-    pub window: EditorWindow,
+    pub window: EditorWindowPlacement,
 }
 
 impl EditorPlugin {
@@ -39,9 +60,10 @@ impl EditorPlugin {
 
     /// Start the editor in a new window. Use [`Window::default`] for creating a new window with default settings.
     pub fn in_new_window(mut self, window: Window) -> Self {
-        self.window = EditorWindow::New(window);
+        self.window = EditorWindowPlacement::New(window);
         self
     }
+    /// Start the editor on the second window ([`MonitorSelection::Index(1)`].
     pub fn on_second_monitor_fullscreen(self) -> Self {
         self.in_new_window(Window {
             // TODO: just use `mode: BorderlessFullscreen` https://github.com/bevyengine/bevy/pull/8178
@@ -56,7 +78,7 @@ impl EditorPlugin {
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         let window = match self.window {
-            EditorWindow::New(ref window) => {
+            EditorWindowPlacement::New(ref window) => {
                 let mut window = window.clone();
                 if window.title == "Bevy App" {
                     window.title = "bevy_editor_pls".into();
@@ -64,8 +86,8 @@ impl Plugin for EditorPlugin {
                 let entity = app.world.spawn(window);
                 WindowRef::Entity(entity.id())
             }
-            EditorWindow::Window(entity) => WindowRef::Entity(entity),
-            EditorWindow::Primary => WindowRef::Primary,
+            EditorWindowPlacement::Window(entity) => WindowRef::Entity(entity),
+            EditorWindowPlacement::Primary => WindowRef::Primary,
         };
 
         app.add_plugin(bevy_editor_pls_core::EditorPlugin { window });

@@ -1,4 +1,6 @@
+/// Editor systems, events and resources
 pub mod editor;
+/// Trait definition for new editor windows
 pub mod editor_window;
 
 use bevy::prelude::*;
@@ -14,8 +16,10 @@ use editor_window::EditorWindow;
 
 pub use editor::{Editor, EditorEvent};
 
+/// Re-export of [`egui_dock`]
 pub use egui_dock;
 
+/// Extension trait for [`App`] to add a new editor window type
 pub trait AddEditorWindow {
     fn add_editor_window<W: EditorWindow>(&mut self) -> &mut Self;
 }
