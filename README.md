@@ -123,13 +123,13 @@ fn set_cam3d_controls(
 ## Missing features
 
 - scene import
-- transform gizmos
 - visualization of invisible entities in editor (to see where the camera is for example)
 
 ## Bevy support table
 
 | bevy | bevy_editor_pls |
 | ---- | --------------- |
+| 0.10 | 0.4             |
 | 0.10 | 0.3             |
 | 0.9  | 0.2             |
 | 0.8  | 0.1             |
