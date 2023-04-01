@@ -70,9 +70,10 @@ impl Plugin for EditorPlugin {
 
         app.add_plugin(bevy_editor_pls_core::EditorPlugin { window });
 
-        // if !app.is_plugin_added::<FramepacePlugin>() {
-        // app.add_plugin(FramepacePlugin);
-        // }
+        if !app.is_plugin_added::<bevy_framepace::FramepacePlugin>() {
+            app.add_plugin(bevy_framepace::FramepacePlugin);
+            app.add_plugin(bevy_framepace::debug::DiagnosticsPlugin);
+        }
 
         #[cfg(feature = "default_windows")]
         {
