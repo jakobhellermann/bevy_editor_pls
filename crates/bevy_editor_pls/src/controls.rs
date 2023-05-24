@@ -379,7 +379,7 @@ impl EditorWindow for ControlsWindow {
     fn ui(
         world: &mut World,
         _: bevy_editor_pls_core::editor_window::EditorWindowContext,
-        ui: &mut egui::Ui,
+        ui: &mut bevy_editor_pls_core::egui_dock::egui::Ui,
     ) {
         let controls = world.get_resource::<EditorControls>().unwrap();
 
@@ -388,10 +388,10 @@ impl EditorWindow for ControlsWindow {
             Action::PauseUnpauseTime,
             Action::FocusSelected,
         ] {
-            ui.label(egui::RichText::new(action.to_string()).strong());
+            ui.label(bevy_editor_pls_core::egui_dock::egui::RichText::new(action.to_string()).strong());
             let bindings = controls.get(action);
             for binding in bindings {
-                ui.add(egui::Label::new(format!("{}", binding)).wrap(false));
+                ui.add(bevy_editor_pls_core::egui_dock::egui::Label::new(format!("{}", binding)).wrap(false));
             }
         }
     }
