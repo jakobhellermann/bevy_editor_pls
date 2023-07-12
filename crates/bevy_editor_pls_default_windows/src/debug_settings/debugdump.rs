@@ -1,6 +1,6 @@
 use bevy::{
     prelude::*,
-    render::{render_graph::RenderGraph, RenderApp},
+    render::{render_graph::RenderGraph, Render, RenderApp},
 };
 use bevy_mod_debugdump::{render_graph, schedule_graph};
 use std::{
@@ -10,11 +10,11 @@ use std::{
 
 #[derive(Resource)]
 pub struct DotGraphs {
-    pub main_schedule: String,
-    pub fixed_update_schedule: String,
-    pub render_main_schedule: String,
-    pub render_extract_schedule: String,
-    pub render_graph: String,
+    pub main_schedule: Option<String>,
+    pub fixed_update_schedule: Option<String>,
+    pub render_main_schedule: Option<String>,
+    pub render_extract_schedule: Option<String>,
+    pub render_graph: Option<String>,
 }
 
 pub fn setup(app: &mut App) {
@@ -34,32 +34,20 @@ pub fn setup(app: &mut App) {
     };
     let rendergraph_settings = render_graph::settings::Settings::default();
 
-    let main_schedule = match app.get_schedule(Main) {
-        Some(schedule) => {
-            schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
-        }
-        None => "".to_string(),
-    };
+    let main_schedule = app.get_schedule(Main).map(|schedule| {
+        schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+    });
 
-    let fixed_update_schedule = match app.get_schedule(FixedUpdate) {
-        Some(schedule) => {
-            schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
-        }
-        None => "".to_string(),
-    };
+    let fixed_update_schedule = app.get_schedule(FixedUpdate).map(|schedule| {
+        schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+    });
 
-    let render_main_schedule = match render_app.get_schedule(FixedUpdate) {
-        Some(schedule) => {
-            schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
-        }
-        None => "".to_string(),
-    };
-    let render_extract_schedule = match render_app.get_schedule(ExtractSchedule) {
-        Some(schedule) => {
-            schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
-        }
-        None => "".to_string(),
-    };
+    let render_main_schedule = render_app.get_schedule(Render).map(|schedule| {
+        schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+    });
+    let render_extract_schedule = render_app.get_schedule(ExtractSchedule).map(|schedule| {
+        schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+    });
 
     let render_graph = render_graph::render_graph_dot(render_graph, &rendergraph_settings);
 
@@ -68,7 +56,7 @@ pub fn setup(app: &mut App) {
         fixed_update_schedule,
         render_main_schedule,
         render_extract_schedule,
-        render_graph,
+        render_graph: Some(render_graph),
     });
 }
 

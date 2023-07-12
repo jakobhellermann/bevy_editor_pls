@@ -22,6 +22,7 @@ pub struct DebugSettingsWindowState {
 
 enum DebugdumpError {
     DotNotFound,
+    ScheduleNotFound,
     OpenError(opener::OpenError),
     IO(std::io::Error),
 }
@@ -148,7 +149,9 @@ fn debug_ui_options(
 }
 
 fn debug_ui_debugdump(world: &mut World, state: &mut DebugSettingsWindowState, ui: &mut egui::Ui) {
-    let open_dot = |dot: &str, path: &str| -> Result<(), DebugdumpError> {
+    let open_dot = |dot: &Option<String>, path: &str| -> Result<(), DebugdumpError> {
+        let dot = dot.as_ref().ok_or(DebugdumpError::ScheduleNotFound)?;
+
         let format = "svg";
         let rendered = match debugdump::execute_dot(dot, format) {
             Ok(rendered) => rendered,
@@ -212,6 +215,10 @@ fn debug_ui_debugdump(world: &mut World, state: &mut DebugSettingsWindowState, u
             }
             DebugdumpError::OpenError(e) => e.to_string(),
             DebugdumpError::IO(e) => e.to_string(),
+            DebugdumpError::ScheduleNotFound => {
+                ui.label("Schedule does not exist");
+                return;
+            }
         };
         ui.label(egui::RichText::new(msg).color(egui::Color32::RED));
     }
