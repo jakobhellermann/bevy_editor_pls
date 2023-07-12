@@ -34,27 +34,24 @@ pub fn setup(app: &mut App) {
     };
     let rendergraph_settings = render_graph::settings::Settings::default();
 
-    let main_schedule = schedule_graph::schedule_graph_dot(
-        app.get_schedule(Main).unwrap(),
-        &app.world,
-        &schedule_settings,
-    );
-    let fixed_update_schedule = schedule_graph::schedule_graph_dot(
-        app.get_schedule(FixedUpdate).unwrap(),
-        &app.world,
-        &schedule_settings,
-    );
+    let main_schedule = match app.get_schedule(Main) {
+        Some(schedule) => schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings),
+        None => "".to_string(),
+    };
+    
+    let fixed_update_schedule = match app.get_schedule(FixedUpdate) {
+        Some(schedule) => schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings),
+        None => "".to_string(),
+    };
 
-    let render_main_schedule = schedule_graph::schedule_graph_dot(
-        render_app.get_schedule(Main).unwrap(),
-        &app.world,
-        &schedule_settings,
-    );
-    let render_extract_schedule = schedule_graph::schedule_graph_dot(
-        render_app.get_schedule(ExtractSchedule).unwrap(),
-        &app.world,
-        &schedule_settings,
-    );
+    let render_main_schedule = match render_app.get_schedule(FixedUpdate) {
+        Some(schedule) => schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings),
+        None => "".to_string(),
+    };
+    let render_extract_schedule = match render_app.get_schedule(ExtractSchedule) {
+        Some(schedule) => schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings),
+        None => "".to_string(),
+    };
 
     let render_graph = render_graph::render_graph_dot(render_graph, &rendergraph_settings);
 
