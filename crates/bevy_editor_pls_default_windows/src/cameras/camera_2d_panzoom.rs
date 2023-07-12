@@ -9,7 +9,7 @@ use bevy_editor_pls_core::Editor;
 
 #[derive(SystemSet, PartialEq, Eq, Clone, Hash, Debug)]
 pub(crate) enum CameraSystem {
-    Movement,
+    EditorCam2dPanZoom,
 }
 
 #[derive(Default)]
@@ -17,8 +17,11 @@ pub(crate) struct PanCamPlugin;
 
 impl Plugin for PanCamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, camera_movement.in_set(CameraSystem::Movement))
-            .add_systems(Update, camera_zoom.in_set(CameraSystem::Movement));
+        app.add_systems(
+            Update,
+            camera_movement.in_set(CameraSystem::EditorCam2dPanZoom),
+        )
+        .add_systems(Update, camera_zoom.in_set(CameraSystem::EditorCam2dPanZoom));
     }
 }
 
@@ -52,7 +55,9 @@ fn camera_movement(
     mut query: Query<(&PanCamControls, &mut Transform, &OrthographicProjection)>,
     mut last_pos: Local<Option<Vec2>>,
 ) {
-    let Ok(window) = window.get(editor.window()) else { return };
+    let Ok(window) = window.get(editor.window()) else {
+        return;
+    };
 
     // Use position instead of MouseMotion, otherwise we don't get acceleration movement
     let current_pos = match window.cursor_position() {

@@ -120,9 +120,9 @@ impl EditorWindow for CameraWindow {
             .add_systems(
                 Update,
                 set_editor_cam_active
-                    .before(camera_3d_panorbit::CameraSystem::Movement)
-                    .before(camera_3d_free::CameraSystem::Movement)
-                    .before(camera_2d_panzoom::CameraSystem::Movement),
+                    .before(camera_3d_panorbit::CameraSystem::EditorCam3dPanOrbit)
+                    .before(camera_3d_free::CameraSystem::EditorCam3dFree)
+                    .before(camera_2d_panzoom::CameraSystem::EditorCam2dPanZoom),
             )
             .add_systems(PreUpdate, toggle_editor_cam)
             .add_systems(PreUpdate, focus_selected)
@@ -387,7 +387,9 @@ fn focus_selected(
     editor: Res<Editor>,
     window: Query<&Window>,
 ) {
-    let Ok(window) = window.get(editor.window()) else { return };
+    let Ok(window) = window.get(editor.window()) else {
+        return;
+    };
 
     for event in editor_events.iter() {
         match *event {
@@ -579,7 +581,9 @@ fn set_main_pass_viewport(
         return;
     };
 
-    let Ok(window) = window.get(editor.window()) else { return };
+    let Ok(window) = window.get(editor.window()) else {
+        return;
+    };
 
     let viewport = editor.active().then(|| {
         let scale_factor = window.scale_factor() * egui_settings.scale_factor;

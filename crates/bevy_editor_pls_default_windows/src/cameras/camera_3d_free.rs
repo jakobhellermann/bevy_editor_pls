@@ -3,14 +3,17 @@ use bevy::{input::mouse::MouseMotion, prelude::*};
 pub(crate) struct FlycamPlugin;
 impl Plugin for FlycamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, camera_movement.in_set(CameraSystem::Movement))
-            .add_systems(Update, camera_look);
+        app.add_systems(
+            Update,
+            camera_movement.in_set(CameraSystem::EditorCam3dFree),
+        )
+        .add_systems(Update, camera_look);
     }
 }
 
 #[derive(SystemSet, PartialEq, Eq, Clone, Hash, Debug)]
 pub(crate) enum CameraSystem {
-    Movement,
+    EditorCam3dFree,
 }
 
 #[derive(Component)]

@@ -10,7 +10,10 @@ use bevy_editor_pls_core::Editor;
 pub struct PanOrbitCameraPlugin;
 impl Plugin for PanOrbitCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, pan_orbit_camera.in_set(CameraSystem::Movement));
+        app.add_systems(
+            Update,
+            pan_orbit_camera.in_set(CameraSystem::EditorCam3dPanOrbit),
+        );
     }
 }
 
@@ -45,7 +48,7 @@ impl Default for PanOrbitCamera {
 
 #[derive(SystemSet, PartialEq, Eq, Clone, Hash, Debug)]
 pub(crate) enum CameraSystem {
-    Movement,
+    EditorCam3dPanOrbit,
 }
 
 /// Pan the camera with middle mouse click, zoom with scroll wheel, orbit with right mouse click.
@@ -57,7 +60,9 @@ fn pan_orbit_camera(
     input_mouse: Res<Input<MouseButton>>,
     mut query: Query<(&mut PanOrbitCamera, &mut Transform, &Projection)>,
 ) {
-    let Ok(window) = window.get(editor.window()) else { return };
+    let Ok(window) = window.get(editor.window()) else {
+        return;
+    };
 
     // change input mapping for orbit and panning here
     let (mut pan_orbit, mut transform, projection) = query.single_mut();
