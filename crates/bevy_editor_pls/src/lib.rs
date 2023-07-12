@@ -92,10 +92,10 @@ impl Plugin for EditorPlugin {
 
         app.add_plugins(bevy_editor_pls_core::EditorPlugin { window });
 
-        if !app.is_plugin_added::<bevy_framepace::FramepacePlugin>() {
-            app.add_plugins(bevy_framepace::FramepacePlugin);
-            app.add_plugins(bevy_framepace::debug::DiagnosticsPlugin);
-        }
+        // if !app.is_plugin_added::<bevy_framepace::FramepacePlugin>() {
+        //     app.add_plugins(bevy_framepace::FramepacePlugin);
+        //     app.add_plugins(bevy_framepace::debug::DiagnosticsPlugin);
+        // }
 
         #[cfg(feature = "default_windows")]
         {
