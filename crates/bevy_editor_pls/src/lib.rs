@@ -3,7 +3,7 @@
 pub mod controls;
 
 use bevy::{
-    prelude::{Entity, Plugin},
+    prelude::{Entity, Plugin, Update},
     window::{MonitorSelection, Window, WindowPosition, WindowRef, WindowResolution},
 };
 
@@ -90,11 +90,11 @@ impl Plugin for EditorPlugin {
             EditorWindowPlacement::Primary => WindowRef::Primary,
         };
 
-        app.add_plugin(bevy_editor_pls_core::EditorPlugin { window });
+        app.add_plugins(bevy_editor_pls_core::EditorPlugin { window });
 
         if !app.is_plugin_added::<bevy_framepace::FramepacePlugin>() {
-            app.add_plugin(bevy_framepace::FramepacePlugin);
-            app.add_plugin(bevy_framepace::debug::DiagnosticsPlugin);
+            app.add_plugins(bevy_framepace::FramepacePlugin);
+            app.add_plugins(bevy_framepace::debug::DiagnosticsPlugin);
         }
 
         #[cfg(feature = "default_windows")]
@@ -124,10 +124,10 @@ impl Plugin for EditorPlugin {
             app.add_editor_window::<GizmoWindow>();
             app.add_editor_window::<controls::ControlsWindow>();
 
-            app.add_plugin(bevy::pbr::wireframe::WireframePlugin);
+            app.add_plugins(bevy::pbr::wireframe::WireframePlugin);
 
             app.insert_resource(controls::EditorControls::default_bindings())
-                .add_system(controls::editor_controls_system);
+                .add_systems(Update, controls::editor_controls_system);
 
             let mut internal_state = app.world.resource_mut::<editor::EditorInternalState>();
 

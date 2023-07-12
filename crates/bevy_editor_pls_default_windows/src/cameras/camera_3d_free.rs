@@ -3,8 +3,8 @@ use bevy::{input::mouse::MouseMotion, prelude::*};
 pub(crate) struct FlycamPlugin;
 impl Plugin for FlycamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(camera_movement.in_set(CameraSystem::Movement))
-            .add_system(camera_look);
+        app.add_systems(Update, camera_movement.in_set(CameraSystem::Movement))
+            .add_systems(Update, camera_look);
     }
 }
 
@@ -42,8 +42,8 @@ impl Default for FlycamControls {
             key_left: KeyCode::A,
             key_right: KeyCode::D,
             key_up: KeyCode::Space,
-            key_down: KeyCode::LControl,
-            key_boost: KeyCode::LShift,
+            key_down: KeyCode::ControlLeft,
+            key_boost: KeyCode::ShiftLeft,
         }
     }
 }

@@ -35,18 +35,18 @@ pub fn setup(app: &mut App) {
     let rendergraph_settings = render_graph::settings::Settings::default();
 
     let main_schedule = schedule_graph::schedule_graph_dot(
-        app.get_schedule(CoreSchedule::Main).unwrap(),
+        app.get_schedule(Main).unwrap(),
         &app.world,
         &schedule_settings,
     );
     let fixed_update_schedule = schedule_graph::schedule_graph_dot(
-        app.get_schedule(CoreSchedule::FixedUpdate).unwrap(),
+        app.get_schedule(FixedUpdate).unwrap(),
         &app.world,
         &schedule_settings,
     );
 
     let render_main_schedule = schedule_graph::schedule_graph_dot(
-        render_app.get_schedule(CoreSchedule::Main).unwrap(),
+        render_app.get_schedule(Main).unwrap(),
         &app.world,
         &schedule_settings,
     );

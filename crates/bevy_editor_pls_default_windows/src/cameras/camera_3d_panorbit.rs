@@ -10,7 +10,7 @@ use bevy_editor_pls_core::Editor;
 pub struct PanOrbitCameraPlugin;
 impl Plugin for PanOrbitCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(pan_orbit_camera.in_set(CameraSystem::Movement));
+        app.add_systems(Update, pan_orbit_camera.in_set(CameraSystem::Movement));
     }
 }
 

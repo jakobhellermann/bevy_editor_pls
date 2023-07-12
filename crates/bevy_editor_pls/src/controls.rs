@@ -279,7 +279,7 @@ impl EditorControls {
             Action::PauseUnpauseTime,
             Binding {
                 input: UserInput::Chord(vec![
-                    Button::Keyboard(KeyCode::LControl),
+                    Button::Keyboard(KeyCode::ControlLeft),
                     Button::Keyboard(KeyCode::Return),
                 ]),
                 conditions: vec![BindingCondition::ListeningForText(false)],

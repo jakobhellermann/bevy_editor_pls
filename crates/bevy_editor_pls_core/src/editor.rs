@@ -4,12 +4,13 @@ use bevy::ecs::event::Events;
 use bevy::window::WindowMode;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_inspector_egui::bevy_egui::{egui, EguiContext};
-use egui_dock::{NodeIndex, TabIndex};
+use egui_dock::{NodeIndex, TabIndex, TabBarStyle};
 use indexmap::IndexMap;
 
 use crate::editor_window::{EditorWindow, EditorWindowContext};
 
 #[non_exhaustive]
+#[derive(Event)]
 pub enum EditorEvent {
     Toggle { now_active: bool },
     FocusSelected,
@@ -314,7 +315,10 @@ impl Editor {
 
         egui_dock::DockArea::new(&mut tree)
             .style(egui_dock::Style {
-                tab_bar_background_color: ctx.style().visuals.window_fill(),
+                tab_bar: TabBarStyle {
+                    bg_fill: ctx.style().visuals.window_fill(),
+                    ..default()
+                },
                 ..egui_dock::Style::from_egui(ctx.style().as_ref())
             })
             .show(

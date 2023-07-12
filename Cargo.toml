@@ -15,8 +15,8 @@ bevy_editor_pls = { version = "0.4.0", path = "crates/bevy_editor_pls" }
 bevy_editor_pls_core = { version = "0.4.0", path = "crates/bevy_editor_pls_core" }
 bevy_editor_pls_default_windows = { version = "0.4.0", path = "crates/bevy_editor_pls_default_windows" }
 
-bevy-inspector-egui = "0.18"
-egui = "0.21"
+bevy-inspector-egui = { git = "https://github.com/KMaheshBhat/bevy-inspector-egui.git", branch = "feature/bevy_0.11_upgrade" }
+egui = "0.22"
 
 [profile.dev.package."*"]
 opt-level = 2

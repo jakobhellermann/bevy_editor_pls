@@ -45,10 +45,10 @@ pub struct EditorPlugin {
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         if !app.is_plugin_added::<DefaultInspectorConfigPlugin>() {
-            app.add_plugin(DefaultInspectorConfigPlugin);
+            app.add_plugins(DefaultInspectorConfigPlugin);
         }
         if !app.is_plugin_added::<EguiPlugin>() {
-            app.add_plugin(EguiPlugin);
+            app.add_plugins(EguiPlugin);
         }
 
         let (window_entity, always_active) = match self.window {
@@ -65,13 +65,11 @@ impl Plugin for EditorPlugin {
         app.insert_resource(Editor::new(window_entity, always_active))
             .init_resource::<EditorInternalState>()
             .add_event::<EditorEvent>()
-            .configure_set(EditorSet::UI.in_base_set(CoreSet::PostUpdate))
-            .add_system(
-                Editor::system
-                    .in_set(EditorSet::UI)
-                    .before(TransformSystem::TransformPropagate)
-                    .before(CameraUpdateSystem)
-                    .before(EguiSet::ProcessOutput),
+            .configure_set(PostUpdate, EditorSet::UI)
+            .add_systems(Update,
+                Editor::system.in_set(EditorSet::UI).before(TransformSystem::TransformPropagate)
+                .before(CameraUpdateSystem)
+                .before(EguiSet::ProcessOutput),
             );
     }
 }
