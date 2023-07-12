@@ -66,10 +66,13 @@ impl Plugin for EditorPlugin {
             .init_resource::<EditorInternalState>()
             .add_event::<EditorEvent>()
             .configure_set(PostUpdate, EditorSet::UI)
-            .add_systems(Update,
-                Editor::system.in_set(EditorSet::UI).before(TransformSystem::TransformPropagate)
-                .before(CameraUpdateSystem)
-                .before(EguiSet::ProcessOutput),
+            .add_systems(
+                Update,
+                Editor::system
+                    .in_set(EditorSet::UI)
+                    .before(TransformSystem::TransformPropagate)
+                    .before(CameraUpdateSystem)
+                    .before(EguiSet::ProcessOutput),
             );
     }
 }

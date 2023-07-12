@@ -35,21 +35,29 @@ pub fn setup(app: &mut App) {
     let rendergraph_settings = render_graph::settings::Settings::default();
 
     let main_schedule = match app.get_schedule(Main) {
-        Some(schedule) => schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings),
+        Some(schedule) => {
+            schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+        }
         None => "".to_string(),
     };
-    
+
     let fixed_update_schedule = match app.get_schedule(FixedUpdate) {
-        Some(schedule) => schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings),
+        Some(schedule) => {
+            schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+        }
         None => "".to_string(),
     };
 
     let render_main_schedule = match render_app.get_schedule(FixedUpdate) {
-        Some(schedule) => schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings),
+        Some(schedule) => {
+            schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+        }
         None => "".to_string(),
     };
     let render_extract_schedule = match render_app.get_schedule(ExtractSchedule) {
-        Some(schedule) => schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings),
+        Some(schedule) => {
+            schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+        }
         None => "".to_string(),
     };
 
