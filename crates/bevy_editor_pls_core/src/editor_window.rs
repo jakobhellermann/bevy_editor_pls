@@ -35,6 +35,10 @@ pub trait EditorWindow: 'static {
     fn app_setup(app: &mut App) {
         let _ = app;
     }
+
+    fn app_finish(app: &mut App) {
+        let _ = app;
+    }
 }
 
 pub struct EditorWindowContext<'a> {

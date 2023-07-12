@@ -10,7 +10,7 @@ use std::{
 
 #[derive(Resource)]
 pub struct DotGraphs {
-    pub main_schedule: Option<String>,
+    pub update_schedule: Option<String>,
     pub fixed_update_schedule: Option<String>,
     pub render_main_schedule: Option<String>,
     pub render_extract_schedule: Option<String>,
@@ -34,7 +34,7 @@ pub fn setup(app: &mut App) {
     };
     let rendergraph_settings = render_graph::settings::Settings::default();
 
-    let main_schedule = app.get_schedule(Main).map(|schedule| {
+    let update_schedule = app.get_schedule(Update).map(|schedule| {
         schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
     });
 
@@ -52,7 +52,7 @@ pub fn setup(app: &mut App) {
     let render_graph = render_graph::render_graph_dot(render_graph, &rendergraph_settings);
 
     app.insert_resource(DotGraphs {
-        main_schedule,
+        update_schedule,
         fixed_update_schedule,
         render_main_schedule,
         render_extract_schedule,

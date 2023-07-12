@@ -56,7 +56,7 @@ impl EditorWindow for DebugSettingsWindow {
         debug_ui(world, state, ui, &type_registry);
     }
 
-    fn app_setup(app: &mut App) {
+    fn app_finish(app: &mut App) {
         debugdump::setup(app);
     }
 }
@@ -167,13 +167,13 @@ fn debug_ui_debugdump(world: &mut World, state: &mut DebugSettingsWindowState, u
     };
 
     ui.vertical(|ui| {
-        if ui.button("Open main schedule").clicked() {
+        if ui.button("Open `Update` schedule").clicked() {
             let schedule_graph = world.get_resource::<debugdump::DotGraphs>().unwrap();
-            if let Err(e) = open_dot(&schedule_graph.main_schedule, "schedule_main") {
+            if let Err(e) = open_dot(&schedule_graph.update_schedule, "schedule_main") {
                 state.open_debugdump_status = Some(e);
             }
         }
-        if ui.button("Open fixed time schedule").clicked() {
+        if ui.button("Open `FixedUpdate` schedule").clicked() {
             let schedule_graph = world.get_resource::<debugdump::DotGraphs>().unwrap();
             if let Err(e) = open_dot(&schedule_graph.fixed_update_schedule, "schedule_fixed") {
                 state.open_debugdump_status = Some(e);
