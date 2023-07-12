@@ -43,8 +43,7 @@ struct EditorCamera2dPanZoom;
 
 pub struct CameraWindow;
 
-#[derive(Clone, Copy, PartialEq)]
-#[derive(Default)]
+#[derive(Clone, Copy, PartialEq, Default)]
 pub enum EditorCamKind {
     D2PanZoom,
     D3Free,
@@ -69,8 +68,6 @@ impl EditorCamKind {
         ]
     }
 }
-
-
 
 #[derive(Default)]
 pub struct CameraWindowState {
@@ -120,7 +117,8 @@ impl EditorWindow for CameraWindow {
         app.add_plugins(camera_2d_panzoom::PanCamPlugin)
             .add_plugins(camera_3d_free::FlycamPlugin)
             .add_plugins(camera_3d_panorbit::PanOrbitCameraPlugin)
-            .add_systems(Update,
+            .add_systems(
+                Update,
                 set_editor_cam_active
                     .before(camera_3d_panorbit::CameraSystem::Movement)
                     .before(camera_3d_free::CameraSystem::Movement)
@@ -131,7 +129,8 @@ impl EditorWindow for CameraWindow {
             .add_systems(Update, initial_camera_setup);
         app.add_systems(PreStartup, spawn_editor_cameras);
 
-        app.add_systems(PostUpdate,
+        app.add_systems(
+            PostUpdate,
             set_main_pass_viewport
                 .after(bevy_editor_pls_core::EditorSet::UI)
                 .before(bevy::render::camera::CameraUpdateSystem),
