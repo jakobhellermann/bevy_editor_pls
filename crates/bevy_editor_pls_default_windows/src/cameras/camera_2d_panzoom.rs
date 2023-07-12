@@ -17,8 +17,8 @@ pub(crate) struct PanCamPlugin;
 
 impl Plugin for PanCamPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(camera_movement.in_set(CameraSystem::Movement))
-            .add_system(camera_zoom.in_set(CameraSystem::Movement));
+        app.add_systems(Update, camera_movement.in_set(CameraSystem::Movement))
+            .add_systems(Update, camera_zoom.in_set(CameraSystem::Movement));
     }
 }
 

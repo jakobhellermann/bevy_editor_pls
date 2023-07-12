@@ -1,4 +1,4 @@
-use bevy::{diagnostic::Diagnostics, prelude::*};
+use bevy::{diagnostic::DiagnosticsStore, prelude::*};
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui;
 
@@ -8,7 +8,7 @@ impl EditorWindow for DiagnosticsWindow {
     const NAME: &'static str = "Diagnostics";
 
     fn ui(world: &mut World, _cx: EditorWindowContext, ui: &mut egui::Ui) {
-        let diagnostics = match world.get_resource::<Diagnostics>() {
+        let diagnostics = match world.get_resource::<DiagnosticsStore>() {
             Some(diagnostics) => diagnostics,
             None => {
                 ui.label("Diagnostics resource not available");
@@ -19,7 +19,7 @@ impl EditorWindow for DiagnosticsWindow {
     }
 }
 
-fn diagnostic_ui(ui: &mut egui::Ui, diagnostics: &Diagnostics) {
+fn diagnostic_ui(ui: &mut egui::Ui, diagnostics: &DiagnosticsStore) {
     egui::Grid::new("frame time diagnostics").show(ui, |ui| {
         let mut has_diagnostics = false;
         for diagnostic in diagnostics.iter() {

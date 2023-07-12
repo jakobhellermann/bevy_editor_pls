@@ -61,11 +61,11 @@ impl EditorWindow for HierarchyWindow {
 
     fn app_setup(app: &mut bevy::prelude::App) {
         // picking::setup(app);
-        app.add_system(clear_removed_entites.in_base_set(CoreSet::PostUpdate));
+        app.add_systems(PostUpdate, clear_removed_entites);
         // .add_system(handle_events);
 
         app.sub_app_mut(RenderApp)
-            .add_system(extract_wireframe_for_selected.in_schedule(ExtractSchedule));
+            .add_systems(ExtractSchedule, extract_wireframe_for_selected);
     }
 }
 

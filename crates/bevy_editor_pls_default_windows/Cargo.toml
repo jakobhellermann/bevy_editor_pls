@@ -11,7 +11,7 @@ readme.workspace = true
 highlight_changes = ["bevy-inspector-egui/highlight_changes"]
 
 [dependencies]
-bevy = { version = "0.10", default-features = false, features = [
+bevy = { version = "0.11", default-features = false, features = [
     "bevy_scene",
     "bevy_text",
     "bevy_ui",
@@ -29,6 +29,6 @@ bevy-inspector-egui.workspace = true
 # ] }
 indexmap = "1.7"
 pretty-type-name = "1.0"
-bevy_mod_debugdump = "0.7"
+bevy_mod_debugdump = { git = "https://github.com/Olle-Lukowski/bevy_mod_debugdump" }
 opener = "0.5.0"
-egui-gizmo = "0.10.0"
+egui-gizmo = "0.11.0"

@@ -86,7 +86,7 @@ impl EditorWindow for GizmoWindow {
             camera_material: material_camera,
         });
 
-        app.add_system(add_gizmo_markers.in_base_set(CoreSet::PostUpdate));
+        app.add_systems(PostUpdate, add_gizmo_markers);
     }
 }
 

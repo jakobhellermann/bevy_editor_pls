@@ -117,23 +117,22 @@ impl EditorWindow for CameraWindow {
     fn app_setup(app: &mut App) {
         app.init_resource::<PreviouslyActiveCameras>();
 
-        app.add_plugin(camera_2d_panzoom::PanCamPlugin)
-            .add_plugin(camera_3d_free::FlycamPlugin)
-            .add_plugin(camera_3d_panorbit::PanOrbitCameraPlugin)
-            .add_system(
+        app.add_plugins(camera_2d_panzoom::PanCamPlugin)
+            .add_plugins(camera_3d_free::FlycamPlugin)
+            .add_plugins(camera_3d_panorbit::PanOrbitCameraPlugin)
+            .add_systems(Update,
                 set_editor_cam_active
                     .before(camera_3d_panorbit::CameraSystem::Movement)
                     .before(camera_3d_free::CameraSystem::Movement)
                     .before(camera_2d_panzoom::CameraSystem::Movement),
             )
-            .add_system(toggle_editor_cam.in_base_set(CoreSet::PreUpdate))
-            .add_system(focus_selected.in_base_set(CoreSet::PreUpdate))
-            .add_system(initial_camera_setup);
-        app.add_startup_system(spawn_editor_cameras.in_base_set(StartupSet::PreStartup));
+            .add_systems(PreUpdate, toggle_editor_cam)
+            .add_systems(PreUpdate, focus_selected)
+            .add_systems(Update, initial_camera_setup);
+        app.add_systems(PreStartup, spawn_editor_cameras);
 
-        app.add_system(
+        app.add_systems(PostUpdate,
             set_main_pass_viewport
-                .in_base_set(CoreSet::PostUpdate)
                 .after(bevy_editor_pls_core::EditorSet::UI)
                 .before(bevy::render::camera::CameraUpdateSystem),
         );
