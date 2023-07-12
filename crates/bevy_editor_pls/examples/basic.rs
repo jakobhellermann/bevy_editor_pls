@@ -13,11 +13,13 @@ fn main() {
 
     App::new()
         .add_plugins(DefaultPlugins.set(RenderPlugin { wgpu_settings }))
-        .add_plugin(EditorPlugin::new())
-        .add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(EntityCountDiagnosticsPlugin)
-        .add_plugin(AssetCountDiagnosticsPlugin::<StandardMaterial>::default())
-        .add_startup_system(setup)
+        .add_plugins((
+            EditorPlugin::new(),
+            FrameTimeDiagnosticsPlugin,
+            EntityCountDiagnosticsPlugin,
+            AssetCountDiagnosticsPlugin::<StandardMaterial>::default(),
+        ))
+        .add_systems(Startup, setup)
         .run();
 }
 
