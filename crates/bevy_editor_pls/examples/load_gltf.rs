@@ -15,9 +15,9 @@ fn main() {
         })
         .insert_resource(DirectionalLightShadowMap { size: 4096 })
         .add_plugins(DefaultPlugins)
-        .add_plugin(bevy_editor_pls::EditorPlugin)
-        .add_startup_system(setup)
-        .add_system(animate_light_direction)
+        .add_plugins(bevy_editor_pls::EditorPlugin::new())
+        .add_systems(Startup, setup)
+        .add_systems(Update, animate_light_direction)
         .run();
 }
 

@@ -32,4 +32,4 @@ bevy = { version = "0.11", default-features = false, features = [
 
 [[example]]
 name = "load_gltf"
-required-features = ["bevy/bevy_gltf", "bevy/png", "bevy/ktx2"]
+required-features = ["bevy/bevy_gltf", "bevy/png", "bevy/ktx2", "bevy/zstd"]
