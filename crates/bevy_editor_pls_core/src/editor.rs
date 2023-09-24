@@ -271,23 +271,24 @@ impl Editor {
 impl Editor {
     pub(crate) fn system(world: &mut World) {
         world.resource_scope(|world, mut editor: Mut<Editor>| {
-            let Ok(mut egui_context) = world.query::<&mut EguiContext>().get_mut(world, editor.on_window) else {
+            let Ok(mut egui_context) = world
+                .query::<&mut EguiContext>()
+                .get_mut(world, editor.on_window)
+            else {
                 return;
             };
             let egui_context = egui_context.get_mut().clone();
 
             world.resource_scope(
                 |world, mut editor_internal_state: Mut<EditorInternalState>| {
-                    world.resource_scope(
-                        |world, mut editor_events: Mut<Events<EditorEvent>>| {
-                            editor.editor_ui(
-                                world,
-                                &egui_context,
-                                &mut editor_internal_state,
-                                &mut editor_events,
-                            );
-                        },
-                    );
+                    world.resource_scope(|world, mut editor_events: Mut<Events<EditorEvent>>| {
+                        editor.editor_ui(
+                            world,
+                            &egui_context,
+                            &mut editor_internal_state,
+                            &mut editor_events,
+                        );
+                    });
                 },
             );
         });
@@ -337,7 +338,6 @@ impl Editor {
         self.editor_floating_windows(world, ctx, internal_state);
 
         self.listening_for_text = ctx.wants_keyboard_input();
-        self.pointer_used |= ctx.is_using_pointer();
 
         let is_pressed = ctx.input(|input| input.pointer.press_start_time().is_some());
         match (&self.active_editor_interaction, is_pressed) {

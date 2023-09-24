@@ -11,7 +11,11 @@ categories = ["game-development", "gui", "visualization"]
 exclude = ["assets"]
 
 [features]
-default_windows = ["bevy_editor_pls_default_windows", "bevy/bevy_render", "bevy/bevy_pbr"]
+default_windows = [
+    "bevy_editor_pls_default_windows",
+    "bevy/bevy_render",
+    "bevy/bevy_pbr",
+]
 highlight_changes = ["bevy_editor_pls_default_windows/highlight_changes"]
 default = ["default_windows"]
 
@@ -21,7 +25,6 @@ bevy_editor_pls_default_windows = { workspace = true, optional = true }
 bevy = { version = "0.11", default-features = false, features = ["x11"] }
 egui.workspace = true
 egui-gizmo = "0.11.0"
-# bevy_framepace = { version = "0.11", default-features = false }
 
 [dev-dependencies]
 bevy = { version = "0.11", default-features = false, features = [
