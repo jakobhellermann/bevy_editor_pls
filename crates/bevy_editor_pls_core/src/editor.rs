@@ -305,7 +305,7 @@ impl Editor {
 
         if !self.active {
             self.editor_floating_windows(world, ctx, internal_state);
-            self.pointer_used = ctx.is_pointer_over_area();
+            self.pointer_used = ctx.wants_pointer_input();
             return;
         }
 
@@ -338,7 +338,6 @@ impl Editor {
         self.editor_floating_windows(world, ctx, internal_state);
 
         self.listening_for_text = ctx.wants_keyboard_input();
-        self.pointer_used |= ctx.is_using_pointer();
 
         let is_pressed = ctx.input(|input| input.pointer.press_start_time().is_some());
         match (&self.active_editor_interaction, is_pressed) {
