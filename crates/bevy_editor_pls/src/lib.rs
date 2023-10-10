@@ -1,3 +1,5 @@
+#![allow(clippy::needless_doctest_main)]
+
 /// input settings for the editor UI
 #[cfg(feature = "default_windows")]
 pub mod controls;
