@@ -192,17 +192,21 @@ fn draw_gizmo(
     }
 
     for selected in selected_entities.iter() {
-        let Some(transform) = world.get::<Transform>(selected) else { continue };
+        let Some(transform) = world.get::<Transform>(selected) else {
+            continue;
+        };
         let model_matrix = transform.compute_matrix();
 
         let Some(result) = egui_gizmo::Gizmo::new(selected)
-                    .model_matrix(model_matrix.to_cols_array_2d())
-                    .view_matrix(view_matrix.to_cols_array_2d())
-                    .projection_matrix(projection_matrix.to_cols_array_2d())
-                    .orientation(egui_gizmo::GizmoOrientation::Local)
-                    .mode(gizmo_mode)
-                    .interact(ui)
-                else { continue };
+            .model_matrix(model_matrix.to_cols_array_2d())
+            .view_matrix(view_matrix.to_cols_array_2d())
+            .projection_matrix(projection_matrix.to_cols_array_2d())
+            .orientation(egui_gizmo::GizmoOrientation::Local)
+            .mode(gizmo_mode)
+            .interact(ui)
+        else {
+            continue;
+        };
 
         let mut transform = world.get_mut::<Transform>(selected).unwrap();
         *transform = Transform {
