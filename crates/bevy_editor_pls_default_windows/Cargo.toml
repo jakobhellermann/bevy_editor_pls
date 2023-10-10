@@ -30,5 +30,5 @@ bevy-inspector-egui.workspace = true
 indexmap = "2"
 pretty-type-name = "1.0"
 bevy_mod_debugdump = "0.8"
-opener = "0.5.0"
-egui-gizmo = "0.11.0"
+opener = "0.6.0"
+egui-gizmo.workspace = true

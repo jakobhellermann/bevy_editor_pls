@@ -4,7 +4,7 @@ use bevy::ecs::event::Events;
 use bevy::window::WindowMode;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_inspector_egui::bevy_egui::{egui, EguiContext};
-use egui_dock::{NodeIndex, TabBarStyle, TabIndex};
+use egui_dock::{NodeIndex, SurfaceIndex, TabBarStyle, TabIndex};
 use indexmap::IndexMap;
 
 use crate::editor_window::{EditorWindow, EditorWindowContext};
@@ -116,7 +116,7 @@ struct EditorWindowData {
 
 #[derive(Resource)]
 pub struct EditorInternalState {
-    tree: egui_dock::Tree<TreeTab>,
+    state: egui_dock::DockState<TreeTab>,
     pub(crate) floating_windows: Vec<FloatingWindow>,
 
     next_floating_window_id: u32,
@@ -125,7 +125,7 @@ pub struct EditorInternalState {
 impl Default for EditorInternalState {
     fn default() -> Self {
         Self {
-            tree: egui_dock::Tree::new(vec![TreeTab::GameView]),
+            state: egui_dock::DockState::new(vec![TreeTab::GameView]),
             floating_windows: Default::default(),
             next_floating_window_id: Default::default(),
         }
@@ -140,10 +140,11 @@ enum TreeTab {
 
 impl EditorInternalState {
     pub fn push_to_focused_leaf<W: EditorWindow>(&mut self) {
-        self.tree
+        self.state
             .push_to_focused_leaf(TreeTab::CustomWindow(TypeId::of::<W>()));
-        if let Some(focus) = self.tree.focused_leaf() {
-            self.tree.set_active_tab(focus, TabIndex(0));
+        if let Some((surface_index, node_index)) = self.state.focused_leaf() {
+            self.state
+                .set_active_tab((surface_index, node_index, TabIndex(0)));
         };
     }
 
@@ -154,7 +155,8 @@ impl EditorInternalState {
         fraction: f32,
     ) -> [NodeIndex; 2] {
         let node = egui_dock::Node::leaf(TreeTab::CustomWindow(TypeId::of::<W>()));
-        self.tree.split(parent, split, fraction, node)
+        self.state
+            .split((SurfaceIndex::main(), parent), split, fraction, node)
     }
 
     pub fn split_right<W: EditorWindow>(
@@ -195,7 +197,8 @@ impl EditorInternalState {
     ) -> [NodeIndex; 2] {
         let tabs = windows.iter().copied().map(TreeTab::CustomWindow).collect();
         let node = egui_dock::Node::leaf_with(tabs);
-        self.tree.split(parent, split, fraction, node)
+        self.state
+            .split((SurfaceIndex::main(), parent), split, fraction, node)
     }
 }
 
@@ -310,8 +313,8 @@ impl Editor {
         }
 
         let mut tree = std::mem::replace(
-            &mut internal_state.tree,
-            egui_dock::Tree::new(Vec::default()),
+            &mut internal_state.state,
+            egui_dock::DockState::new(Vec::new()),
         );
 
         egui_dock::DockArea::new(&mut tree)
@@ -330,7 +333,7 @@ impl Editor {
                     world,
                 },
             );
-        internal_state.tree = tree;
+        internal_state.state = tree;
 
         let pointer_pos = ctx.input(|input| input.pointer.interact_pos());
         self.pointer_used = pointer_pos.map_or(false, |pos| !self.is_in_viewport(pos));
@@ -535,7 +538,13 @@ impl egui_dock::TabViewer for TabViewer<'_> {
         }
     }
 
-    fn context_menu(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
+    fn context_menu(
+        &mut self,
+        ui: &mut egui::Ui,
+        tab: &mut Self::Tab,
+        _surface: SurfaceIndex,
+        _node: NodeIndex,
+    ) {
         self.editor
             .editor_window_context_menu(ui, self.internal_state, *tab);
     }
