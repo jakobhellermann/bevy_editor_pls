@@ -127,9 +127,9 @@ fn set_cam3d_controls(
 
 ## Bevy support table
 
-| bevy | bevy_editor_pls   |
+| bevy | bevy\_editor\_pls   |
 | ---- | ----------------- |
-| 0.11 | `main` (unstable) |
+| 0.11 | 0.5               |
 | 0.10 | 0.4               |
 | 0.10 | 0.3               |
 | 0.9  | 0.2               |

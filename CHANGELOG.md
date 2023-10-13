@@ -1,6 +1,10 @@
 # Changelog
 
-## Version 0.4 (unreleased)
+## Version 0.5
+- update to bevy 0.11 and egui 0.23
+- fix crashes from invalid debugdump
+
+## Version 0.4
 - allow editor on non-primary window (`EditorPlugin::in_new_window(Window::default())`)
 - breaking: require `.add_plugin(EditorPlugin::new())` instead of `.add_plugin(EditorPlugin)`
 - merge `EditorState` and `Editor`
