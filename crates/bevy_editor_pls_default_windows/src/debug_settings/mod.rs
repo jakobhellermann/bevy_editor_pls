@@ -3,7 +3,7 @@ pub mod debugdump;
 use bevy::{
     pbr::wireframe::WireframeConfig,
     prelude::*,
-    reflect::TypeRegistryInternal,
+    reflect::TypeRegistry,
     render::{render_resource::WgpuFeatures, renderer::RenderAdapter},
 };
 use bevy_editor_pls_core::editor_window::EditorWindow;
@@ -65,7 +65,7 @@ fn debug_ui(
     world: &mut World,
     state: &mut DebugSettingsWindowState,
     ui: &mut egui::Ui,
-    type_registry: &TypeRegistryInternal,
+    type_registry: &TypeRegistry,
 ) {
     let available_size = ui.available_size();
     let horizontal = available_size.x > available_size.y;
@@ -97,20 +97,9 @@ fn debug_ui_options(
     world: &mut World,
     state: &mut DebugSettingsWindowState,
     ui: &mut egui::Ui,
-    type_registry: &TypeRegistryInternal,
+    type_registry: &TypeRegistry,
 ) {
     Grid::new("debug settings").show(ui, |ui| {
-        ui.label("Pause time");
-        if ui.checkbox(&mut state.pause_time, "").changed() {
-            let mut time = world.resource_mut::<Time>();
-            if state.pause_time {
-                time.pause();
-            } else {
-                time.unpause();
-            }
-        }
-        ui.end_row();
-
         let wireframe_enabled = world
             .get_resource::<RenderAdapter>()
             .map_or(false, |adapter| {

@@ -3,7 +3,7 @@
 use bevy::ecs::entity::Entities;
 use bevy::pbr::wireframe::Wireframe;
 use bevy::prelude::*;
-use bevy::reflect::TypeRegistryInternal;
+use bevy::reflect::TypeRegistry;
 use bevy::render::{Extract, RenderApp};
 use bevy_inspector_egui::bevy_inspector::guess_entity_name;
 use bevy_inspector_egui::bevy_inspector::hierarchy::SelectedEntities;
@@ -137,7 +137,7 @@ pub struct RenameInfo {
 struct Hierarchy<'a> {
     world: &'a mut World,
     state: &'a mut HierarchyState,
-    type_registry: &'a TypeRegistryInternal,
+    type_registry: &'a TypeRegistry,
     add_state: Option<&'a AddWindowState>,
 }
 

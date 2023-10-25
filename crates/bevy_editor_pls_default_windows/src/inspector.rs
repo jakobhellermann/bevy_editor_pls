@@ -2,9 +2,9 @@ use std::any::TypeId;
 
 use super::add::{AddWindow, AddWindowState};
 use super::hierarchy::HierarchyWindow;
-use bevy::asset::HandleId;
+use bevy::asset::UntypedAssetId;
 use bevy::prelude::{AppTypeRegistry, Entity, World};
-use bevy::reflect::TypeRegistryInternal;
+use bevy::reflect::TypeRegistry;
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::bevy_inspector::hierarchy::SelectedEntities;
 use bevy_inspector_egui::{bevy_inspector, egui};
@@ -13,7 +13,7 @@ use bevy_inspector_egui::{bevy_inspector, egui};
 pub enum InspectorSelection {
     Entities,
     Resource(TypeId, String),
-    Asset(TypeId, String, HandleId),
+    Asset(TypeId, String, UntypedAssetId),
 }
 
 pub struct InspectorState {
@@ -58,7 +58,7 @@ fn inspector(
     selected_entities: &SelectedEntities,
     ui: &mut egui::Ui,
     add_window_state: Option<&AddWindowState>,
-    type_registry: &TypeRegistryInternal,
+    type_registry: &TypeRegistry,
 ) {
     egui::ScrollArea::vertical().show(ui, |ui| match *selected {
         InspectorSelection::Entities => match selected_entities.as_slice() {

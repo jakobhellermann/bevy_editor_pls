@@ -11,25 +11,33 @@ categories = ["game-development", "gui", "visualization"]
 exclude = ["assets"]
 
 [features]
-default_windows = ["bevy_editor_pls_default_windows", "bevy/bevy_render", "bevy/bevy_pbr"]
+default_windows = [
+    "bevy_editor_pls_default_windows",
+    "bevy/bevy_render",
+    "bevy/bevy_pbr",
+]
 highlight_changes = ["bevy_editor_pls_default_windows/highlight_changes"]
 default = ["default_windows"]
 
 [dependencies]
 bevy_editor_pls_core.workspace = true
 bevy_editor_pls_default_windows = { workspace = true, optional = true }
-bevy = { version = "0.11", default-features = false, features = ["x11"] }
+bevy = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = [
+    "x11",
+] }
 egui.workspace = true
 egui-gizmo.workspace = true
-# bevy_framepace = { version = "0.11", default-features = false }
+# bevy_framepace = { git = "https://github.com/bevyengine/bevy.git", default-features = false }
 
 [dev-dependencies]
-bevy = { version = "0.11", default-features = false, features = [
+bevy = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = [
     "bevy_winit",
     "bevy_core_pipeline",
     "x11",
 
-    "tonemapping_luts", "zstd", "ktx2" # https://github.com/bevyengine/bevy/discussions/9100
+    "tonemapping_luts",
+    "zstd",
+    "ktx2",             # https://github.com/bevyengine/bevy/discussions/9100
 ] }
 
 [[example]]
