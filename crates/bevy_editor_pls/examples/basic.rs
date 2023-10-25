@@ -1,8 +1,11 @@
 use bevy::{
-    asset::diagnostic::AssetCountDiagnosticsPlugin,
     diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     prelude::*,
-    render::{render_resource::WgpuFeatures, settings::WgpuSettings, RenderPlugin},
+    render::{
+        render_resource::WgpuFeatures,
+        settings::{RenderCreation, WgpuSettings},
+        RenderPlugin,
+    },
 };
 use bevy_editor_pls::prelude::*;
 
@@ -12,12 +15,13 @@ fn main() {
     wgpu_settings.features |= WgpuFeatures::POLYGON_MODE_LINE;
 
     App::new()
-        .add_plugins(DefaultPlugins.set(RenderPlugin { wgpu_settings }))
+        .add_plugins(DefaultPlugins.set(RenderPlugin {
+            render_creation: RenderCreation::Automatic(wgpu_settings),
+        }))
         .add_plugins((
             EditorPlugin::new(),
             FrameTimeDiagnosticsPlugin,
             EntityCountDiagnosticsPlugin,
-            AssetCountDiagnosticsPlugin::<StandardMaterial>::default(),
         ))
         .add_systems(Startup, setup)
         .run();

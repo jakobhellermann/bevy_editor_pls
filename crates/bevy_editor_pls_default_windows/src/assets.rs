@@ -1,7 +1,7 @@
 use bevy::{
     asset::ReflectAsset,
     prelude::{AppTypeRegistry, World},
-    reflect::TypeRegistryInternal,
+    reflect::TypeRegistry,
 };
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui;
@@ -25,7 +25,7 @@ impl EditorWindow for AssetsWindow {
 
 fn select_asset(
     ui: &mut egui::Ui,
-    type_registry: &TypeRegistryInternal,
+    type_registry: &TypeRegistry,
     world: &World,
     selection: &mut InspectorSelection,
 ) {
@@ -34,7 +34,7 @@ fn select_asset(
         .filter_map(|registration| {
             let reflect_asset = registration.data::<ReflectAsset>()?;
             Some((
-                registration.short_name().to_owned(),
+                registration.type_info().type_path().to_owned(),
                 registration.type_id(),
                 reflect_asset,
             ))
@@ -44,7 +44,6 @@ fn select_asset(
 
     for (asset_name, asset_type_id, reflect_asset) in assets {
         let mut handles: Vec<_> = reflect_asset.ids(world).collect();
-        handles.sort();
 
         ui.collapsing(format!("{asset_name} ({})", handles.len()), |ui| {
             for handle in handles {

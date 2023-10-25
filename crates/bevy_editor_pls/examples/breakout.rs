@@ -56,7 +56,7 @@ fn main() {
         .insert_resource(ClearColor(BACKGROUND_COLOR))
         .add_event::<CollisionEvent>()
         // Configure how frequently our gameplay systems are run
-        .insert_resource(FixedTime::new_from_secs(1.0 / 60.0))
+        .insert_resource(Time::new_with(1.0 / 60.0))
         .add_systems(Startup, setup)
         // Add our gameplay simulation systems to the fixed timestep schedule
         .add_systems(
@@ -298,7 +298,7 @@ fn setup(
 fn move_paddle(
     keyboard_input: Res<Input<KeyCode>>,
     mut query: Query<&mut Transform, With<Paddle>>,
-    time_step: Res<FixedTime>,
+    time_step: Res<Time>,
 ) {
     let mut paddle_transform = query.single_mut();
     let mut direction = 0.0;
@@ -313,7 +313,7 @@ fn move_paddle(
 
     // Calculate the new horizontal paddle position based on player input
     let new_paddle_position =
-        paddle_transform.translation.x + direction * PADDLE_SPEED * time_step.period.as_secs_f32();
+        paddle_transform.translation.x + direction * PADDLE_SPEED * time_step.delta_seconds();
 
     // Update the paddle position,
     // making sure it doesn't cause the paddle to leave the arena
@@ -323,10 +323,10 @@ fn move_paddle(
     paddle_transform.translation.x = new_paddle_position.clamp(left_bound, right_bound);
 }
 
-fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time_step: Res<FixedTime>) {
+fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time_step: Res<Time>) {
     for (mut transform, velocity) in &mut query {
-        transform.translation.x += velocity.x * time_step.period.as_secs_f32();
-        transform.translation.y += velocity.y * time_step.period.as_secs_f32();
+        transform.translation.x += velocity.x * time_step.delta_seconds();
+        transform.translation.y += velocity.y * time_step.delta_seconds();
     }
 }
 

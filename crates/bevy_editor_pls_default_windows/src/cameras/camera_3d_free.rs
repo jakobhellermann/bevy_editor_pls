@@ -80,7 +80,7 @@ fn camera_movement(
     };
 
     let movement =
-        Vec3::new(sideways, forward, up).normalize_or_zero() * speed * time.raw_delta_seconds();
+        Vec3::new(sideways, forward, up).normalize_or_zero() * speed * time.delta_seconds();
 
     let diff = cam_transform.forward() * movement.y
         + cam_transform.right() * movement.x

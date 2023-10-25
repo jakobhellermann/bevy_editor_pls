@@ -156,7 +156,7 @@ fn add_gizmo_markers(
             .insert((
                 HasGizmoMarker,
                 Visibility::Visible,
-                ComputedVisibility::default(),
+                ViewVisibility::default(),
             ))
             .with_children(|commands| {
                 commands.spawn((

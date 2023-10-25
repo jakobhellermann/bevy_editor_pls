@@ -1,6 +1,6 @@
 use bevy::{
     prelude::{AppTypeRegistry, ReflectResource, World},
-    reflect::TypeRegistryInternal,
+    reflect::TypeRegistry,
 };
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::egui;
@@ -25,13 +25,18 @@ impl EditorWindow for ResourcesWindow {
 
 fn select_resource(
     ui: &mut egui::Ui,
-    type_registry: &TypeRegistryInternal,
+    type_registry: &TypeRegistry,
     selection: &mut InspectorSelection,
 ) {
     let mut resources: Vec<_> = type_registry
         .iter()
         .filter(|registration| registration.data::<ReflectResource>().is_some())
-        .map(|registration| (registration.short_name().to_owned(), registration.type_id()))
+        .map(|registration| {
+            (
+                registration.type_info().type_path().to_owned(),
+                registration.type_id(),
+            )
+        })
         .collect();
     resources.sort_by(|(name_a, _), (name_b, _)| name_a.cmp(name_b));
 
