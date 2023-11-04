@@ -8,7 +8,7 @@ description.workspace = true
 readme.workspace = true
 
 [dependencies]
-bevy = { git = "https://github.com/bevyengine/bevy.git", default-features = false }
+bevy = { version = "0.12", default-features = false }
 bevy-inspector-egui.workspace = true
 indexmap = "2"
 egui_dock = "0.8"
