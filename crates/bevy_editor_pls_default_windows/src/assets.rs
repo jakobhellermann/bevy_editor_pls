@@ -34,7 +34,7 @@ fn select_asset(
         .filter_map(|registration| {
             let reflect_asset = registration.data::<ReflectAsset>()?;
             Some((
-                registration.type_info().type_path().to_owned(),
+                registration.type_info().type_path_table().short_path(),
                 registration.type_id(),
                 reflect_asset,
             ))
