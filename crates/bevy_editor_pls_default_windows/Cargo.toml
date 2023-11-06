@@ -29,6 +29,6 @@ bevy-inspector-egui.workspace = true
 # ] }
 indexmap = "2"
 pretty-type-name = "1.0"
-bevy_mod_debugdump = { git = "https://github.com/raffaeleragni/bevy_mod_debugdump", branch = "bevy_0_12" }
+bevy_mod_debugdump = "0.8.1"
 opener = "0.6.0"
 egui-gizmo.workspace = true
