@@ -43,7 +43,7 @@ fn select_asset(
     assets.sort_by(|(name_a, ..), (name_b, ..)| name_a.cmp(name_b));
 
     for (asset_name, asset_type_id, reflect_asset) in assets {
-        let mut handles: Vec<_> = reflect_asset.ids(world).collect();
+        let handles: Vec<_> = reflect_asset.ids(world).collect();
 
         ui.collapsing(format!("{asset_name} ({})", handles.len()), |ui| {
             for handle in handles {
@@ -57,7 +57,7 @@ fn select_asset(
                     .clicked()
                 {
                     *selection =
-                        InspectorSelection::Asset(asset_type_id, asset_name.clone(), handle);
+                        InspectorSelection::Asset(asset_type_id, asset_name.to_owned(), handle);
                 }
             }
         });
