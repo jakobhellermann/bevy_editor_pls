@@ -33,7 +33,7 @@ fn select_resource(
         .filter(|registration| registration.data::<ReflectResource>().is_some())
         .map(|registration| {
             (
-                registration.type_info().type_path().to_owned(),
+                registration.type_info().type_path_table().short_path(),
                 registration.type_id(),
             )
         })
