@@ -32,7 +32,7 @@ fn camera_zoom(
 ) {
     let pixels_per_line = 100.; // Maybe make configurable?
     let scroll = scroll_events
-        .iter()
+        .read()
         .map(|ev| match ev.unit {
             MouseScrollUnit::Pixel => ev.y,
             MouseScrollUnit::Line => ev.y * pixels_per_line,

@@ -80,7 +80,7 @@ impl Plugin for EditorPlugin {
         app.insert_resource(Editor::new(window_entity, always_active))
             .init_resource::<EditorInternalState>()
             .add_event::<EditorEvent>()
-            .configure_set(PostUpdate, EditorSet::UI)
+            .configure_sets(PostUpdate, EditorSet::UI)
             .add_systems(
                 Update,
                 Editor::system

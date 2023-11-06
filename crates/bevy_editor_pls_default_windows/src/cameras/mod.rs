@@ -345,7 +345,7 @@ fn toggle_editor_cam(
         return;
     }
 
-    for event in editor_events.iter() {
+    for event in editor_events.read() {
         if let EditorEvent::Toggle { now_active } = *event {
             if now_active {
                 // Add all currently active cameras
@@ -391,7 +391,7 @@ fn focus_selected(
         return;
     };
 
-    for event in editor_events.iter() {
+    for event in editor_events.read() {
         match *event {
             EditorEvent::FocusSelected => (),
             _ => continue,

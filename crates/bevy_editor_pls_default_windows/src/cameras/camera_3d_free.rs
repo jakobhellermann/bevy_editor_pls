@@ -101,7 +101,7 @@ fn camera_look(
         return;
     }
     let mut delta: Vec2 = Vec2::ZERO;
-    for event in mouse_motion_event_reader.iter() {
+    for event in mouse_motion_event_reader.read() {
         delta += event.delta;
     }
     if delta.is_nan() || delta.abs_diff_eq(Vec2::ZERO, f32::EPSILON) {

@@ -305,7 +305,7 @@ fn mouse_scroll(
     mut query_list: Query<(&mut ScrollingList, &mut Style, &Children, &Node)>,
     query_item: Query<&Node>,
 ) {
-    for mouse_wheel_event in mouse_wheel_events.iter() {
+    for mouse_wheel_event in mouse_wheel_events.read() {
         for (mut scrolling_list, mut style, children, uinode) in &mut query_list {
             let items_height: f32 = children
                 .iter()
