@@ -46,8 +46,8 @@ fn select_resource(
             _ => false,
         };
 
-        if ui.selectable_label(selected, &resource_name).clicked() {
-            *selection = InspectorSelection::Resource(type_id, resource_name);
+        if ui.selectable_label(selected, resource_name).clicked() {
+            *selection = InspectorSelection::Resource(type_id, resource_name.to_owned());
         }
     }
 }
