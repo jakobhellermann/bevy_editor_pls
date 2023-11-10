@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.6
+- update to bevy 0.12
+- add abililty to control game speed in debug options
+
 ## Version 0.5
 - update to bevy 0.11 and egui 0.23
 - fix crashes from invalid debugdump
