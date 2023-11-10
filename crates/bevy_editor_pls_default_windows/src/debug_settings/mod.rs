@@ -100,6 +100,33 @@ fn debug_ui_options(
     type_registry: &TypeRegistry,
 ) {
     Grid::new("debug settings").show(ui, |ui| {
+        ui.label("Pause time");
+
+        let mut time = world.resource_mut::<Time<Virtual>>();
+
+        if ui.checkbox(&mut state.pause_time, "").changed() {
+            if state.pause_time {
+                time.pause();
+            } else {
+                time.unpause();
+            }
+        }
+        ui.end_row();
+        ui.label("Game Speed");
+
+        let mut speed = time.relative_speed_f64();
+        if ui
+            .add(
+                egui::DragValue::new(&mut speed)
+                    .clamp_range(0..=20)
+                    .speed(0.1),
+            )
+            .changed()
+        {
+            time.set_relative_speed_f64(speed);
+        }
+        ui.end_row();
+
         let wireframe_enabled = world
             .get_resource::<RenderAdapter>()
             .map_or(false, |adapter| {
@@ -116,7 +143,7 @@ fn debug_ui_options(
         }
         ui.scope(|ui| {
             ui.set_enabled(wireframe_enabled);
-            if ui_for_value(&mut state.wireframes, ui, type_registry) {
+            if ui_for_value(&mut state.wireframes, ui, &type_registry) {
                 world
                     .get_resource_or_insert_with(WireframeConfig::default)
                     .global = state.wireframes;
