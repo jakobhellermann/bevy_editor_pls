@@ -21,7 +21,7 @@ Add the `EditorPlugin`:
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-+       .add_plugin(EditorPlugin::default())
++       .add_plugins(EditorPlugin::default())
         ...
         .run();
 }
@@ -127,8 +127,9 @@ fn set_cam3d_controls(
 
 ## Bevy support table
 
-| bevy | bevy\_editor\_pls   |
+| bevy | bevy\_editor\_pls |
 | ---- | ----------------- |
+| 0.12 | 0.6               |
 | 0.11 | 0.5               |
 | 0.10 | 0.4               |
 | 0.10 | 0.3               |
