@@ -28,6 +28,7 @@ egui-gizmo.workspace = true
 # bevy_framepace = { version = "0.12", default-features = false }
 
 [dev-dependencies]
+log.workspace = true
 bevy = { version = "0.12", default-features = false, features = [
     "bevy_winit",
     "bevy_core_pipeline",
