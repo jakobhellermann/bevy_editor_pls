@@ -4,6 +4,7 @@
 pub mod add;
 pub mod assets;
 pub mod cameras;
+pub mod console_log;
 pub mod debug_settings;
 pub mod diagnostics;
 pub mod gizmos;
