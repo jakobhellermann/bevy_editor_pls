@@ -1,5 +1,6 @@
 //! A simplified implementation of the classic game "Breakout".
 
+use bevy::log::LogPlugin;
 use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
@@ -49,8 +50,10 @@ const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 const SCORE_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 
 fn main() {
+    console_log::set_module_filter("breakout=trace");
+
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
         .add_plugins(EditorPlugin::new())
         .insert_resource(Scoreboard { score: 0 })
         .insert_resource(ClearColor(BACKGROUND_COLOR))
@@ -175,6 +178,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
+    log::info!("Start Setup Example");
     // Camera
     commands.spawn(Camera2dBundle::default());
 
