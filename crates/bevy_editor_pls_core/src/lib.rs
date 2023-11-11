@@ -3,6 +3,8 @@ pub mod editor;
 /// Trait definition for new editor windows
 pub mod editor_window;
 
+pub mod widgets;
+
 use std::marker::PhantomData;
 
 use bevy::prelude::*;
