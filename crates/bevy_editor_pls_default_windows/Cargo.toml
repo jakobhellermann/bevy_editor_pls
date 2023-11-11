@@ -31,4 +31,6 @@ indexmap = "2"
 pretty-type-name = "1.0"
 bevy_mod_debugdump = "0.9"
 opener = "0.6.0"
+log.workspace = true
 egui-gizmo.workspace = true
+egui_extras.workspace = true
