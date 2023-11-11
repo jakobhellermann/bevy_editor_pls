@@ -112,6 +112,9 @@ impl Plugin for EditorPlugin {
             use bevy_editor_pls_default_windows::renderer::RendererWindow;
             use bevy_editor_pls_default_windows::resources::ResourcesWindow;
             use bevy_editor_pls_default_windows::scenes::SceneWindow;
+            use bevy_editor_pls_default_windows::console_log;
+
+            console_log::setup(app);
 
             app.add_editor_window::<HierarchyWindow>();
             app.add_editor_window::<AssetsWindow>();
@@ -125,6 +128,7 @@ impl Plugin for EditorPlugin {
             app.add_editor_window::<SceneWindow>();
             app.add_editor_window::<GizmoWindow>();
             app.add_editor_window::<controls::ControlsWindow>();
+            app.add_editor_window::<console_log::ConsoleLogWindow>();
 
             app.add_plugins(bevy::pbr::wireframe::WireframePlugin);
 
@@ -145,6 +149,7 @@ impl Plugin for EditorPlugin {
                     std::any::TypeId::of::<AssetsWindow>(),
                     std::any::TypeId::of::<DebugSettingsWindow>(),
                     std::any::TypeId::of::<DiagnosticsWindow>(),
+                    std::any::TypeId::of::<console_log::ConsoleLogWindow>(),
                 ],
             );
         }
