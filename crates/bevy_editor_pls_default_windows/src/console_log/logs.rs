@@ -3,6 +3,8 @@ use std::sync::{Arc, OnceLock, RwLock};
 
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use bevy::log;
+use bevy::utils::tracing::{Subscriber, span};
 
 static FILTER: OnceLock<String> = OnceLock::new();
 
@@ -23,13 +25,13 @@ pub fn set_module_filter<T: ToString>(new_filter: T) {
 #[derive(Clone, Debug, Resource)]
 pub struct Logs {
     logs: Arc<RwLock<HashMap<LogItem, u64>>>,
-    filter_modules: HashMap<String, Option<log::Level>>,
+    filter_modules: HashMap<String, Option<bevy::log::Level>>,
 }
 
 impl Default for Logs {
     fn default() -> Self {
         let mut filter_modules = HashMap::new();
-        filter_modules.insert(env!("CARGO_PKG_NAME").to_string(), Some(log::Level::Trace));
+        filter_modules.insert(env!("CARGO_PKG_NAME").to_string(), Some(log::Level::TRACE));
 
         let external_filters = FILTER.get_or_init(String::new);
         filter_modules.extend(
@@ -63,8 +65,8 @@ pub struct LogItem {
     pub details: String,
 }
 
-impl<'a> From<&log::Record<'a>> for LogItem {
-    fn from(v: &log::Record) -> Self {
+impl<'a> From<&span::Record<'a>> for LogItem {
+    fn from(v: &span::Record<'a>) -> Self {
         Self {
             level_log: v.level(),
             module: v.module_path().unwrap_or_default().to_string(),
@@ -97,25 +99,16 @@ impl Logs {
     }
 }
 
-impl log::Log for Logs {
-    fn enabled(&self, _metadata: &log::Metadata) -> bool {
-        true
+impl Subscriber for Logs {
+    fn enabled(&self, metadata: &bevy::utils::tracing::Metadata<'_>) -> bool {
+        !metadata.module_path().is_some_and(|m| {
+            self.filter_modules.iter().any(|(name, filter)| {
+                m.starts_with(name) && filter.is_some_and(|f| metadata.level() <= &f)
+            })
+        })
     }
 
-    fn log(&self, record: &log::Record) {
-        if !self.enabled(record.metadata()) {
-            return;
-        }
-
-        // Check if NameModule of record has in filter modules and have correct level
-        if !record.module_path().is_some_and(|m| {
-            self.filter_modules.iter().any(|(name, filter)| {
-                m.starts_with(name) && filter.is_some_and(|f| record.level() <= f)
-            })
-        }) {
-            return;
-        }
-
+    fn record(&self, span: &span::Id, record: &span::Record<'_>) {
         let mut logs = self.logs.write().unwrap();
         let item = LogItem::from(record);
         (*logs)
@@ -129,5 +122,23 @@ impl log::Log for Logs {
         drop(logs);
     }
 
-    fn flush(&self) {}
+    fn new_span(&self, span: &span::Attributes<'_>) -> span::Id {
+        todo!()
+    }
+
+    fn record_follows_from(&self, span: &span::Id, follows: &span::Id) {
+        todo!()
+    }
+
+    fn event(&self, event: &bevy::utils::tracing::Event<'_>) {
+        todo!()
+    }
+
+    fn enter(&self, span: &span::Id) {
+        todo!()
+    }
+
+    fn exit(&self, span: &span::Id) {
+        todo!()
+    }
 }
