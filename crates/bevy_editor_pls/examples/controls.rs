@@ -1,9 +1,12 @@
 use bevy::prelude::*;
+use bevy::log::LogPlugin;
 use bevy_editor_pls::{controls, EditorPlugin};
 
 fn main() {
+    console_log::set_module_filter("controls=trace");
+
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
         .add_plugins(EditorPlugin::new())
         .insert_resource(editor_controls())
         .add_systems(Startup, (set_cam3d_controls, setup))
@@ -41,6 +44,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    log::info!("Start Setup Example");
     // plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),

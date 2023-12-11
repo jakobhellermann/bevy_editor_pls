@@ -1,9 +1,12 @@
+use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy_editor_pls::EditorPlugin;
 
 fn main() {
+    console_log::set_module_filter("separate_window=trace");
+
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
         // .add_plugin(EditorPlugin::new().in_separate_window())
         .add_plugins(EditorPlugin::new().in_new_window(Window::default()))
         .add_systems(Startup, setup)
@@ -16,6 +19,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    log::info!("Start Setup Example");
     // plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),

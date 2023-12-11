@@ -2,19 +2,22 @@
 
 use std::f32::consts::*;
 
+use bevy::log::LogPlugin;
 use bevy::{
     pbr::{CascadeShadowConfigBuilder, DirectionalLightShadowMap},
     prelude::*,
 };
 
 fn main() {
+    console_log::set_module_filter("load_gltf=trace");
+
     App::new()
         .insert_resource(AmbientLight {
             color: Color::WHITE,
             brightness: 1.0 / 5.0f32,
         })
         .insert_resource(DirectionalLightShadowMap { size: 4096 })
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
         .add_plugins(bevy_editor_pls::EditorPlugin::new())
         .add_systems(Startup, setup)
         .add_systems(Update, animate_light_direction)
@@ -22,6 +25,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    log::info!("Start Setup Example");
     commands.spawn((
         Camera3dBundle {
             transform: Transform::from_xyz(0.7, 0.7, 1.0)

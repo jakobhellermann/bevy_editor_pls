@@ -1,3 +1,4 @@
+use bevy::log::LogPlugin;
 use bevy::{
     diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
     prelude::*,
@@ -8,8 +9,10 @@ use bevy::{
     },
 };
 use bevy_editor_pls::prelude::*;
+use bevy_editor_pls_default_windows::console_log;
 
 fn main() {
+    console_log::set_module_filter("wgpu_core=off;basic=trace");
     // enable wireframe rendering
     let mut wgpu_settings = WgpuSettings::default();
     wgpu_settings.features |= WgpuFeatures::POLYGON_MODE_LINE;
@@ -17,7 +20,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(RenderPlugin {
             render_creation: RenderCreation::Automatic(wgpu_settings),
-        }))
+        }).disable::<LogPlugin>())
         .add_plugins((
             EditorPlugin::new(),
             FrameTimeDiagnosticsPlugin,
@@ -33,6 +36,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    log::info!("Start Setup Example");
     // plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane::from_size(5.0))),

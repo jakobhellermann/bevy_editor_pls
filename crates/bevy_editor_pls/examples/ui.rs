@@ -1,5 +1,6 @@
 //! This example illustrates the various features of Bevy UI.
 
+use bevy::log::LogPlugin;
 use bevy::{
     input::mouse::{MouseScrollUnit, MouseWheel},
     prelude::*,
@@ -8,8 +9,10 @@ use bevy::{
 use bevy_editor_pls::EditorPlugin;
 
 fn main() {
+    console_log::set_module_filter("ui=trace");
+
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
         .add_plugins(EditorPlugin::new())
         // Only run the app when there is user input. This will significantly reduce CPU/GPU use.
         .insert_resource(WinitSettings::desktop_app())
@@ -19,6 +22,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    log::info!("Start Setup Example");
     // Camera
     commands.spawn(Camera2dBundle::default());
 

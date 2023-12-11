@@ -1,14 +1,18 @@
+use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
 fn main() {
+    console_log::set_module_filter("2d_3d_mixed=trace");
+
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
         .add_plugins(bevy_editor_pls::EditorPlugin::new())
         .add_systems(Startup, (setup_2d, setup_3d))
         .run();
 }
 
 fn setup_2d(mut commands: Commands) {
+    log::info!("Start Setup Example 2D");
     commands.spawn(Camera2dBundle::default());
     commands.spawn(SpriteBundle {
         sprite: Sprite {
@@ -25,6 +29,7 @@ fn setup_3d(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    log::info!("Start Setup Example 3D");
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane::from_size(0.5))),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
