@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.7
+- update to `bevy-inspector-egui` 0.22 and `egui` 0.24
+
 ## Version 0.6
 - update to bevy 0.12
 - add abililty to control game speed in debug options
