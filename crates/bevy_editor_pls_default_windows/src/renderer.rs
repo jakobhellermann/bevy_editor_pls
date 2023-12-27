@@ -38,7 +38,7 @@ impl EditorWindow for RendererWindow {
                     if env.ui_for_reflect_with_options(
                         &mut size,
                         ui,
-                        egui::Id::null(),
+                        egui::Id::NULL,
                         &NumberOptions::at_least(1).with_speed(4.0),
                     ) {
                         directional_light_shadow_map.size = size;
