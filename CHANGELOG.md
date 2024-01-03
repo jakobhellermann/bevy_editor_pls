@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.7.1
+- fix mouse control glitches introduced in version 0.6
+
 ## Version 0.7
 - update to `bevy-inspector-egui` 0.22 and `egui` 0.24
 
