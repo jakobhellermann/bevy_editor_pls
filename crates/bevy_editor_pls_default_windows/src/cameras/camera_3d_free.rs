@@ -94,10 +94,9 @@ fn camera_look(
     mut query: Query<(&mut FlycamControls, &mut Transform)>,
 ) {
     let (mut flycam, mut transform) = query.single_mut();
-    if !mouse_input.pressed(MouseButton::Right) {
-        return;
-    }
-    if !flycam.enable_look {
+    if !flycam.enable_look || !mouse_input.pressed(MouseButton::Right) {
+        //Prevent accumulation of irrelevant events
+        mouse_motion_event_reader.clear();
         return;
     }
     let mut delta: Vec2 = Vec2::ZERO;

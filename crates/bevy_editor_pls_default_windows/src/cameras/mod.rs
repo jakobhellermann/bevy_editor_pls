@@ -342,6 +342,8 @@ fn toggle_editor_cam(
     mut cam_query: Query<(Entity, &mut Camera)>,
 ) {
     if editor.always_active() {
+        //Prevent accumulation of irrelevant events
+        editor_events.clear();
         return;
     }
 
@@ -388,6 +390,8 @@ fn focus_selected(
     window: Query<&Window>,
 ) {
     let Ok(window) = window.get(editor.window()) else {
+        //Prevent accumulation of irrelevant events
+        editor_events.clear();
         return;
     };
 

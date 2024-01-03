@@ -61,6 +61,9 @@ fn pan_orbit_camera(
     mut query: Query<(&mut PanOrbitCamera, &mut Transform, &Projection)>,
 ) {
     let Ok(window) = window.get(editor.window()) else {
+        //Prevent accumulation of irrelevant events
+        ev_motion.clear();
+        ev_scroll.clear();
         return;
     };
 
@@ -68,6 +71,9 @@ fn pan_orbit_camera(
     let (mut pan_orbit, mut transform, projection) = query.single_mut();
 
     if !pan_orbit.enabled {
+        //Prevent accumulation of irrelevant events
+        ev_motion.clear();
+        ev_scroll.clear();
         return;
     }
 
@@ -86,6 +92,11 @@ fn pan_orbit_camera(
             pan += ev.delta;
         }
     }
+    else {
+        //Prevent accumulation of irrelevant events
+        ev_motion.clear();
+    }
+
     for ev in ev_scroll.read() {
         scroll += ev.y;
     }
