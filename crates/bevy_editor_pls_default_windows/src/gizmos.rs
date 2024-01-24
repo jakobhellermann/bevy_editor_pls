@@ -193,7 +193,7 @@ fn draw_gizmo(
     }
 
     for selected in selected_entities.iter() {
-        let Some(transform) = world.get::<Transform>(selected) else {
+        let Some(transform) = world.get::<GlobalTransform>(selected) else {
             continue;
         };
         let model_matrix = transform.compute_matrix();
