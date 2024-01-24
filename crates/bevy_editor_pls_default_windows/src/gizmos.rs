@@ -186,10 +186,10 @@ fn draw_gizmo(
     }
 
     for selected in selected_entities.iter() {
-        let Some(transform) = world.get::<GlobalTransform>(selected) else {
+        let Some(global_transform) = world.get::<GlobalTransform>(selected) else {
             continue;
         };
-        let model_matrix = transform.compute_matrix();
+        let model_matrix = global_transform.compute_matrix();
 
         let Some(result) = egui_gizmo::Gizmo::new(selected)
             .model_matrix(model_matrix.into())
@@ -202,11 +202,19 @@ fn draw_gizmo(
             continue;
         };
 
+        let global_affine = global_transform.affine();
+
         let mut transform = world.get_mut::<Transform>(selected).unwrap();
-        *transform = Transform {
-            translation: Vec3::from(<[f32; 3]>::from(result.translation)),
-            rotation: Quat::from_array(<[f32; 4]>::from(result.rotation)),
-            scale: Vec3::from(<[f32; 3]>::from(result.scale)),
+
+        let parent_affine = global_affine * transform.compute_affine().inverse();
+        let inverse_parent_transform = GlobalTransform::from(parent_affine.inverse());
+
+        let global_transform = Transform {
+            translation: result.translation.into(),
+            rotation: result.rotation.into(),
+            scale: result.scale.into(),
         };
+
+        *transform = (inverse_parent_transform * global_transform).into();
     }
 }
