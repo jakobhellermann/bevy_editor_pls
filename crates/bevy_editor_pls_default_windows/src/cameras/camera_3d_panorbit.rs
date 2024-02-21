@@ -57,7 +57,7 @@ fn pan_orbit_camera(
     window: Query<&Window>,
     mut ev_motion: EventReader<MouseMotion>,
     mut ev_scroll: EventReader<MouseWheel>,
-    input_mouse: Res<Input<MouseButton>>,
+    input_mouse: Res<ButtonInput<MouseButton>>,
     mut query: Query<(&mut PanOrbitCamera, &mut Transform, &Projection)>,
 ) {
     let Ok(window) = window.get(editor.window()) else {
@@ -91,8 +91,7 @@ fn pan_orbit_camera(
         for ev in ev_motion.read() {
             pan += ev.delta;
         }
-    }
-    else {
+    } else {
         //Prevent accumulation of irrelevant events
         ev_motion.clear();
     }

@@ -7,6 +7,7 @@ use bevy::reflect::TypeRegistry;
 use bevy::render::{Extract, RenderApp};
 use bevy_inspector_egui::bevy_inspector::guess_entity_name;
 use bevy_inspector_egui::bevy_inspector::hierarchy::SelectedEntities;
+use bevy_inspector_egui::egui::text::CCursorRange;
 use bevy_inspector_egui::egui::{self, ScrollArea};
 
 use bevy_editor_pls_core::{
@@ -219,7 +220,7 @@ impl<'a> Hierarchy<'a> {
 
 fn rename_entity_ui(ui: &mut egui::Ui, rename_info: &mut RenameInfo, world: &mut World) {
     use egui::epaint::text::cursor::CCursor;
-    use egui::widgets::text_edit::{CCursorRange, TextEdit, TextEditOutput};
+    use egui::widgets::text_edit::{TextEdit, TextEditOutput};
 
     let id = egui::Id::new(rename_info.entity);
 
@@ -252,8 +253,7 @@ fn rename_entity_ui(ui: &mut egui::Ui, rename_info: &mut RenameInfo, world: &mut
     // Runs once when renaming begins
     if !response.has_focus() {
         response.request_focus();
-
-        edit_state.set_ccursor_range(Some(CCursorRange::two(
+        edit_state.cursor.set_char_range(Some(CCursorRange::two(
             CCursor::new(0),
             CCursor::new(rename_info.current_rename.len()),
         )));

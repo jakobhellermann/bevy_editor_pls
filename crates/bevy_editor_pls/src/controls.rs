@@ -70,15 +70,19 @@ impl From<UserInput> for Binding {
 impl Button {
     fn just_pressed(
         &self,
-        keyboard_input: &Input<KeyCode>,
-        mouse_input: &Input<MouseButton>,
+        keyboard_input: &ButtonInput<KeyCode>,
+        mouse_input: &ButtonInput<MouseButton>,
     ) -> bool {
         match self {
             Button::Keyboard(code) => keyboard_input.just_pressed(*code),
             Button::Mouse(button) => mouse_input.just_pressed(*button),
         }
     }
-    fn pressed(&self, keyboard_input: &Input<KeyCode>, mouse_input: &Input<MouseButton>) -> bool {
+    fn pressed(
+        &self,
+        keyboard_input: &ButtonInput<KeyCode>,
+        mouse_input: &ButtonInput<MouseButton>,
+    ) -> bool {
         match self {
             Button::Keyboard(code) => keyboard_input.pressed(*code),
             Button::Mouse(button) => mouse_input.pressed(*button),
@@ -89,8 +93,8 @@ impl Button {
 impl UserInput {
     fn just_pressed(
         &self,
-        keyboard_input: &Input<KeyCode>,
-        mouse_input: &Input<MouseButton>,
+        keyboard_input: &ButtonInput<KeyCode>,
+        mouse_input: &ButtonInput<MouseButton>,
     ) -> bool {
         match self {
             UserInput::Single(single) => single.just_pressed(keyboard_input, mouse_input),
@@ -110,8 +114,8 @@ impl UserInput {
 impl Binding {
     fn just_pressed(
         &self,
-        keyboard_input: &Input<KeyCode>,
-        mouse_input: &Input<MouseButton>,
+        keyboard_input: &ButtonInput<KeyCode>,
+        mouse_input: &ButtonInput<MouseButton>,
         editor: &Editor,
     ) -> bool {
         let can_trigger = self
@@ -173,8 +177,8 @@ impl EditorControls {
     fn just_pressed(
         &self,
         action: Action,
-        keyboard_input: &Input<KeyCode>,
-        mouse_input: &Input<MouseButton>,
+        keyboard_input: &ButtonInput<KeyCode>,
+        mouse_input: &ButtonInput<MouseButton>,
         editor: &Editor,
     ) -> bool {
         let bindings = &self.actions.get(&action).unwrap();
@@ -186,8 +190,8 @@ impl EditorControls {
 
 pub fn editor_controls_system(
     controls: Res<EditorControls>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mouse_input: Res<Input<MouseButton>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut editor_events: EventWriter<EditorEvent>,
     mut editor: ResMut<Editor>,
 ) {
@@ -280,7 +284,7 @@ impl EditorControls {
             Binding {
                 input: UserInput::Chord(vec![
                     Button::Keyboard(KeyCode::ControlLeft),
-                    Button::Keyboard(KeyCode::Return),
+                    Button::Keyboard(KeyCode::Enter),
                 ]),
                 conditions: vec![BindingCondition::ListeningForText(false)],
             },
@@ -289,7 +293,7 @@ impl EditorControls {
         controls.insert(
             Action::PlayPauseEditor,
             Binding {
-                input: UserInput::Single(Button::Keyboard(KeyCode::E)),
+                input: UserInput::Single(Button::Keyboard(KeyCode::KeyE)),
                 conditions: vec![BindingCondition::ListeningForText(false)],
             },
         );
@@ -297,7 +301,7 @@ impl EditorControls {
         controls.insert(
             Action::FocusSelected,
             Binding {
-                input: UserInput::Single(Button::Keyboard(KeyCode::F)),
+                input: UserInput::Single(Button::Keyboard(KeyCode::KeyF)),
                 conditions: vec![BindingCondition::EditorActive(true)],
             },
         );
@@ -306,15 +310,15 @@ impl EditorControls {
         {
             controls.insert(
                 Action::SetGizmoModeTranslate,
-                UserInput::Single(Button::Keyboard(KeyCode::T)).into(),
+                UserInput::Single(Button::Keyboard(KeyCode::KeyT)).into(),
             );
             controls.insert(
                 Action::SetGizmoModeRotate,
-                UserInput::Single(Button::Keyboard(KeyCode::R)).into(),
+                UserInput::Single(Button::Keyboard(KeyCode::KeyR)).into(),
             );
             controls.insert(
                 Action::SetGizmoModeScale,
-                UserInput::Single(Button::Keyboard(KeyCode::S)).into(),
+                UserInput::Single(Button::Keyboard(KeyCode::KeyS)).into(),
             );
         }
 

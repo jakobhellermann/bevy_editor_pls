@@ -210,7 +210,6 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
 
     let render_layers = RenderLayers::default().with(EDITOR_RENDER_LAYER);
 
-    let show_ui_by_default = false;
     let editor_cam_priority = 100;
 
     let target = RenderTarget::Window(WindowRef::Entity(editor.window()));
@@ -225,9 +224,6 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
             },
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Camera3dBundle::default()
-        },
-        UiCameraConfig {
-            show_ui: show_ui_by_default,
         },
         Ec3d,
         camera_3d_free::FlycamControls::default(),
@@ -251,9 +247,6 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
             transform: Transform::from_xyz(0.0, 2.0, 5.0),
             ..Camera3dBundle::default()
         },
-        UiCameraConfig {
-            show_ui: show_ui_by_default,
-        },
         Ec3d,
         PanOrbitCamera::default(),
         EditorCamera,
@@ -275,9 +268,6 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
             },
             ..default()
         },
-        UiCameraConfig {
-            show_ui: show_ui_by_default,
-        },
         Ec2d,
         camera_2d_panzoom::PanCamControls::default(),
         EditorCamera,
@@ -297,16 +287,15 @@ fn set_editor_cam_active(
         Query<(&mut Camera, &mut camera_3d_panorbit::PanOrbitCamera)>,
         Query<(&mut Camera, &mut camera_2d_panzoom::PanCamControls)>,
     )>,
-
-    mut ui_camera_settings: Query<&mut UiCameraConfig, With<EditorCamera>>,
+    // mut ui_camera_settings: Query<&mut UiCameraConfig, With<EditorCamera>>,
 ) {
     let camera_window_state = &editor.window_state::<CameraWindow>().unwrap();
     let editor_cam = camera_window_state.editor_cam;
 
-    if editor.active() {
-        ui_camera_settings
-            .for_each_mut(|mut settings| settings.show_ui = camera_window_state.show_ui);
-    }
+    // if editor.active() {
+    // ui_camera_settings
+    // .for_each_mut(|mut settings| settings.show_ui = camera_window_state.show_ui);
+    // }
 
     {
         let mut q = editor_cameras.p0();
@@ -592,8 +581,8 @@ fn set_main_pass_viewport(
     let viewport = editor.active().then(|| {
         let scale_factor = window.scale_factor() * egui_settings.scale_factor;
 
-        let viewport_pos = editor.viewport().left_top().to_vec2() * scale_factor as f32;
-        let viewport_size = editor.viewport().size() * scale_factor as f32;
+        let viewport_pos = editor.viewport().left_top().to_vec2() * scale_factor;
+        let viewport_size = editor.viewport().size() * scale_factor;
 
         if !viewport_size.is_finite() {
             warn!("editor viewport size is infinite");

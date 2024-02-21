@@ -200,7 +200,7 @@ impl Default for AddWindowState {
             "3D",
             AddItem::new("Cube".into(), |world, entity| {
                 let mut meshes = world.get_resource_mut::<Assets<Mesh>>().unwrap();
-                let mesh = meshes.add(shape::Cube::default().into());
+                let mesh = meshes.add(Cuboid::default());
 
                 let mut materials = world
                     .get_resource_mut::<Assets<StandardMaterial>>()

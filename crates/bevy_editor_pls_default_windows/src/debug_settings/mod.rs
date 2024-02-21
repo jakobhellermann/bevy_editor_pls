@@ -143,7 +143,7 @@ fn debug_ui_options(
         }
         ui.scope(|ui| {
             ui.set_enabled(wireframe_enabled);
-            if ui_for_value(&mut state.wireframes, ui, &type_registry) {
+            if ui_for_value(&mut state.wireframes, ui, type_registry) {
                 world
                     .get_resource_or_insert_with(WireframeConfig::default)
                     .global = state.wireframes;

@@ -40,10 +40,10 @@ impl Default for FlycamControls {
             sensitivity: 1.0,
             enable_movement: false,
             enable_look: false,
-            key_forward: KeyCode::W,
-            key_back: KeyCode::S,
-            key_left: KeyCode::A,
-            key_right: KeyCode::D,
+            key_forward: KeyCode::KeyW,
+            key_back: KeyCode::KeyS,
+            key_left: KeyCode::KeyA,
+            key_right: KeyCode::KeyD,
             key_up: KeyCode::Space,
             key_down: KeyCode::ControlLeft,
             key_boost: KeyCode::ShiftLeft,
@@ -54,7 +54,7 @@ impl Default for FlycamControls {
 fn camera_movement(
     mut cam: Query<(&FlycamControls, &mut Transform)>,
     time: Res<Time>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     let (flycam, mut cam_transform) = cam.single_mut();
     if !flycam.enable_movement {
@@ -89,7 +89,7 @@ fn camera_movement(
 }
 
 fn camera_look(
-    mouse_input: Res<Input<MouseButton>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut mouse_motion_event_reader: EventReader<MouseMotion>,
     mut query: Query<(&mut FlycamControls, &mut Transform)>,
 ) {

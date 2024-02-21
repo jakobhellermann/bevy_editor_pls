@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::query::ReadOnlyWorldQuery,
+    ecs::query::QueryFilter,
     prelude::*,
     render::{camera::CameraProjection, view::RenderLayers},
 };
@@ -68,14 +68,7 @@ impl EditorWindow for GizmoWindow {
         });
 
         let mut meshes = app.world.resource_mut::<Assets<Mesh>>();
-        let sphere = meshes.add(
-            shape::UVSphere {
-                radius: 0.3,
-                sectors: 16,
-                stacks: 16,
-            }
-            .into(),
-        );
+        let sphere = meshes.add(Sphere { radius: 0.3 });
 
         app.world.insert_resource(GizmoMarkerConfig {
             point_light_mesh: sphere.clone(),
@@ -114,7 +107,7 @@ fn add_gizmo_markers(
     directional_lights: GizmoMarkerQuery<DirectionalLight>,
     cameras: GizmoMarkerQuery<Camera, Without<EditorCamera>>,
 ) {
-    fn add<T: Component, F: ReadOnlyWorldQuery, B: Bundle>(
+    fn add<T: Component, F: QueryFilter, B: Bundle>(
         commands: &mut Commands,
         query: GizmoMarkerQuery<T, F>,
         name: &'static str,

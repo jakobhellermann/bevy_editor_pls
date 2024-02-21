@@ -24,7 +24,7 @@ fn diagnostic_ui(ui: &mut egui::Ui, diagnostics: &DiagnosticsStore) {
         let mut has_diagnostics = false;
         for diagnostic in diagnostics.iter() {
             has_diagnostics = true;
-            ui.label(diagnostic.name.as_ref());
+            ui.label(diagnostic.path().as_str());
             if let Some(average) = diagnostic.average() {
                 ui.label(format!("{:.2}", average));
             }

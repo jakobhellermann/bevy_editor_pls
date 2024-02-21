@@ -51,7 +51,7 @@ fn camera_zoom(
 fn camera_movement(
     editor: Res<Editor>,
     window: Query<&Window>,
-    mouse_buttons: Res<Input<MouseButton>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut query: Query<(&PanCamControls, &mut Transform, &OrthographicProjection)>,
     mut last_pos: Local<Option<Vec2>>,
 ) {
@@ -65,6 +65,8 @@ fn camera_movement(
         None => return,
     };
     let delta = current_pos - last_pos.unwrap_or(current_pos);
+
+    let delta = Vec2::new(delta.x, -delta.y);
 
     for (cam, mut transform, projection) in query.iter_mut() {
         if !cam.enabled {
