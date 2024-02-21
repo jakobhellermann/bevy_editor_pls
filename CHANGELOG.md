@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.8
+- update to bevy 0.13
+
 ## Version 0.7.1
 - fix mouse control glitches introduced in version 0.6
 
