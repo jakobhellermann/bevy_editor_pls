@@ -380,8 +380,8 @@ impl Editor {
                     }
                 });
             })
-            .response
-            .interact(egui::Sense::click());
+            .response;
+            // .interact(egui::Sense::click());
 
             if bar_response.double_clicked() {
                 let mut window = world
