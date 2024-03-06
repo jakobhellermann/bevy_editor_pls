@@ -1,6 +1,5 @@
 use std::any::{Any, TypeId};
 
-use bevy::ecs::event::Events;
 use bevy::window::WindowMode;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_inspector_egui::bevy_egui::{egui, EguiContext};

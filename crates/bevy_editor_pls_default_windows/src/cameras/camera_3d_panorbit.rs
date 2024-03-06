@@ -3,7 +3,6 @@
 use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
-    render::camera::Projection,
 };
 use bevy_editor_pls_core::Editor;
 
