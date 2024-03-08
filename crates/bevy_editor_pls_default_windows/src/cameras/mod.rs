@@ -581,11 +581,13 @@ fn set_main_pass_viewport(
     let viewport = editor.active().then(|| {
         let scale_factor = window.scale_factor() * egui_settings.scale_factor;
 
-        let viewport_pos = editor.viewport().left_top().to_vec2() * scale_factor;
-        let viewport_size = editor.viewport().size() * scale_factor;
+        let mut viewport_pos = editor.viewport().left_top().to_vec2() * scale_factor;
+        let mut viewport_size = editor.viewport().size() * scale_factor;
 
         if !viewport_size.is_finite() {
             warn!("editor viewport size is infinite");
+            viewport_pos = egui::Vec2::ZERO;
+            viewport_size = egui::Vec2::new(640., 480.);
         }
 
         bevy::render::camera::Viewport {

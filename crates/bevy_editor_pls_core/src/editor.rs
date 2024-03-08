@@ -46,7 +46,7 @@ impl Editor {
             pointer_used: false,
             active_editor_interaction: None,
             listening_for_text: false,
-            viewport: egui::Rect::NOTHING,
+            viewport: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::new(640., 480.)),
 
             windows: IndexMap::default(),
             window_states: HashMap::default(),
