@@ -93,7 +93,7 @@ impl Editor {
 
     pub fn viewport_interaction_active(&self) -> bool {
         !self.pointer_used
-            && matches!(
+            || matches!(
                 self.active_editor_interaction,
                 Some(ActiveEditorInteraction::Viewport)
             )
