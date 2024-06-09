@@ -13,6 +13,7 @@ use bevy_editor_pls_core::{
     Editor, EditorEvent,
 };
 use bevy_inspector_egui::egui;
+use transform_gizmo_bevy::GizmoCamera;
 // use bevy_mod_picking::prelude::PickRaycastSource;
 
 use crate::hierarchy::{HideInEditor, HierarchyWindow};
@@ -28,6 +29,9 @@ pub struct EditorCamera;
 // Present only one the one currently active camera
 #[derive(Component)]
 pub struct ActiveEditorCamera;
+// /// Changed to a type alias to guarentee being in sync with the GizmoCamera component,
+// /// this should be considered a 'hack' that maybe should be fixed down the line
+// pub type ActiveEditorCamera = transform_gizmo_bevy::GizmoCamera;
 
 // Marker component for the 3d free camera
 #[derive(Component)]
@@ -168,7 +172,7 @@ fn set_active_editor_camera_marker(world: &mut World, editor_cam: EditorCamKind)
             state.iter(world).next().unwrap()
         }
     };
-    world.entity_mut(entity).insert(ActiveEditorCamera);
+    world.entity_mut(entity).insert(ActiveEditorCamera {});
 }
 
 fn cameras_ui(ui: &mut egui::Ui, world: &mut World) {
@@ -232,6 +236,7 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
         HideInEditor,
         Name::new("Editor Camera 3D Free"),
         NotInScene,
+        GizmoCamera,
         render_layers,
     ));
 
@@ -254,6 +259,7 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
         HideInEditor,
         Name::new("Editor Camera 3D Pan/Orbit"),
         NotInScene,
+        GizmoCamera,
         render_layers,
     ));
 
@@ -275,6 +281,7 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
         HideInEditor,
         Name::new("Editor Camera 2D Pan/Zoom"),
         NotInScene,
+        GizmoCamera,
         render_layers,
     ));
 }
@@ -496,21 +503,21 @@ fn initial_camera_setup(
                 camera_state.editor_cam = EditorCamKind::D2PanZoom;
                 commands
                     .entity(cameras.p0().single().0)
-                    .insert(ActiveEditorCamera);
+                    .insert(ActiveEditorCamera {});
                 *has_decided_initial_cam = true;
             }
             (false, true) => {
                 camera_state.editor_cam = EditorCamKind::D3PanOrbit;
                 commands
                     .entity(cameras.p2().single().0)
-                    .insert(ActiveEditorCamera);
+                    .insert(ActiveEditorCamera {});
                 *has_decided_initial_cam = true;
             }
             (true, true) => {
                 camera_state.editor_cam = EditorCamKind::D3PanOrbit;
                 commands
                     .entity(cameras.p2().single().0)
-                    .insert(ActiveEditorCamera);
+                    .insert(ActiveEditorCamera {});
                 *has_decided_initial_cam = true;
             }
             (false, false) => return,

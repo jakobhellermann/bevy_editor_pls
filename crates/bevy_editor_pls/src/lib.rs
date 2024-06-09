@@ -128,6 +128,11 @@ impl Plugin for EditorPlugin {
 
             app.add_plugins(bevy::pbr::wireframe::WireframePlugin);
 
+						// required for the GizmoWindow
+            if !app.is_plugin_added::<transform_gizmo_bevy::TransformGizmoPlugin>() {
+                app.add_plugins(transform_gizmo_bevy::TransformGizmoPlugin);
+            }
+
             app.insert_resource(controls::EditorControls::default_bindings())
                 .add_systems(Update, controls::editor_controls_system);
 

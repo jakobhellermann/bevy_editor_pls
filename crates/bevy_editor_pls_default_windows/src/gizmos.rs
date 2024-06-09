@@ -1,12 +1,13 @@
 use bevy::{
-    ecs::query::QueryFilter,
+    ecs::{query::QueryFilter, system::RunSystemOnce},
     prelude::*,
     render::{camera::CameraProjection, view::RenderLayers},
 };
 
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::{bevy_inspector::hierarchy::SelectedEntities, egui};
-use egui_gizmo::GizmoMode;
+use transform_gizmo_bevy::{EnumSet, GizmoMode};
+use transform_gizmo_bevy::GizmoTarget;
 
 use crate::{
     cameras::{ActiveEditorCamera, CameraWindow, EditorCamera, EDITOR_RENDER_LAYER},
@@ -15,14 +16,15 @@ use crate::{
 
 pub struct GizmoState {
     pub camera_gizmo_active: bool,
-    pub gizmo_mode: GizmoMode,
+		/// TODO: Take these settings into account
+    pub gizmo_mode: EnumSet<GizmoMode>,
 }
 
 impl Default for GizmoState {
     fn default() -> Self {
         Self {
             camera_gizmo_active: true,
-            gizmo_mode: GizmoMode::Translate,
+            gizmo_mode: GizmoMode::all_translate(),
         }
     }
 }
@@ -42,10 +44,62 @@ impl EditorWindow for GizmoWindow {
         let gizmo_state = cx.state::<GizmoWindow>().unwrap();
 
         if gizmo_state.camera_gizmo_active {
-            if let (Some(hierarchy_state), Some(_camera_state)) =
-                (cx.state::<HierarchyWindow>(), cx.state::<CameraWindow>())
-            {
-                draw_gizmo(ui, world, &hierarchy_state.selected, gizmo_state.gizmo_mode);
+            // if let (Some(hierarchy_state), Some(_camera_state)) =
+            //     (cx.state::<HierarchyWindow>(), cx.state::<CameraWindow>())
+            // {
+            //     draw_gizmo(ui, world, &hierarchy_state.selected, gizmo_state.gizmo_mode);
+            // }
+
+            /// Before [hydrate_gizmos] and [deconstruct_gizmos] are run, this system resets the state of all entities that have a [EntityShouldShowGizmo] component.
+            /// Then, according to selection logic some entities are marked as focussed, and [hydrate_gizmos] and [deconstruct_gizmos] is run to sync the gizmo state with the selection state.
+            fn reset_gizmos_selected_state(
+                mut commands: Commands,
+                entities: Query<Entity, With<EntityShouldShowGizmo>>,
+            ) {
+                for entity in entities.iter() {
+                    commands.entity(entity).remove::<EntityShouldShowGizmo>();
+                }
+            }
+
+            /// Takes all entities marked with [EntityShouldShowGizmo] and adds the [GizmoTarget] component to them.
+            fn hydrate_gizmos(
+                mut commands: Commands,
+                entities: Query<Entity, (With<EntityShouldShowGizmo>, Without<GizmoTarget>)>,
+            ) {
+                for entity in entities.iter() {
+                    trace!("Hydrating a gizmo on entity {:?} because it is selected", entity);
+                    // TODO: Maybe change the exact gizmo target instance instead of using default? should this load from some config?
+                    commands.entity(entity).insert(GizmoTarget::default());
+                }
+            }
+
+            /// Takes all entities that should have their [GizmoTarget] removed because they are no longer selected.
+            fn deconstruct_gizmos(
+                mut commands: Commands,
+                entities: Query<Entity, (With<GizmoTarget>, Without<EntityShouldShowGizmo>)>,
+            ) {
+                for entity in entities.iter() {
+                    commands.entity(entity).remove::<GizmoTarget>();
+                    debug!(
+                        "Removing GizmoTarget from entity {:?} because it has lost focus",
+                        entity
+                    );
+                }
+            }
+
+            if let Some(hierarchy_state) = cx.state::<HierarchyWindow>() {
+                // here should assign the `EntityShouldShowGizmo` component, which is later synced
+                // with the actual gizmo ui system
+
+                world.run_system_once(reset_gizmos_selected_state);
+
+                let selected_entities = hierarchy_state.selected.iter();
+                for entity in selected_entities {
+                    world.entity_mut(entity).insert(EntityShouldShowGizmo);
+                }
+
+                world.run_system_once(hydrate_gizmos);
+                world.run_system_once(deconstruct_gizmos);
             }
         }
     }
@@ -93,8 +147,14 @@ struct GizmoMarkerConfig {
     camera_material: Handle<StandardMaterial>,
 }
 
+/// can somebody document what this does? is it a duplicate of [EntityShouldShowGizmo]?
 #[derive(Component)]
 struct HasGizmoMarker;
+
+/// When on an entity, this entity should be controllable using some sort of user gizmo.
+/// Currently uses [transform_gizmo_bevy], and puts the [GizmoTarget] on the entity.
+#[derive(Component)]
+struct EntityShouldShowGizmo;
 
 type GizmoMarkerQuery<'w, 's, T, F = ()> =
     Query<'w, 's, Entity, (With<T>, Without<HasGizmoMarker>, F)>;
@@ -166,55 +226,59 @@ fn add_gizmo_markers(
     }
 }
 
-fn draw_gizmo(
-    ui: &mut egui::Ui,
-    world: &mut World,
-    selected_entities: &SelectedEntities,
-    gizmo_mode: GizmoMode,
-) {
-    let Ok((cam_transform, projection)) = world
-        .query_filtered::<(&GlobalTransform, &Projection), With<ActiveEditorCamera>>()
-        .get_single(world)
-    else {
-        return;
-    };
-    let view_matrix = Mat4::from(cam_transform.affine().inverse());
-    let projection_matrix = projection.get_projection_matrix();
+// fn draw_gizmo(
+//     ui: &mut egui::Ui,
+//     world: &mut World,
+//     selected_entities: &SelectedEntities,
+//     gizmo_mode: GizmoMode,
+// ) {
+// 		for entity in selected_entities.iter() {
+// 			world.entity_mut(entity).insert(transform_gizmo_bevy::GizmoTarget::default());
+// 			info!("Inserted GizmoTarget to entity: {:?}", entity);
+// 		}
+//     // let Ok((cam_transform, projection)) = world
+//     //     .query_filtered::<(&GlobalTransform, &Projection), With<ActiveEditorCamera>>()
+//     //     .get_single(world)
+//     // else {
+//     //     return;
+//     // };
+//     // let view_matrix = Mat4::from(cam_transform.affine().inverse());
+//     // let projection_matrix = projection.get_projection_matrix();
 
-    if selected_entities.len() != 1 {
-        return;
-    }
+//     // if selected_entities.len() != 1 {
+//     //     return;
+//     // }
 
-    for selected in selected_entities.iter() {
-        let Some(global_transform) = world.get::<GlobalTransform>(selected) else {
-            continue;
-        };
-        let model_matrix = global_transform.compute_matrix();
+//     // for selected in selected_entities.iter() {
+//     //     // let Some(global_transform) = world.get::<GlobalTransform>(selected) else {
+//     //     //     continue;
+//     //     // };
+//     //     // let model_matrix = global_transform.compute_matrix();
 
-        let Some(result) = egui_gizmo::Gizmo::new(selected)
-            .model_matrix(model_matrix.into())
-            .view_matrix(view_matrix.into())
-            .projection_matrix(projection_matrix.into())
-            .orientation(egui_gizmo::GizmoOrientation::Local)
-            .mode(gizmo_mode)
-            .interact(ui)
-        else {
-            continue;
-        };
+//     //     // let Some(result) = transform_gizmo_bevy::Gizmo::new(selected)
+//     //     //     .model_matrix(model_matrix.into())
+//     //     //     .view_matrix(view_matrix.into())
+//     //     //     .projection_matrix(projection_matrix.into())
+//     //     //     .orientation(transform_gizmo_bevy::GizmoOrientation::Local)
+//     //     //     .mode(gizmo_mode)
+//     //     //     .interact(ui)
+//     //     // else {
+//     //     //     continue;
+//     //     // };
 
-        let global_affine = global_transform.affine();
+//     //     // let global_affine = global_transform.affine();
 
-        let mut transform = world.get_mut::<Transform>(selected).unwrap();
+//     //     // let mut transform = world.get_mut::<Transform>(selected).unwrap();
 
-        let parent_affine = global_affine * transform.compute_affine().inverse();
-        let inverse_parent_transform = GlobalTransform::from(parent_affine.inverse());
+//     //     // let parent_affine = global_affine * transform.compute_affine().inverse();
+//     //     // let inverse_parent_transform = GlobalTransform::from(parent_affine.inverse());
 
-        let global_transform = Transform {
-            translation: result.translation.into(),
-            rotation: result.rotation.into(),
-            scale: result.scale.into(),
-        };
+//     //     // let global_transform = Transform {
+//     //     //     translation: result.translation.into(),
+//     //     //     rotation: result.rotation.into(),
+//     //     //     scale: result.scale.into(),
+//     //     // };
 
-        *transform = (inverse_parent_transform * global_transform).into();
-    }
-}
+//     //     // *transform = (inverse_parent_transform * global_transform).into();
+//     // }
+// }
