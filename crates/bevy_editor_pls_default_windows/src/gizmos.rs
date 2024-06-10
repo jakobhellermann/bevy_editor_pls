@@ -17,14 +17,14 @@ use crate::{
 pub struct GizmoState {
     pub camera_gizmo_active: bool,
 		/// TODO: Take these settings into account
-    pub gizmo_mode: EnumSet<GizmoMode>,
+    pub gizmo_modes: EnumSet<GizmoMode>,
 }
 
 impl Default for GizmoState {
     fn default() -> Self {
         Self {
             camera_gizmo_active: true,
-            gizmo_mode: GizmoMode::all_translate(),
+            gizmo_modes: GizmoMode::all_translate(),
         }
     }
 }
@@ -38,18 +38,19 @@ impl EditorWindow for GizmoWindow {
 
     fn ui(_world: &mut World, _cx: EditorWindowContext, ui: &mut egui::Ui) {
         ui.label("Gizmos can currently not be configured");
+				// could definitely change some settings here in the future
     }
 
-    fn viewport_toolbar_ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui) {
+		/// Called every frame (hopefully), could this invariant (namely being called every frame) be documented,
+		/// ideally in the [EditorWindow] trait?
+    fn viewport_toolbar_ui(world: &mut World, cx: EditorWindowContext, _ui: &mut egui::Ui) {
         let gizmo_state = cx.state::<GizmoWindow>().unwrap();
 
-        if gizmo_state.camera_gizmo_active {
-            // if let (Some(hierarchy_state), Some(_camera_state)) =
-            //     (cx.state::<HierarchyWindow>(), cx.state::<CameraWindow>())
-            // {
-            //     draw_gizmo(ui, world, &hierarchy_state.selected, gizmo_state.gizmo_mode);
-            // }
+				// syncs the [GizmoOptions] resource with the current state of the gizmo window
+				let mut gizmo_options = world.resource_mut::<transform_gizmo_bevy::GizmoOptions>();
+				gizmo_options.gizmo_modes = gizmo_state.gizmo_modes;
 
+        if gizmo_state.camera_gizmo_active {
             /// Before [hydrate_gizmos] and [deconstruct_gizmos] are run, this system resets the state of all entities that have a [EntityShouldShowGizmo] component.
             /// Then, according to selection logic some entities are marked as focussed, and [hydrate_gizmos] and [deconstruct_gizmos] is run to sync the gizmo state with the selection state.
             fn reset_gizmos_selected_state(

@@ -240,7 +240,7 @@ pub fn editor_controls_system(
             editor
                 .window_state_mut::<bevy_editor_pls_default_windows::gizmos::GizmoWindow>()
                 .unwrap()
-                .gizmo_mode = transform_gizmo_bevy::GizmoMode::all_translate();
+                .gizmo_modes = transform_gizmo_bevy::GizmoMode::all_translate();
         }
         if controls.just_pressed(
             Action::SetGizmoModeRotate,
@@ -251,7 +251,7 @@ pub fn editor_controls_system(
             editor
                 .window_state_mut::<bevy_editor_pls_default_windows::gizmos::GizmoWindow>()
                 .unwrap()
-                .gizmo_mode = transform_gizmo_bevy::GizmoMode::all_rotate();
+                .gizmo_modes = transform_gizmo_bevy::GizmoMode::all_rotate();
         }
         if controls.just_pressed(
             Action::SetGizmoModeScale,
@@ -262,7 +262,7 @@ pub fn editor_controls_system(
             editor
                 .window_state_mut::<bevy_editor_pls_default_windows::gizmos::GizmoWindow>()
                 .unwrap()
-                .gizmo_mode = transform_gizmo_bevy::GizmoMode::all_scale();
+                .gizmo_modes = transform_gizmo_bevy::GizmoMode::all_scale();
         }
     }
 }
