@@ -13,6 +13,7 @@ pub trait EditorWindow: 'static {
     const DEFAULT_SIZE: (f32, f32) = (0.0, 0.0);
 
     fn ui(world: &mut World, cx: EditorWindowContext, ui: &mut egui::Ui);
+
     /// Ui shown in the `Open Window` menu item. By default opens the window as a floating window.
     fn menu_ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
         let _ = world;
