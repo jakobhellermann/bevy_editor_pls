@@ -136,6 +136,8 @@ pub enum Action {
     PauseUnpauseTime,
     FocusSelected,
 
+    // maybe investigate [GizmoOptions].hotkeys
+    // https://docs.rs/transform-gizmo-bevy/latest/transform_gizmo_bevy/struct.GizmoHotkeys.html
     #[cfg(feature = "default_windows")]
     SetGizmoModeTranslate,
     #[cfg(feature = "default_windows")]

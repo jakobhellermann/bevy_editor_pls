@@ -1,22 +1,23 @@
 use bevy::{
     ecs::{query::QueryFilter, system::RunSystemOnce},
     prelude::*,
-    render::{camera::CameraProjection, view::RenderLayers},
+    render::view::RenderLayers,
 };
 
 use bevy_editor_pls_core::editor_window::{EditorWindow, EditorWindowContext};
-use bevy_inspector_egui::{bevy_inspector::hierarchy::SelectedEntities, egui};
-use transform_gizmo_bevy::{EnumSet, GizmoMode};
+use bevy_inspector_egui::egui;
 use transform_gizmo_bevy::GizmoTarget;
+use transform_gizmo_bevy::{EnumSet, GizmoMode};
 
 use crate::{
-    cameras::{ActiveEditorCamera, CameraWindow, EditorCamera, EDITOR_RENDER_LAYER},
+    cameras::{EditorCamera, EDITOR_RENDER_LAYER},
     hierarchy::HierarchyWindow,
 };
 
 pub struct GizmoState {
+    /// If [false], doesn't show any gizmos
     pub camera_gizmo_active: bool,
-		/// TODO: Take these settings into account
+    /// Synced with the [transform_gizmo_bevy::GizmoOptions] resource
     pub gizmo_modes: EnumSet<GizmoMode>,
 }
 
@@ -38,17 +39,17 @@ impl EditorWindow for GizmoWindow {
 
     fn ui(_world: &mut World, _cx: EditorWindowContext, ui: &mut egui::Ui) {
         ui.label("Gizmos can currently not be configured");
-				// could definitely change some settings here in the future
+        // could definitely change some settings here in the future
     }
 
-		/// Called every frame (hopefully), could this invariant (namely being called every frame) be documented,
-		/// ideally in the [EditorWindow] trait?
+    /// Called every frame (hopefully), could this invariant (namely being called every frame) be documented,
+    /// ideally in the [EditorWindow] trait?
     fn viewport_toolbar_ui(world: &mut World, cx: EditorWindowContext, _ui: &mut egui::Ui) {
         let gizmo_state = cx.state::<GizmoWindow>().unwrap();
 
-				// syncs the [GizmoOptions] resource with the current state of the gizmo window
-				let mut gizmo_options = world.resource_mut::<transform_gizmo_bevy::GizmoOptions>();
-				gizmo_options.gizmo_modes = gizmo_state.gizmo_modes;
+        // syncs the [GizmoOptions] resource with the current state of the gizmo window
+        let mut gizmo_options = world.resource_mut::<transform_gizmo_bevy::GizmoOptions>();
+        gizmo_options.gizmo_modes = gizmo_state.gizmo_modes;
 
         if gizmo_state.camera_gizmo_active {
             /// Before [hydrate_gizmos] and [deconstruct_gizmos] are run, this system resets the state of all entities that have a [EntityShouldShowGizmo] component.
@@ -68,8 +69,12 @@ impl EditorWindow for GizmoWindow {
                 entities: Query<Entity, (With<EntityShouldShowGizmo>, Without<GizmoTarget>)>,
             ) {
                 for entity in entities.iter() {
-                    trace!("Hydrating a gizmo on entity {:?} because it is selected", entity);
-                    // TODO: Maybe change the exact gizmo target instance instead of using default? should this load from some config?
+                    trace!(
+                        "Hydrating a gizmo on entity {:?} because it is selected",
+                        entity
+                    );
+                    // implicitly assumes it is the only gizmo system in the world,
+                    // otherwise setting [GizmoTarget].is_focussed may be necessary
                     commands.entity(entity).insert(GizmoTarget::default());
                 }
             }
