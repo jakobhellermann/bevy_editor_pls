@@ -69,13 +69,15 @@ impl EditorWindow for GizmoWindow {
                 entities: Query<Entity, (With<EntityShouldShowGizmo>, Without<GizmoTarget>)>,
             ) {
                 for entity in entities.iter() {
+									if let Some(mut entity) = commands.get_entity(entity) {
                     trace!(
                         "Hydrating a gizmo on entity {:?} because it is selected",
-                        entity
+                        entity.id()
                     );
-                    // implicitly assumes it is the only gizmo system in the world,
+                    // implicitly assumes it is the only gizmo target in the world,
                     // otherwise setting [GizmoTarget].is_focussed may be necessary
-                    commands.entity(entity).insert(GizmoTarget::default());
+                    entity.insert(GizmoTarget::default());
+									}
                 }
             }
 
@@ -85,11 +87,13 @@ impl EditorWindow for GizmoWindow {
                 entities: Query<Entity, (With<GizmoTarget>, Without<EntityShouldShowGizmo>)>,
             ) {
                 for entity in entities.iter() {
-                    commands.entity(entity).remove::<GizmoTarget>();
-                    debug!(
-                        "Removing GizmoTarget from entity {:?} because it has lost focus",
-                        entity
-                    );
+                    if let Some(mut entity) = commands.get_entity(entity) {
+                        entity.remove::<GizmoTarget>();
+                        debug!(
+                            "Removing GizmoTarget from entity {:?} because it has lost focus",
+                            entity.id()
+                        );
+                    }
                 }
             }
 
@@ -101,7 +105,9 @@ impl EditorWindow for GizmoWindow {
 
                 let selected_entities = hierarchy_state.selected.iter();
                 for entity in selected_entities {
-                    world.entity_mut(entity).insert(EntityShouldShowGizmo);
+                    if let Some(mut entity) = world.get_entity_mut(entity) {
+                        entity.insert(EntityShouldShowGizmo);
+                    }
                 }
 
                 world.run_system_once(hydrate_gizmos);
