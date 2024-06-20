@@ -604,7 +604,7 @@ fn set_main_pass_viewport(
         }
     });
 
-    cameras.iter_mut().for_each(|mut cam| {
-        cam.viewport = viewport.clone();
-    });
+    cameras
+        .iter_mut()
+        .for_each(|mut cam| cam.viewport.clone_from(&viewport));
 }
