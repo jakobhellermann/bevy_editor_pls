@@ -19,8 +19,8 @@ pub struct DotGraphs {
 
 pub fn setup(app: &mut App) {
     let render_app = match app.get_sub_app(RenderApp) {
-        Ok(render_app) => render_app,
-        Err(_label) => {
+        Some(render_app) => render_app,
+        None => {
             return;
         }
     };
