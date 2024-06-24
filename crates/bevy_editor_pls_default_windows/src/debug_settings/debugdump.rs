@@ -24,7 +24,7 @@ pub fn setup(app: &mut App) {
             return;
         }
     };
-    let render_graph = render_app.world.get_resource::<RenderGraph>().unwrap();
+    let render_graph = render_app.world().get_resource::<RenderGraph>().unwrap();
 
     let schedule_settings = schedule_graph::settings::Settings {
         include_system: Some(Box::new(|system| {
@@ -35,18 +35,18 @@ pub fn setup(app: &mut App) {
     let rendergraph_settings = render_graph::settings::Settings::default();
 
     let update_schedule = app.get_schedule(Update).map(|schedule| {
-        schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+        schedule_graph::schedule_graph_dot(schedule, &app.world(), &schedule_settings)
     });
 
     let fixed_update_schedule = app.get_schedule(FixedUpdate).map(|schedule| {
-        schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+        schedule_graph::schedule_graph_dot(schedule, &app.world(), &schedule_settings)
     });
 
     let render_main_schedule = render_app.get_schedule(Render).map(|schedule| {
-        schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+        schedule_graph::schedule_graph_dot(schedule, &app.world(), &schedule_settings)
     });
     let render_extract_schedule = render_app.get_schedule(ExtractSchedule).map(|schedule| {
-        schedule_graph::schedule_graph_dot(schedule, &app.world, &schedule_settings)
+        schedule_graph::schedule_graph_dot(schedule, &app.world(), &schedule_settings)
     });
 
     let render_graph = render_graph::render_graph_dot(render_graph, &rendergraph_settings);

@@ -39,7 +39,7 @@ impl<W: EditorWindow> Plugin for WindowSetupPlugin<W> {
 
 impl AddEditorWindow for App {
     fn add_editor_window<W: EditorWindow>(&mut self) -> &mut Self {
-        let mut editor = self.world.get_resource_mut::<Editor>().expect("Editor resource missing. Make sure to add the `EditorPlugin` before calling `app.add_editor_window`.");
+        let mut editor = self.world_mut().get_resource_mut::<Editor>().expect("Editor resource missing. Make sure to add the `EditorPlugin` before calling `app.add_editor_window`.");
         editor.add_window::<W>();
 
         self.add_plugins(WindowSetupPlugin::<W>(PhantomData));
@@ -69,9 +69,9 @@ impl Plugin for EditorPlugin {
         let (window_entity, always_active) = match self.window {
             WindowRef::Primary => {
                 let entity = app
-                    .world
+                    .world_mut()
                     .query_filtered::<Entity, With<PrimaryWindow>>()
-                    .single(&app.world);
+                    .single(&app.world());
                 (entity, false)
             }
             WindowRef::Entity(entity) => (entity, true),

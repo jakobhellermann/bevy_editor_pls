@@ -85,7 +85,7 @@ impl Plugin for EditorPlugin {
                 if window.title == "Bevy App" {
                     window.title = "bevy_editor_pls".into();
                 }
-                let entity = app.world.spawn(window);
+                let entity = app.world_mut().spawn(window);
                 WindowRef::Entity(entity.id())
             }
             EditorWindowPlacement::Window(entity) => WindowRef::Entity(entity),
@@ -136,7 +136,7 @@ impl Plugin for EditorPlugin {
             app.insert_resource(controls::EditorControls::default_bindings())
                 .add_systems(Update, controls::editor_controls_system);
 
-            let mut internal_state = app.world.resource_mut::<editor::EditorInternalState>();
+            let mut internal_state = app.world_mut().resource_mut::<editor::EditorInternalState>();
 
             let [game, _inspector] =
                 internal_state.split_right::<InspectorWindow>(egui_dock::NodeIndex::root(), 0.75);
