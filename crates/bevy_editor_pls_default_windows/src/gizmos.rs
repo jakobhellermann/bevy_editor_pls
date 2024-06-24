@@ -191,7 +191,7 @@ fn add_gizmo_markers(
                 .entity(entity)
                 .insert(HasGizmoMarker)
                 .with_children(|commands| {
-                    commands.spawn((f(), render_layers, Name::new(name)));
+                    commands.spawn((f(), render_layers.clone(), Name::new(name)));
                 });
         }
     }
@@ -231,7 +231,7 @@ fn add_gizmo_markers(
                         material: gizmo_marker_meshes.camera_material.clone_weak(),
                         ..default()
                     },
-                    render_layers,
+                    render_layers.clone(),
                     Name::new("Camera Gizmo"),
                 ));
             });
