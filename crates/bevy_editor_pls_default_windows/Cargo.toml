@@ -11,7 +11,7 @@ readme.workspace = true
 highlight_changes = ["bevy-inspector-egui/highlight_changes"]
 
 [dependencies]
-bevy = { version = "0.14.0-rc", default-features = false, features = [
+bevy = { version = "0.14", default-features = false, features = [
     "bevy_scene",
     "bevy_text",
     "bevy_ui",
