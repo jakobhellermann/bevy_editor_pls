@@ -397,7 +397,7 @@ impl EditorWindow for ControlsWindow {
             ui.label(egui::RichText::new(action.to_string()).strong());
             let bindings = controls.get(action);
             for binding in bindings {
-                ui.add(egui::Label::new(format!("{}", binding)).wrap(false));
+                ui.add(egui::Label::new(format!("{}", binding)).extend());
             }
         }
     }
