@@ -118,7 +118,7 @@ fn debug_ui_options(
         if ui
             .add(
                 egui::DragValue::new(&mut speed)
-                    .clamp_range(0..=20)
+                    .range(0..=20)
                     .speed(0.1),
             )
             .changed()
