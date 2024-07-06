@@ -3,7 +3,7 @@ members = ["crates/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.8.1"
+version = "0.9.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jakobhellermann/bevy_editor_pls"
@@ -15,9 +15,9 @@ bevy_mod_debugdump = { git = "https://github.com/Vrixyz/bevy_mod_debugdump.git",
 transform-gizmo-bevy = { git = "https://github.com/zhaop/transform-gizmo.git", branch = "bevy-0.14", package = "transform-gizmo-bevy" }
 
 [workspace.dependencies]
-bevy_editor_pls = { version = "0.8.1", path = "crates/bevy_editor_pls" }
-bevy_editor_pls_core = { version = "0.8.1", path = "crates/bevy_editor_pls_core" }
-bevy_editor_pls_default_windows = { version = "0.8.1", path = "crates/bevy_editor_pls_default_windows" }
+bevy_editor_pls = { version = "0.9.0", path = "crates/bevy_editor_pls" }
+bevy_editor_pls_core = { version = "0.9.0", path = "crates/bevy_editor_pls_core" }
+bevy_editor_pls_default_windows = { version = "0.9.0", path = "crates/bevy_editor_pls_default_windows" }
 
 bevy-inspector-egui = "0.25.0"
 egui = "0.28"
