@@ -141,8 +141,7 @@ fn debug_ui_options(
         } else {
             ui.label("Wireframes (enable POLYGON_MODE_LINE feature)");
         }
-        ui.scope(|ui| {
-            ui.set_enabled(wireframe_enabled);
+        ui.add_enabled_ui(wireframe_enabled, |ui| {
             if ui_for_value(&mut state.wireframes, ui, type_registry) {
                 world
                     .get_resource_or_insert_with(WireframeConfig::default)
@@ -156,8 +155,7 @@ fn debug_ui_options(
         }
 
         ui.label("Highlight selected entity");
-        ui.scope(|ui| {
-            ui.set_enabled(wireframe_enabled);
+        ui.add_enabled_ui(wireframe_enabled, |ui| {
             ui.checkbox(&mut state.highlight_selected, "");
         });
         ui.end_row();
