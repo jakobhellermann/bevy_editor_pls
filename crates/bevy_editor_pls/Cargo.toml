@@ -22,13 +22,13 @@ default = ["default_windows"]
 [dependencies]
 bevy_editor_pls_core.workspace = true
 bevy_editor_pls_default_windows = { workspace = true, optional = true }
-bevy = { version = "0.14.0-rc", default-features = false, features = ["x11"] }
+bevy = { version = "0.14", default-features = false, features = ["x11"] }
 egui.workspace = true
 transform-gizmo-bevy.workspace = true
 # bevy_framepace = { version = "0.12", default-features = false }
 
 [dev-dependencies]
-bevy = { version = "0.14.0-rc", default-features = false, features = [
+bevy = { version = "0.14", default-features = false, features = [
     "bevy_winit",
     "bevy_core_pipeline",
     "x11",
