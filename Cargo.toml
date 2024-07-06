@@ -13,7 +13,7 @@ readme = "README.md"
 [patch.crates-io]
 bevy-inspector-egui = { git = "https://github.com/kristoff3r/bevy-inspector-egui.git", branch = "main", package = "bevy-inspector-egui" }
 bevy_mod_debugdump = { git = "https://github.com/Vrixyz/bevy_mod_debugdump.git", branch = "bevy_0.14" }
-transform-gizmo-bevy = { git = "https://github.com/zhaop/transform-gizmo.git", branch = "bevy-0.14.0-rc", package = "transform-gizmo-bevy" }
+transform-gizmo-bevy = { git = "https://github.com/zhaop/transform-gizmo.git", branch = "bevy-0.14", package = "transform-gizmo-bevy" }
 
 [workspace.dependencies]
 bevy_editor_pls = { version = "0.8.1", path = "crates/bevy_editor_pls" }
