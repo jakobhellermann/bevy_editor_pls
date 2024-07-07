@@ -18,7 +18,7 @@ fn setup(
 ) {
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y).mesh().size(5.0, 5.0))),
+        mesh: meshes.add(Mesh::from(Plane3d::new(Vec3::Y, Vec2::new(2.5, 2.5)).mesh())),
         material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
         ..Default::default()
     });
