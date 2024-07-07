@@ -46,6 +46,7 @@ fn setup_3d(
         ..Default::default()
     });
     commands.spawn(Camera3dBundle {
+        camera: Camera { order: 1, ..Default::default() },
         transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
