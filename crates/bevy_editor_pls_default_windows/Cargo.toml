@@ -29,6 +29,6 @@ bevy-inspector-egui.workspace = true
 # ] }
 indexmap = "2"
 pretty-type-name = "1.0"
-bevy_mod_debugdump = "0.10"
+bevy_mod_debugdump = "0.11"
 opener = "0.6.0"
 transform-gizmo-bevy.workspace = true
