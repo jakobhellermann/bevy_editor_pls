@@ -457,7 +457,8 @@ impl Editor {
             }
             window.show(ctx, |ui| {
                 self.editor_window_inner(world, internal_state, floating_window.window, ui);
-                ui.allocate_space(ui.available_size() - (5.0, 5.0).into());
+                let desired_size = (ui.available_size() - (5.0, 5.0).into()).max((0.0, 0.0).into());
+                ui.allocate_space(desired_size);
             });
 
             if !open {
