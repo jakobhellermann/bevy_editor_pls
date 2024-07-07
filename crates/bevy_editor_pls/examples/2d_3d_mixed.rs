@@ -12,7 +12,7 @@ fn setup_2d(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
     commands.spawn(SpriteBundle {
         sprite: Sprite {
-            color: Color::rgb(0.25, 0.25, 0.75),
+            color: Color::srgb(0.25, 0.25, 0.75),
             custom_size: Some(Vec2::new(50.0, 50.0)),
             ..Default::default()
         },
@@ -27,12 +27,12 @@ fn setup_3d(
 ) {
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::new(Vec3::Y).mesh().size(0.5, 0.5)),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3)),
+        material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
         ..Default::default()
     });
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cuboid::from_size(Vec3::ONE))),
-        material: materials.add(Color::rgb(0.8, 0.7, 0.6)),
+        material: materials.add(Color::srgb(0.8, 0.7, 0.6)),
         transform: Transform::from_xyz(0.0, 0.5, 0.0),
         ..Default::default()
     });
