@@ -10,9 +10,6 @@ repository = "https://github.com/jakobhellermann/bevy_editor_pls"
 description = "In-App editor tools for bevy apps"
 readme = "README.md"
 
-[patch.crates-io]
-transform-gizmo-bevy = { git = "https://github.com/zhaop/transform-gizmo.git", branch = "bevy-0.14", package = "transform-gizmo-bevy" }
-
 [workspace.dependencies]
 bevy_editor_pls = { version = "0.9.0", path = "crates/bevy_editor_pls" }
 bevy_editor_pls_core = { version = "0.9.0", path = "crates/bevy_editor_pls_core" }
@@ -22,7 +19,7 @@ bevy-inspector-egui = "0.25.0"
 egui = "0.28"
 egui_dock = "0.13"
 # used to be egui-gizmo 0.16
-transform-gizmo-bevy = "0.2"
+transform-gizmo-bevy = "0.3"
 
 [profile.dev.package."*"]
 opt-level = 2
