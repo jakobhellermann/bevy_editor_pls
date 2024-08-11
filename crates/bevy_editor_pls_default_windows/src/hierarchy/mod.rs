@@ -41,23 +41,21 @@ impl EditorWindow for HierarchyWindow {
                 }
             };
 
-        ScrollArea::vertical()
-            .auto_shrink([false, false])
-            .show(ui, |ui| {
-                let type_registry = world.resource::<AppTypeRegistry>().clone();
-                let type_registry = type_registry.read();
-                let new_selected = Hierarchy {
-                    world,
-                    state: hierarchy_state,
-                    type_registry: &type_registry,
-                    add_state: add_state.as_deref(),
-                }
-                .show(ui);
+        ScrollArea::vertical().show(ui, |ui| {
+            let type_registry = world.resource::<AppTypeRegistry>().clone();
+            let type_registry = type_registry.read();
+            let new_selected = Hierarchy {
+                world,
+                state: hierarchy_state,
+                type_registry: &type_registry,
+                add_state: add_state.as_deref(),
+            }
+            .show(ui);
 
-                if new_selected {
-                    inspector_state.selected = InspectorSelection::Entities;
-                }
-            });
+            if new_selected {
+                inspector_state.selected = InspectorSelection::Entities;
+            }
+        });
     }
 
     fn app_setup(app: &mut bevy::prelude::App) {
