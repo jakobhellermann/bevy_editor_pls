@@ -97,14 +97,20 @@ impl EditorWindowContext<'_> {
     }
 
     pub fn open_floating_window<W: ?Sized + EditorWindow>(&mut self) {
-        let floating_window_id = self.internal_state.next_floating_window_id();
-        let window_id = std::any::TypeId::of::<W>();
-        self.internal_state
-            .floating_windows
-            .push(crate::editor::FloatingWindow {
-                window: window_id,
-                id: floating_window_id,
-                initial_position: None,
-            });
+        open_floating_window::<W>(self.internal_state)
     }
+}
+
+pub fn open_floating_window<W: ?Sized + EditorWindow>(
+    editor_internal_state: &mut crate::editor::EditorInternalState,
+) {
+    let floating_window_id = editor_internal_state.next_floating_window_id();
+    let window_id = std::any::TypeId::of::<W>();
+    editor_internal_state
+        .floating_windows
+        .push(crate::editor::FloatingWindow {
+            window: window_id,
+            id: floating_window_id,
+            initial_position: None,
+        });
 }
