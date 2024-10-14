@@ -1,6 +1,12 @@
 # Changelog
 
 ## Version 0.9
+- update to `bevy-inspector-egui 0.26` / `egui 0.28`
+
+## Version 0.9
+- update to bevy 0.14
+
+## Version 0.9
 - update to bevy 0.14
 
 ## Version 0.8
