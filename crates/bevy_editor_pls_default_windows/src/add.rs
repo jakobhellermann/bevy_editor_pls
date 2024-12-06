@@ -167,35 +167,36 @@ impl Default for AddWindowState {
         state.add(
             "2D",
             AddItem::new("Orthographic Camera".into(), |world, entity| {
-                world.entity_mut(entity).insert(Camera3dBundle::default());
+                world.entity_mut(entity).insert(Camera3d::default());
             }),
         );
-        state.add("2D", AddItem::bundle::<SpriteBundle>());
-        state.add("2D", AddItem::bundle::<Text2dBundle>());
+        state.add("2D", AddItem::bundle::<Sprite>());
+        state.add("2D", AddItem::bundle::<Text2d>());
 
         state.add(
             "3D",
             AddItem::new("Perspective Camera".into(), |world, entity| {
-                world.entity_mut(entity).insert(Camera3dBundle::default());
+                world.entity_mut(entity).insert(Camera3d::default());
             }),
         );
         state.add(
             "3D",
             AddItem::new("Orthographic Camera".into(), |world, entity| {
-                world.entity_mut(entity).insert(Camera3dBundle {
-                    projection: OrthographicProjection {
+                world.entity_mut(entity).insert((
+                    Camera3d::default(),
+                    Projection::Orthographic(OrthographicProjection {
                         scale: 3.0,
-                        scaling_mode: ScalingMode::FixedVertical(1.0),
-                        ..default()
-                    }
-                    .into(),
-                    ..default()
-                });
+                        scaling_mode: ScalingMode::FixedVertical {
+                            viewport_height: 1.0,
+                        },
+                        ..OrthographicProjection::default_3d()
+                    }),
+                ));
             }),
         );
-        state.add("3D", AddItem::bundle::<PointLightBundle>());
-        state.add("3D", AddItem::bundle::<DirectionalLightBundle>());
-        state.add("3D", AddItem::bundle_named::<PbrBundle>("PbrBundle".into()));
+        state.add("3D", AddItem::bundle::<PointLight>());
+        state.add("3D", AddItem::bundle::<DirectionalLight>());
+        // state.add("3D", AddItem::bundle_named::<PbrBundle>("PbrBundle".into()));
         state.add(
             "3D",
             AddItem::new("Cube".into(), |world, entity| {
@@ -207,18 +208,16 @@ impl Default for AddWindowState {
                     .unwrap();
                 let material = materials.add(StandardMaterial::default());
 
-                world.entity_mut(entity).insert(PbrBundle {
-                    mesh,
-                    material,
-                    ..Default::default()
-                });
+                world
+                    .entity_mut(entity)
+                    .insert((Mesh3d(mesh), MeshMaterial3d(material)));
             }),
         );
 
-        state.add("UI", AddItem::bundle::<NodeBundle>());
-        state.add("UI", AddItem::bundle::<TextBundle>());
-        state.add("UI", AddItem::bundle::<ImageBundle>());
-        state.add("UI", AddItem::bundle::<ButtonBundle>());
+        state.add("UI", AddItem::bundle::<Node>());
+        state.add("UI", AddItem::bundle::<Text>());
+        state.add("UI", AddItem::bundle::<ImageNode>());
+        state.add("UI", AddItem::bundle::<Button>());
 
         state
     }
