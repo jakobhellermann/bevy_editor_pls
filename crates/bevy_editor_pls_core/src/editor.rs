@@ -390,7 +390,9 @@ impl Editor {
                     .unwrap();
 
                 match window.mode {
-                    WindowMode::Windowed => window.mode = WindowMode::BorderlessFullscreen,
+                    WindowMode::Windowed => {
+                        window.mode = WindowMode::BorderlessFullscreen(MonitorSelection::Current)
+                    }
                     _ => window.mode = WindowMode::Windowed,
                 }
             }
