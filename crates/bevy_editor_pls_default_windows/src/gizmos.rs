@@ -101,7 +101,8 @@ impl EditorWindow for GizmoWindow {
                 // here should assign the `EntityShouldShowGizmo` component, which is later synced
                 // with the actual gizmo ui system
 
-                world.run_system_once(reset_gizmos_selected_state);
+                // todo: not ignore errors
+                world.run_system_once(reset_gizmos_selected_state).ok();
 
                 let selected_entities = hierarchy_state.selected.iter();
                 for entity in selected_entities {
@@ -110,8 +111,8 @@ impl EditorWindow for GizmoWindow {
                     }
                 }
 
-                world.run_system_once(hydrate_gizmos);
-                world.run_system_once(deconstruct_gizmos);
+                world.run_system_once(hydrate_gizmos).ok();
+                world.run_system_once(deconstruct_gizmos).ok();
             }
         }
     }
