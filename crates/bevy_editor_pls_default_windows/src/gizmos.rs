@@ -69,15 +69,15 @@ impl EditorWindow for GizmoWindow {
                 entities: Query<Entity, (With<EntityShouldShowGizmo>, Without<GizmoTarget>)>,
             ) {
                 for entity in entities.iter() {
-									if let Some(mut entity) = commands.get_entity(entity) {
-                    trace!(
-                        "Hydrating a gizmo on entity {:?} because it is selected",
-                        entity.id()
-                    );
-                    // implicitly assumes it is the only gizmo target in the world,
-                    // otherwise setting [GizmoTarget].is_focussed may be necessary
-                    entity.insert(GizmoTarget::default());
-									}
+                    if let Some(mut entity) = commands.get_entity(entity) {
+                        trace!(
+                            "Hydrating a gizmo on entity {:?} because it is selected",
+                            entity.id()
+                        );
+                        // implicitly assumes it is the only gizmo target in the world,
+                        // otherwise setting [GizmoTarget].is_focussed may be necessary
+                        entity.insert(GizmoTarget::default());
+                    }
                 }
             }
 
@@ -105,7 +105,7 @@ impl EditorWindow for GizmoWindow {
 
                 let selected_entities = hierarchy_state.selected.iter();
                 for entity in selected_entities {
-                    if let Some(mut entity) = world.get_entity_mut(entity) {
+                    if let Ok(mut entity) = world.get_entity_mut(entity) {
                         entity.insert(EntityShouldShowGizmo);
                     }
                 }
@@ -197,20 +197,20 @@ fn add_gizmo_markers(
     }
 
     add(&mut commands, point_lights, "PointLight Gizmo", || {
-        PbrBundle {
-            mesh: gizmo_marker_meshes.point_light_mesh.clone_weak(),
-            material: gizmo_marker_meshes.point_light_material.clone_weak(),
-            ..default()
-        }
+        (
+            Mesh3d(gizmo_marker_meshes.point_light_mesh.clone_weak()),
+            MeshMaterial3d(gizmo_marker_meshes.point_light_material.clone_weak()),
+        )
     });
     add(
         &mut commands,
         directional_lights,
         "DirectionalLight Gizmo",
-        || PbrBundle {
-            mesh: gizmo_marker_meshes.directional_light_mesh.clone_weak(),
-            material: gizmo_marker_meshes.directional_light_material.clone_weak(),
-            ..default()
+        || {
+            (
+                Mesh3d(gizmo_marker_meshes.directional_light_mesh.clone_weak()),
+                MeshMaterial3d(gizmo_marker_meshes.directional_light_material.clone_weak()),
+            )
         },
     );
 
@@ -226,11 +226,8 @@ fn add_gizmo_markers(
             ))
             .with_children(|commands| {
                 commands.spawn((
-                    PbrBundle {
-                        mesh: gizmo_marker_meshes.camera_mesh.clone_weak(),
-                        material: gizmo_marker_meshes.camera_material.clone_weak(),
-                        ..default()
-                    },
+                    Mesh3d(gizmo_marker_meshes.camera_mesh.clone_weak()),
+                    MeshMaterial3d(gizmo_marker_meshes.camera_material.clone_weak()),
                     render_layers.clone(),
                     Name::new("Camera Gizmo"),
                 ));

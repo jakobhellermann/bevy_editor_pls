@@ -18,7 +18,10 @@ bevy_editor_pls_default_windows = { version = "0.10.0", path = "crates/bevy_edit
 bevy-inspector-egui = "0.28.0"
 egui = "0.29"
 egui_dock = "0.14"
-transform-gizmo-bevy = "0.4"
+transform-gizmo-bevy = "0.5"
+
+[patch.crates-io]
+transform-gizmo-bevy = { git = "https://github.com/ActuallyHappening/transform-gizmo" }
 
 [profile.dev.package."*"]
 opt-level = 2
