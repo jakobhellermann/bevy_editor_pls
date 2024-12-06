@@ -18,7 +18,6 @@ bevy_editor_pls_default_windows = { version = "0.10.0", path = "crates/bevy_edit
 bevy-inspector-egui = "0.28.0"
 egui = "0.29"
 egui_dock = "0.14"
-# used to be egui-gizmo 0.16
 transform-gizmo-bevy = "0.4"
 
 [profile.dev.package."*"]
