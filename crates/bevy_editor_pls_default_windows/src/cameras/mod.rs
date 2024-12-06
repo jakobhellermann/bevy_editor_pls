@@ -216,16 +216,14 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
     let target = RenderTarget::Window(WindowRef::Entity(editor.window()));
 
     commands.spawn((
-        Camera3dBundle {
-            camera: Camera {
-                order: editor_cam_priority,
-                is_active: false,
-                target: target.clone(),
-                ..default()
-            },
-            transform: Transform::from_xyz(0.0, 2.0, 5.0),
-            ..Camera3dBundle::default()
+        Camera3d::default(),
+        Camera {
+            order: editor_cam_priority,
+            is_active: false,
+            target: target.clone(),
+            ..default()
         },
+        Transform::from_xyz(0.0, 2.0, 5.0),
         Ec3d,
         camera_3d_free::FlycamControls::default(),
         EditorCamera,
@@ -238,17 +236,15 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
     ));
 
     commands.spawn((
-        Camera3dBundle {
-            camera: Camera {
-                //  Prevent multiple cameras from having the same priority.
-                order: editor_cam_priority + 1,
-                target: target.clone(),
-                is_active: false,
-                ..default()
-            },
-            transform: Transform::from_xyz(0.0, 2.0, 5.0),
-            ..Camera3dBundle::default()
+        Camera3d::default(),
+        Camera {
+            //  Prevent multiple cameras from having the same priority.
+            order: editor_cam_priority + 1,
+            target: target.clone(),
+            is_active: false,
+            ..default()
         },
+        Transform::from_xyz(0.0, 2.0, 5.0),
         Ec3d,
         PanOrbitCamera::default(),
         EditorCamera,
@@ -261,14 +257,12 @@ fn spawn_editor_cameras(mut commands: Commands, editor: Res<Editor>) {
     ));
 
     commands.spawn((
-        Camera2dBundle {
-            camera: Camera {
-                //  Prevent multiple cameras from having the same priority.
-                order: editor_cam_priority + 2,
-                target,
-                is_active: false,
-                ..default()
-            },
+        Camera2d,
+        Camera {
+            //  Prevent multiple cameras from having the same priority.
+            order: editor_cam_priority + 2,
+            target,
+            is_active: false,
             ..default()
         },
         Ec2d,

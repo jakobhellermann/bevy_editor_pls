@@ -116,6 +116,7 @@ fn extract_wireframe_for_selected(editor: Extract<Res<Editor>>, mut commands: Co
     if wireframe_for_selected {
         let selected = &editor.window_state::<HierarchyWindow>().unwrap().selected;
         for selected in selected.iter() {
+            // get_or_spawn is now deprecated, idk what semantics to use here though
             commands.get_or_spawn(selected).insert(Wireframe);
         }
     }
@@ -140,7 +141,7 @@ struct Hierarchy<'a> {
     add_state: Option<&'a AddWindowState>,
 }
 
-impl<'a> Hierarchy<'a> {
+impl Hierarchy<'_> {
     fn show(&mut self, ui: &mut egui::Ui) -> bool {
         let mut despawn_recursive = None;
         let mut despawn = None;
@@ -198,7 +199,7 @@ impl<'a> Hierarchy<'a> {
         .show::<Without<HideInEditor>>(ui);
 
         if let Some(entity) = despawn_recursive {
-            bevy::hierarchy::despawn_with_children_recursive(self.world, entity);
+            bevy::hierarchy::despawn_with_children_recursive(self.world, entity, true);
         }
         if let Some(entity) = despawn {
             self.world.entity_mut(entity).despawn();
@@ -234,7 +235,7 @@ fn rename_entity_ui(ui: &mut egui::Ui, rename_info: &mut RenameInfo, world: &mut
         rename_info.renaming = false;
 
         match world.get_entity_mut(rename_info.entity) {
-            Some(mut ent_mut) => match ent_mut.get_mut::<Name>() {
+            Ok(mut ent_mut) => match ent_mut.get_mut::<Name>() {
                 Some(mut name) => {
                     name.set(rename_info.current_rename.clone());
                 }
@@ -242,8 +243,8 @@ fn rename_entity_ui(ui: &mut egui::Ui, rename_info: &mut RenameInfo, world: &mut
                     ent_mut.insert(Name::new(rename_info.current_rename.clone()));
                 }
             },
-            None => {
-                error!("Failed to get renamed entity");
+            Err(err) => {
+                error!(?err, "Failed to get renamed entity");
             }
         }
     }
