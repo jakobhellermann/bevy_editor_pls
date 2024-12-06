@@ -71,7 +71,7 @@ impl Plugin for EditorPlugin {
                 let entity = app
                     .world_mut()
                     .query_filtered::<Entity, With<PrimaryWindow>>()
-                    .single(&app.world());
+                    .single(app.world());
                 (entity, false)
             }
             WindowRef::Entity(entity) => (entity, true),

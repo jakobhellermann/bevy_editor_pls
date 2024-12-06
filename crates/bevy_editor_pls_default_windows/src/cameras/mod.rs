@@ -569,16 +569,15 @@ fn initial_camera_setup(
 }
 
 fn set_main_pass_viewport(
-    egui_settings: Res<bevy_inspector_egui::bevy_egui::EguiSettings>,
     editor: Res<Editor>,
-    window: Query<&Window>,
+    window: Query<(&bevy_inspector_egui::bevy_egui::EguiSettings, &Window)>,
     mut cameras: Query<&mut Camera, With<EditorCamera>>,
 ) {
     if !editor.is_changed() {
         return;
     };
 
-    let Ok(window) = window.get(editor.window()) else {
+    let Ok((egui_settings, window)) = window.get(editor.window()) else {
         return;
     };
 
