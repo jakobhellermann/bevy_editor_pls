@@ -277,7 +277,7 @@ impl EditorControls {
     /// - `C-Enter`: pause time
     /// - `E`: toggle editor
     /// - `F`: focus on selected entity
-    /// `T/R/S`: show translate/rotate/scale gizmo
+    /// - `T/R/S`: show translate/rotate/scale gizmo
     pub fn default_bindings() -> Self {
         let mut controls = EditorControls::default();
 

@@ -116,8 +116,9 @@ fn extract_wireframe_for_selected(editor: Extract<Res<Editor>>, mut commands: Co
     if wireframe_for_selected {
         let selected = &editor.window_state::<HierarchyWindow>().unwrap().selected;
         for selected in selected.iter() {
-            // get_or_spawn is now deprecated, idk what semantics to use here though
-            commands.get_or_spawn(selected).insert(Wireframe);
+            if let Some(mut entity) = commands.get_entity(selected) {
+                entity.insert(Wireframe);
+            }
         }
     }
 }
