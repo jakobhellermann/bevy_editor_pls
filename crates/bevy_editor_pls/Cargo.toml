@@ -28,9 +28,13 @@ transform-gizmo-bevy.workspace = true
 # bevy_framepace = { version = "0.12", default-features = false }
 
 [dev-dependencies]
+accesskit = "0.17.1"
 bevy = { version = "0.15", default-features = false, features = [
     "bevy_winit",
+    "bevy_ui",
     "bevy_core_pipeline",
+    "bevy_gizmos",
+    "bevy_dev_tools",
     "x11",
 
     "tonemapping_luts",

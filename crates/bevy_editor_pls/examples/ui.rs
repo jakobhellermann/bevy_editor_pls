@@ -2,7 +2,9 @@
 
 use std::f32::consts::PI;
 
+use accesskit::{Node as Accessible, Role};
 use bevy::{
+    a11y::AccessibilityNode,
     color::palettes::{basic::LIME, css::DARK_GRAY},
     input::mouse::{MouseScrollUnit, MouseWheel},
     picking::focus::HoverMap,
@@ -10,17 +12,22 @@ use bevy::{
     ui::widget::NodeImageMode,
     winit::WinitSettings,
 };
-use bevy_editor_pls::EditorPlugin;
 
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
-        .add_plugins(EditorPlugin::default())
+        .add_plugins(bevy_editor_pls::EditorPlugin::new())
         // Only run the app when there is user input. This will significantly reduce CPU/GPU use.
         .insert_resource(WinitSettings::desktop_app())
         .add_systems(Startup, setup)
-        .add_systems(Update, update_scroll_position)
-        .run();
+        .add_systems(Update, update_scroll_position);
+
+    {
+        app.add_plugins(bevy::dev_tools::ui_debug_overlay::DebugUiPlugin)
+            .add_systems(Update, toggle_overlay);
+    }
+
+    app.run();
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -74,6 +81,16 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 // for accessibility to treat the text accordingly.
                                 Label,
                             ));
+
+                            // Debug overlay text
+                            parent.spawn((
+                                Text::new("Press Space to enable debug outlines."),
+                                TextFont {
+                                    font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                    ..default()
+                                },
+                                Label,
+                            ));
                         });
                 });
             // right vertical fill
@@ -119,6 +136,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                                             ..default()
                                         },
                                         Label,
+                                        AccessibilityNode(Accessible::new(Role::ListItem)),
                                     ))
                                     .insert(PickingBehavior {
                                         should_block_lower: false,
@@ -318,6 +336,18 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     }
                 });
         });
+}
+
+// The system that will enable/disable the debug outlines around the nodes
+fn toggle_overlay(
+    input: Res<ButtonInput<KeyCode>>,
+    mut options: ResMut<bevy::dev_tools::ui_debug_overlay::UiDebugOptions>,
+) {
+    info_once!("The debug outlines are enabled, press Space to turn them on/off");
+    if input.just_pressed(KeyCode::Space) {
+        // The toggle method will enable the debug_overlay if disabled and disable if enabled
+        options.toggle();
+    }
 }
 
 /// Updates the scroll position of scrollable nodes in response to mouse input
