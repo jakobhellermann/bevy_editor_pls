@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_editor_pls_core::{editor_window::EditorWindow, Editor, EditorEvent};
 
 #[derive(Debug)]
@@ -206,7 +206,7 @@ pub fn editor_controls_system(
     {
         let was_active = editor.active();
         editor.set_active(!was_active);
-        editor_events.send(EditorEvent::Toggle {
+        editor_events.write(EditorEvent::Toggle {
             now_active: !was_active,
         });
     }
@@ -228,7 +228,7 @@ pub fn editor_controls_system(
         &mouse_input,
         &editor,
     ) {
-        editor_events.send(EditorEvent::FocusSelected);
+        editor_events.write(EditorEvent::FocusSelected);
     }
 
     #[cfg(feature = "default_windows")]

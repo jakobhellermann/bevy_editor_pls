@@ -26,7 +26,7 @@ impl Plugin for PanCamPlugin {
 
 // Zoom doesn't work on bevy 0.5 due to: https://github.com/bevyengine/bevy/pull/2015
 fn camera_zoom(
-    mut query: Query<(&PanCamControls, &mut OrthographicProjection)>,
+    mut query: Query<(&PanCamControls, &mut Projection)>,
     mut scroll_events: EventReader<MouseWheel>,
 ) {
     let pixels_per_line = 100.; // Maybe make configurable?
@@ -42,8 +42,11 @@ fn camera_zoom(
         return;
     }
 
-    for (_cam, mut projection) in query.iter_mut() {
-        projection.scale = (projection.scale * (1. + -scroll * 0.001)).max(0.00001);
+    for (_cam, projection) in &mut query {
+        let Projection::Orthographic(ortho) = projection.into_inner() else {
+            continue;
+        };
+        ortho.scale = (ortho.scale * (1. + -scroll * 0.001)).max(0.00001);
     }
 }
 
@@ -51,7 +54,7 @@ fn camera_movement(
     editor: Res<Editor>,
     window: Query<&Window>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    mut query: Query<(&PanCamControls, &mut Transform, &OrthographicProjection)>,
+    mut query: Query<(&PanCamControls, &mut Transform, &Projection)>,
     mut last_pos: Local<Option<Vec2>>,
 ) {
     let Ok(window) = window.get(editor.window()) else {
@@ -71,6 +74,9 @@ fn camera_movement(
         if !cam.enabled {
             continue;
         }
+        let Projection::Orthographic(ortho) = projection else {
+            continue;
+        };
 
         if cam
             .grab_buttons
@@ -78,9 +84,9 @@ fn camera_movement(
             .any(|btn| mouse_buttons.pressed(*btn))
         {
             let scaling = Vec2::new(
-                window.width() / projection.area.width(),
-                window.height() / projection.area.height(),
-            ) * projection.scale;
+                window.width() / ortho.area.width(),
+                window.height() / ortho.area.height(),
+            ) * ortho.scale;
 
             transform.translation -= (delta * scaling).extend(0.);
         }

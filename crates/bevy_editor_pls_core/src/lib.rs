@@ -10,7 +10,7 @@ use bevy::render::camera::CameraUpdateSystem;
 use bevy::transform::TransformSystem;
 use bevy::window::{PrimaryWindow, WindowRef};
 use bevy_inspector_egui::{
-    bevy_egui::{EguiPlugin, EguiSet},
+    bevy_egui::EguiPlugin,
     DefaultInspectorConfigPlugin,
 };
 use editor::EditorInternalState;
@@ -63,7 +63,7 @@ impl Plugin for EditorPlugin {
             app.add_plugins(DefaultInspectorConfigPlugin);
         }
         if !app.is_plugin_added::<EguiPlugin>() {
-            app.add_plugins(EguiPlugin);
+            app.add_plugins(EguiPlugin { enable_multipass_for_primary_context: false });
         }
 
         let (window_entity, always_active) = match self.window {
@@ -72,7 +72,7 @@ impl Plugin for EditorPlugin {
                     .world_mut()
                     .query_filtered::<Entity, With<PrimaryWindow>>()
                     .single(app.world());
-                (entity, false)
+                (entity.unwrap(), false)
             }
             WindowRef::Entity(entity) => (entity, true),
         };
@@ -86,8 +86,7 @@ impl Plugin for EditorPlugin {
                 Editor::system
                     .in_set(EditorSet::UI)
                     .before(TransformSystem::TransformPropagate)
-                    .before(CameraUpdateSystem)
-                    .before(EguiSet::ProcessOutput),
+                    .before(CameraUpdateSystem),
             );
     }
 }

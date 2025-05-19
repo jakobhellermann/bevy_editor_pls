@@ -3,9 +3,9 @@ pub mod camera_3d_free;
 pub mod camera_3d_panorbit;
 use crate::scenes::NotInScene;
 
+use bevy::platform::collections::HashSet;
 use bevy::render::camera::RenderTarget;
 use bevy::render::view::RenderLayers;
-use bevy::utils::HashSet;
 use bevy::window::WindowRef;
 use bevy::{prelude::*, render::primitives::Aabb};
 use bevy_editor_pls_core::{
@@ -297,7 +297,7 @@ fn set_editor_cam_active(
 
     {
         let mut q = editor_cameras.p0();
-        let mut editor_cam_3d_free = q.single_mut();
+        let mut editor_cam_3d_free = q.single_mut().unwrap();
         let active = matches!(editor_cam, EditorCamKind::D3Free) && editor.active();
         editor_cam_3d_free.0.is_active = active;
         editor_cam_3d_free.1.enable_movement = active && !editor.listening_for_text();
@@ -305,14 +305,14 @@ fn set_editor_cam_active(
     }
     {
         let mut q = editor_cameras.p1();
-        let mut editor_cam_3d_panorbit = q.single_mut();
+        let mut editor_cam_3d_panorbit = q.single_mut().unwrap();
         let active = matches!(editor_cam, EditorCamKind::D3PanOrbit) && editor.active();
         editor_cam_3d_panorbit.0.is_active = active;
         editor_cam_3d_panorbit.1.enabled = active && editor.viewport_interaction_active();
     }
     {
         let mut q = editor_cameras.p2();
-        let mut editor_cam_2d_panzoom = q.single_mut();
+        let mut editor_cam_2d_panzoom = q.single_mut().unwrap();
         let active = matches!(editor_cam, EditorCamKind::D2PanZoom) && editor.active();
         editor_cam_2d_panzoom.0.is_active = active;
         editor_cam_2d_panzoom.1.enabled = active && editor.viewport_interaction_active();
@@ -365,7 +365,7 @@ fn focus_selected(
         (
             &mut Transform,
             Option<&mut PanOrbitCamera>,
-            Option<&mut OrthographicProjection>,
+            Option<&mut Projection>,
         ),
         With<ActiveEditorCamera>,
     >,
@@ -432,9 +432,9 @@ fn focus_selected(
             RADIUS_MULTIPLIER
         };
 
-        let (mut camera_tf, pan_orbit_cam, ortho) = active_cam.single_mut();
+        let (mut camera_tf, pan_orbit_cam, proj) = active_cam.single_mut().unwrap();
 
-        if let Some(mut ortho) = ortho {
+        if let Some(Projection::Orthographic(ortho)) = proj.map(|x| x.into_inner()) {
             camera_tf.translation.x = focus_loc.x;
             camera_tf.translation.y = focus_loc.y;
 
@@ -483,8 +483,8 @@ fn initial_camera_setup(
         Query<&Transform, (With<Camera3d>, Without<EditorCamera>)>,
     )>,
 ) {
-    let cam2d = cameras.p3().get_single().ok().cloned();
-    let cam3d = cameras.p4().get_single().ok().cloned();
+    let cam2d = cameras.p3().single().ok().cloned();
+    let cam3d = cameras.p4().single().ok().cloned();
 
     if !*has_decided_initial_cam {
         let camera_state = editor.window_state_mut::<CameraWindow>().unwrap();
@@ -493,21 +493,21 @@ fn initial_camera_setup(
             (true, false) => {
                 camera_state.editor_cam = EditorCamKind::D2PanZoom;
                 commands
-                    .entity(cameras.p0().single().0)
+                    .entity(cameras.p0().single().unwrap().0)
                     .insert(ActiveEditorCamera);
                 *has_decided_initial_cam = true;
             }
             (false, true) => {
                 camera_state.editor_cam = EditorCamKind::D3PanOrbit;
                 commands
-                    .entity(cameras.p2().single().0)
+                    .entity(cameras.p2().single().unwrap().0)
                     .insert(ActiveEditorCamera);
                 *has_decided_initial_cam = true;
             }
             (true, true) => {
                 camera_state.editor_cam = EditorCamKind::D3PanOrbit;
                 commands
-                    .entity(cameras.p2().single().0)
+                    .entity(cameras.p2().single().unwrap().0)
                     .insert(ActiveEditorCamera);
                 *has_decided_initial_cam = true;
             }
@@ -525,7 +525,7 @@ fn initial_camera_setup(
             };
 
             let mut query = cameras.p0();
-            let (_, mut cam_transform) = query.single_mut();
+            let (_, mut cam_transform) = query.single_mut().unwrap();
             *cam_transform = cam2d_transform;
 
             *was_positioned_2d = true;
@@ -543,7 +543,7 @@ fn initial_camera_setup(
 
             {
                 let mut query = cameras.p1();
-                let (_, mut cam_transform, mut cam) = query.single_mut();
+                let (_, mut cam_transform, mut cam) = query.single_mut().unwrap();
                 *cam_transform = cam3d_transform;
                 let (yaw, pitch, _) = cam3d_transform.rotation.to_euler(EulerRot::YXZ);
                 cam.yaw = yaw;
@@ -552,7 +552,7 @@ fn initial_camera_setup(
 
             {
                 let mut query = cameras.p2();
-                let (_, mut cam_transform, mut cam) = query.single_mut();
+                let (_, mut cam_transform, mut cam) = query.single_mut().unwrap();
                 cam.radius = cam3d_transform.translation.distance(cam.focus);
                 *cam_transform = cam3d_transform;
             }
@@ -564,7 +564,7 @@ fn initial_camera_setup(
 
 fn set_main_pass_viewport(
     editor: Res<Editor>,
-    window: Query<(&bevy_inspector_egui::bevy_egui::EguiSettings, &Window)>,
+    window: Query<(&bevy_inspector_egui::bevy_egui::EguiContextSettings, &Window)>,
     mut cameras: Query<&mut Camera, With<EditorCamera>>,
 ) {
     if !editor.is_changed() {
