@@ -43,6 +43,10 @@ bevy = { version = "0.16", default-features = false, features = [
     "ktx2",             # https://github.com/bevyengine/bevy/discussions/9100
 ] }
 
+[build-dependencies]
+# Workaround for <https://github.com/bevyengine/bevy/issues/18668>.
+bevy_reflect = { version = "0.16", features = ["documentation"] }
+
 [[example]]
 name = "load_gltf"
 required-features = ["bevy/bevy_gltf", "bevy/png", "bevy/ktx2", "bevy/zstd"]
