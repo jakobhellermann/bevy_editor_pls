@@ -69,7 +69,7 @@ impl EditorWindow for GizmoWindow {
                 entities: Query<Entity, (With<EntityShouldShowGizmo>, Without<GizmoTarget>)>,
             ) {
                 for entity in entities.iter() {
-                    if let Some(mut entity) = commands.get_entity(entity) {
+                    if let Ok(mut entity) = commands.get_entity(entity) {
                         trace!(
                             "Hydrating a gizmo on entity {:?} because it is selected",
                             entity.id()
@@ -87,7 +87,7 @@ impl EditorWindow for GizmoWindow {
                 entities: Query<Entity, (With<GizmoTarget>, Without<EntityShouldShowGizmo>)>,
             ) {
                 for entity in entities.iter() {
-                    if let Some(mut entity) = commands.get_entity(entity) {
+                    if let Ok(mut entity) = commands.get_entity(entity) {
                         entity.remove::<GizmoTarget>();
                         debug!(
                             "Removing GizmoTarget from entity {:?} because it has lost focus",

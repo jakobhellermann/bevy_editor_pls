@@ -126,7 +126,7 @@ impl Plugin for EditorPlugin {
             app.add_editor_window::<GizmoWindow>();
             app.add_editor_window::<controls::ControlsWindow>();
 
-            app.add_plugins(bevy::pbr::wireframe::WireframePlugin);
+            app.add_plugins(bevy::pbr::wireframe::WireframePlugin::default());
 
             // required for the GizmoWindow
             if !app.is_plugin_added::<transform_gizmo_bevy::TransformGizmoPlugin>() {

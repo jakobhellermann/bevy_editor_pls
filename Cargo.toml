@@ -11,14 +11,14 @@ description = "In-App editor tools for bevy apps"
 readme = "README.md"
 
 [workspace.dependencies]
-bevy_editor_pls = { version = "0.11.0", path = "crates/bevy_editor_pls" }
-bevy_editor_pls_core = { version = "0.11.0", path = "crates/bevy_editor_pls_core" }
-bevy_editor_pls_default_windows = { version = "0.11.0", path = "crates/bevy_editor_pls_default_windows" }
+bevy_editor_pls = { version = "0.11", path = "crates/bevy_editor_pls" }
+bevy_editor_pls_core = { version = "0.11", path = "crates/bevy_editor_pls_core" }
+bevy_editor_pls_default_windows = { version = "0.11", path = "crates/bevy_editor_pls_default_windows" }
 
-bevy-inspector-egui = "0.28.0"
-egui = "0.29"
-egui_dock = "0.14"
-transform-gizmo-bevy = "0.5"
+bevy-inspector-egui = "0.31"
+egui = "0.31"
+egui_dock = "0.16"
+transform-gizmo-bevy = "0.6"
 
 [profile.dev.package."*"]
 opt-level = 2

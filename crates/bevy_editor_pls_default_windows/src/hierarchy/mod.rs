@@ -116,7 +116,7 @@ fn extract_wireframe_for_selected(editor: Extract<Res<Editor>>, mut commands: Co
     if wireframe_for_selected {
         let selected = &editor.window_state::<HierarchyWindow>().unwrap().selected;
         for selected in selected.iter() {
-            if let Some(mut entity) = commands.get_entity(selected) {
+            if let Ok(mut entity) = commands.get_entity(selected) {
                 entity.insert(Wireframe);
             }
         }
@@ -144,8 +144,8 @@ struct Hierarchy<'a> {
 
 impl Hierarchy<'_> {
     fn show(&mut self, ui: &mut egui::Ui) -> bool {
-        let mut despawn_recursive = None;
         let mut despawn = None;
+        let mut despawn_single = None;
 
         let HierarchyState {
             selected,
@@ -159,11 +159,11 @@ impl Hierarchy<'_> {
             selected,
             context_menu: Some(&mut |ui, entity, world, rename_info| {
                 if ui.button("Despawn").clicked() {
-                    despawn_recursive = Some(entity);
+                    despawn = Some(entity);
                 }
 
                 if ui.button("Remove keeping children").clicked() {
-                    despawn = Some(entity);
+                    despawn_single = Some(entity);
                 }
 
                 if ui.button("Rename").clicked() {
@@ -199,17 +199,19 @@ impl Hierarchy<'_> {
         }
         .show::<Without<HideInEditor>>(ui);
 
-        if let Some(entity) = despawn_recursive {
-            bevy::hierarchy::despawn_with_children_recursive(self.world, entity, true);
-        }
         if let Some(entity) = despawn {
             self.world.entity_mut(entity).despawn();
+        }
+        if let Some(entity) = despawn_single {
+            let mut e = self.world.entity_mut(entity);
+            e.remove::<Children>();
+            e.despawn();
             self.state.selected.remove(entity);
         }
 
         if ui.input(|input| input.key_pressed(egui::Key::Delete)) {
             for entity in self.state.selected.iter() {
-                self.world.entity_mut(entity).despawn_recursive();
+                self.world.entity_mut(entity).despawn();
             }
             self.state.selected.clear();
         }

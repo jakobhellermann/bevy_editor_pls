@@ -22,25 +22,30 @@ default = ["default_windows"]
 [dependencies]
 bevy_editor_pls_core.workspace = true
 bevy_editor_pls_default_windows = { workspace = true, optional = true }
-bevy = { version = "0.15", default-features = false, features = ["x11"] }
+bevy = { version = "0.16", default-features = false, features = ["x11"] }
 egui.workspace = true
 transform-gizmo-bevy.workspace = true
 # bevy_framepace = { version = "0.12", default-features = false }
 
 [dev-dependencies]
-accesskit = "0.17.1"
-bevy = { version = "0.15", default-features = false, features = [
+accesskit = "0.19"
+bevy = { version = "0.16", default-features = false, features = [
     "bevy_winit",
     "bevy_ui",
     "bevy_core_pipeline",
     "bevy_gizmos",
     "bevy_dev_tools",
+    "bevy_picking",
     "x11",
 
     "tonemapping_luts",
     "zstd",
     "ktx2",             # https://github.com/bevyengine/bevy/discussions/9100
 ] }
+
+[build-dependencies]
+# Workaround for <https://github.com/bevyengine/bevy/issues/18668>.
+bevy_reflect = { version = "0.16", features = ["documentation"] }
 
 [[example]]
 name = "load_gltf"
