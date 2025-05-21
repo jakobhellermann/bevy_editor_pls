@@ -1,22 +1,25 @@
 # Changelog
 
-## Version 0.9
-- update to `bevy-inspector-egui 0.26` / `egui 0.28`
+## Version 0.11
+- update to bevy 0.16
+- update to `bevy-inspector-egui 0.31` / `egui 0.31`
+
+## Version 0.10
+- update to `bevy-inspector-egui 0.26`
 
 ## Version 0.9
 - update to bevy 0.14
-
-## Version 0.9
-- update to bevy 0.14
+- update to `bevy-inspector-egui 0.25` / `egui 0.28`
 
 ## Version 0.8
 - update to bevy 0.13
+- update to `bevy-inspector-egui 0.23` / `egui 0.26`
 
 ## Version 0.7.1
 - fix mouse control glitches introduced in version 0.6
 
 ## Version 0.7
-- update to `bevy-inspector-egui` 0.22 and `egui` 0.24
+- update to `bevy-inspector-egui 0.22` / `egui 0.24`
 
 ## Version 0.6
 - update to bevy 0.12
